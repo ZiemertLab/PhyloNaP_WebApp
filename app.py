@@ -1,15 +1,15 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for
-from flask_sqlalchemy import SQLAlchemy
-from ete3 import Tree, TreeStyle
+from ete3 import Tree
+from ete3 import Tree, WebTreeApplication, NodeStyle
+#from ete3 import TreeStyle
+
+import os
+#from ete3 import TreeStyle
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
-db = SQLAlchemy(app)
 
-class Sequence(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    data = db.Column(db.String(500))
+
 
 @app.route('/')
 def home():
@@ -19,9 +19,49 @@ def home():
 def help_page():
     return render_template('help.html')
 
+############ All about trees are here ############
+# Create a TreeStyle instance to specify how the tree should be rendered
+#ts = TreeStyle()
+#ts.show_leaf_name = True
+
+# Create a WebTreeApplication instance
+def simple_layout(node):
+    node.img_style["size"] = 12
+
+web_tree_app = WebTreeApplication()
+web_tree_app.set_default_layout_fn(simple_layout)
+def change_color(node):
+    # This function changes the color of a node
+    nstyle = NodeStyle()
+    nstyle["fgcolor"] = "red"
+    node.set_style(nstyle)
+
+web_tree_app.register_action("Change color", None, change_color, None, None)
+
+flask_app = Flask(__name__)
+#############################
+
 @app.route('/database')
 def database_page():
-    return render_template('database.html')
+    # Get a dictionary of the files in each folder
+    folders = {folder: os.listdir('database/' + folder) for folder in os.listdir('database/') if os.path.isdir('database/' + folder)}
+    print('Printing folders:::')
+    print(folders)  # Debugging line
+
+    # Pass the list of files to the template
+    return render_template('database.html', folders=folders)
+
+from flask import send_from_directory
+
+@app.route('/get_file/<path:filename>')
+def get_file(filename):
+    return send_from_directory('database', filename)
+
+# @app.route('/get_file/<filename>')
+# def get_file(filename):
+#     # Read the .contree file and return its contents
+#     with open('path/to/mt_test/' + filename + '.contree', 'r') as f:
+#         return f.read()
 
 '''
 @app.route('/submit', methods=['POST'])
@@ -41,21 +81,37 @@ def submit():
     # redirect the user to the "Results" page
     return redirect(url_for('results'))
 
-@app.route('/tree')
-def tree_page():
-    # Parse the tree file
-    with open('database/mt_test/tree_file.txt', 'r') as f:
-        tree_string = f.read()
-    tree = Tree(tree_string)
+# @app.route('/tree')
+# def tree_page():
+#     # Parse the tree file
+#     with open('database/mt_test/tree_file.txt', 'r') as f:
+#         tree_string = f.read()
+#     tree = Tree(tree_string)
 
-    # Generate an image of the tree
-    ts = TreeStyle()
-    ts.show_leaf_name = True
-    tree.render("static/tree_image.png", tree_style=ts)
+#     # Generate an image of the tree
+#     ts = TreeStyle()
+#     ts.show_leaf_name = True
+#     tree.render("static/tree_image.png", tree_style=ts)
 
-    # Display the image on a webpage
-    image_url = url_for('static', filename='tree_image.png')
-    return render_template('tree.html', image_url=image_url)
+#     # Display the image on a webpage
+#     image_url = url_for('static', filename='tree_image.png')
+#     return render_template('tree.html', image_url=image_url)
+
+# @app.route('/tree')
+# def tree_page():
+#     # Parse the tree file
+#     with open('database/mt_test/group1.1_corr_keep.fa_al_trimmed.contree', 'r') as f:
+#         tree_string = f.read()
+#     tree = Tree(tree_string)
+
+#     # Generate an image of the tree
+#     ts = TreeStyle()
+#     ts.show_leaf_name = True
+#     tree.render("static/tree_image.png", tree_style=ts)
+
+#     # Display the image on a webpage
+#     image_url = url_for('static', filename='tree_image.png')
+#     return render_template('tree.html', image_url=image_url)
 
 '''
 @app.route('/submit', methods=['GET', 'POST'])

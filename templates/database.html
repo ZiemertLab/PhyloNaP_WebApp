@@ -1,4 +1,62 @@
+<!-- templates/database.html -->
 {% extends "base.html" %}
 {% block content %}
-    <p>Results: {{ results }}</p>
+<ul id="file-list">
+    {% for folder, files in folders.items() %}
+        {% for file in files %}
+            <li>
+                {{ file }}
+                <button class="show-button" data-folder="{{ folder }}" data-filename="{{ file }}">Show</button>
+            </li>
+        {% endfor %}
+    {% endfor %}
+    {% for folder in folders %}
+    <input type="radio" id="{{ folder }}" name="folder" value="{{ folder }}">
+    <label for="{{ folder }}">{{ folder }}</label>
+{% endfor %}
+    </ul>
+    <div id="tree"></div>
+
+    <img id="tree-image" src="">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <script src="{{ url_for('static', filename='js/tree_rendering.js') }}"></script>
+    <script>
+       document.querySelectorAll('.show-button').forEach(function(button) {
+    button.addEventListener('click', function() {
+        var filename = button.getAttribute('data-filename');
+        var folder = document.querySelector('input[name="folder"]:checked').value;
+
+        var height = 500;
+        var width = 500;
+        var svg = d3.select("body").append("svg")
+            .attr("width", width)
+            .attr("height", height);
+        fetch('/get_file/' + folder + '/' + filename)
+            .then(response => response.text())
+            .then(text => {
+                // Parse the Newick format text into a tree structure
+                var treeData = parseNewick(text);
+
+                // Render the tree with D3
+                renderTree(treeData);
+            })
+            .catch(error => console.error(error));
+
+
+        // // Fetch the .contree file and render it
+        // fetch('/get_file/' + folder + '/' + filename)
+        //     .then(response => response.blob())
+        //     .then(blob => {
+        //         // Process the blob here
+        //         // For example, if it's an image, you can create an image URL and set it as the src of an img element:
+        //         var imageUrl = URL.createObjectURL(blob);
+        //         document.getElementById('tree-image').src = imageUrl;
+        //     })
+        //     .catch(error => console.error(error));
+        //     // .then(response => response.json())
+        //     // .then(data => renderTree('#tree', data));
+    });
+});
+    </script>
+
 {% endblock %}
