@@ -1,5 +1,9 @@
 <!-- templates/tree.html -->
-{% extends "base.html" %}
+{% extends "database.html" %}
 {% block content %}
     <img src="{{ image_url }}" alt="Phylogenetic tree">
+    <form action="/draw_tree" method="POST">
+        <input type="hidden" name="newick_string" value="{{ newick_string }}">
+        <button type="submit">Draw Tree</button>
+    </form>
 {% endblock %}

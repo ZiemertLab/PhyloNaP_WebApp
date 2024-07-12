@@ -26,21 +26,24 @@
         var filename = button.getAttribute('data-filename');
         var folder = document.querySelector('input[name="folder"]:checked').value;
 
-        var height = 500;
-        var width = 500;
-        var svg = d3.select("body").append("svg")
-            .attr("width", width)
-            .attr("height", height);
         fetch('/get_file/' + folder + '/' + filename)
-            .then(response => response.text())
-            .then(text => {
-                // Parse the Newick format text into a tree structure
-                var treeData = parseNewick(text);
-
-                // Render the tree with D3
-                renderTree(treeData);
-            })
-            .catch(error => console.error(error));
+        .then(response => response.text())
+        .then(newick_string => {
+            // Send the Newick string to the /tree route
+            return fetch('/tree', {
+                method: 'POST',
+                body: newick_string,
+                headers: {
+                    'Content-Type': 'text/plain'
+                }
+            });
+        })
+        .then(response => response.text())
+        .then(tree_html => {
+            // Insert the rendered tree HTML into the page
+            document.getElementById('tree_container').innerHTML = tree_html;
+        })
+        .catch(error => console.error(error));
 
 
         // // Fetch the .contree file and render it
