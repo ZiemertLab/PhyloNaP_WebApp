@@ -1,0 +1,25 @@
+{% extends "database.html" %}
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Phylogenetic Tree</title>
+    <!-- Include the necessary scripts here -->
+    <script src="https://unpkg.com/react/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone/babel.min.js"></script>
+    <script src="/Users/sasha/Desktop/tubingen/PhyloNaP/static/js/phylotree.js"></script>
+</head>
+<body>
+    <div id="tree"></div>
+
+    <script type="text/babel">
+        // Render the Phylotree component
+        ReactDOM.render(
+            <Phylotree />,
+            document.getElementById('tree')
+        );
+    </script>
+</body>
+</html>
+{% endblock %}

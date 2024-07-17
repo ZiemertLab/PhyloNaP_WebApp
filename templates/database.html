@@ -18,48 +18,29 @@
     <div id="tree"></div>
 
     <img id="tree-image" src="">
-    <script src="https://d3js.org/d3.v3.min.js"></script>
-    <script src="{{ url_for('static', filename='js/tree_rendering.js') }}"></script>
     <script>
        document.querySelectorAll('.show-button').forEach(function(button) {
     button.addEventListener('click', function() {
+
         var filename = button.getAttribute('data-filename');
         var folder = document.querySelector('input[name="folder"]:checked').value;
 
-        fetch('/get_file/' + folder + '/' + filename)
-        .then(response => response.text())
-        .then(newick_string => {
-            // Send the Newick string to the /tree route
-            return fetch('/tree', {
-                method: 'POST',
-                body: newick_string,
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            });
-        })
-        .then(response => response.text())
-        .then(tree_html => {
-            // Insert the rendered tree HTML into the page
-            document.getElementById('tree_container').innerHTML = tree_html;
-        })
-        .catch(error => console.error(error));
+        fetch('/tree', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'folder': folder,
+                'filename': filename
+            }),
+            })
+            .then(response => response.text())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
 
-
-        // // Fetch the .contree file and render it
-        // fetch('/get_file/' + folder + '/' + filename)
-        //     .then(response => response.blob())
-        //     .then(blob => {
-        //         // Process the blob here
-        //         // For example, if it's an image, you can create an image URL and set it as the src of an img element:
-        //         var imageUrl = URL.createObjectURL(blob);
-        //         document.getElementById('tree-image').src = imageUrl;
-        //     })
-        //     .catch(error => console.error(error));
-        //     // .then(response => response.json())
-        //     // .then(data => renderTree('#tree', data));
+        });
     });
-});
     </script>
 
 {% endblock %}

@@ -1,40 +1,22 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, Response, session
+from flask import send_from_directory
 from ete3 import Tree
 from ete3 import Tree, WebTreeApplication, NodeStyle
 from ete3 import TreeStyle
-
+from WSGIMiddleware import WSGIMiddleware
 import os
+import logging
 #from ete3 import TreeStyle
 
+ts = TreeStyle()
 
-class WSGIMiddleware:
-    def __init__(self, flask_app):
-        self.flask_app = flask_app
-
-    def __call__(self, environ, start_response):
-        if environ['PATH_INFO'].startswith('/tree'):
-            # Get the Newick string from the session
-            newick_string = session.get('newick_string')
-
-            if newick_string is not None:
-                # Create a tree from the Newick string
-                t = Tree(newick_string)
-
-                # Create a WebTreeApplication instance
-                web_tree_app = WebTreeApplication(t)
-
-                # Pass the request to the WebTreeApplication
-                return web_tree_app(environ, start_response)
-            else:
-                # Handle the case where the Newick string is not in the session
-                return self.flask_app(environ, start_response)
-        else:
-            return self.flask_app(environ, start_response)
 
 
 flask_app = Flask(__name__)
+flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
 app = WSGIMiddleware(flask_app)
+
 
 @app.route('/')
 def home():
@@ -46,7 +28,7 @@ def help_page():
 
 ############ All about trees are here ############
 # Create a TreeStyle instance to specify how the tree should be rendered
-#ts = TreeStyle()
+
 #ts.show_leaf_name = True
 
 
@@ -58,9 +40,7 @@ def change_color(node):
     nstyle["fgcolor"] = "red"
     node.set_style(nstyle)
 
-web_tree_app.register_action("Change color", None, change_color, None, None)
 
-flask_app = Flask(__name__)
 #############################
 
 @app.route('/database')
@@ -82,15 +62,17 @@ def draw_tree(t):
 
 
 @app.route('/tree', methods=['POST'])
-def setdata():
-    session['newick_string'] = request.form['newick_string']
+def tree_renderer():
+    logging.info(f"Received form data: {request.form}")
+    app.wsgi_app = WSGIMiddleware(app.wsgi_app)
     return 'Data set'
-def tree_renderer(tree, treeid, application):
-   html = application._get_tree_img(treeid = treeid)
-   return html
 
+@app.route('/phylotree_render', methods=['POST'])
+def tree_renderer():
+    logging.info(f"Received form data: {request.form}")
+    app.wsgi_app = WSGIMiddleware(app.wsgi_app)
+    return 'Data set'
 
-from flask import send_from_directory
 
 @app.route('/get_file/<path:filename>')
 def get_file(filename):
