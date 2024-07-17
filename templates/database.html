@@ -1,46 +1,53 @@
 <!-- templates/database.html -->
 {% extends "base.html" %}
 {% block content %}
-<ul id="file-list">
-    {% for folder, files in folders.items() %}
-        {% for file in files %}
-            <li>
-                {{ file }}
-                <button class="show-button" data-folder="{{ folder }}" data-filename="{{ file }}">Show</button>
-            </li>
+<form method="post" action="/phylotree_render">
+    <ul id="file-list">
+        {% for folder, files in folders.items() %}
+
+        <input type="radio" id="{{ folder }}" name="folder" value="{{ folder }}">
+        <label for="{{ folder }}">{{ folder }}</label>
+
+            {% for file in files %}
+                <li>
+                    <label for="{{ file }}">{{ file }}</label>
+                    <input type="radio" id="{{ file }}" name="file" value="{{ file }}">
+                    <button class="show-button" type="submit">Show</button>
+
+
+                    <label for="{{ nwk }}">{{ nwk }}</label>
+                    <input type="radio" id="{{nwk}}" name="nwk" value="{{nwk}}">
+                    <input type="hidden" id="nwk-file" value="{{ url_for('get_file', filename=nwk) }}">
+
+                </li>
+            {% endfor %}
         {% endfor %}
-    {% endfor %}
-    {% for folder in folders %}
-    <input type="radio" id="{{ folder }}" name="folder" value="{{ folder }}">
-    <label for="{{ folder }}">{{ folder }}</label>
-{% endfor %}
     </ul>
-    <div id="tree"></div>
+</form>
+<div id="tree"></div>
 
-    <img id="tree-image" src="">
-    <script>
-       document.querySelectorAll('.show-button').forEach(function(button) {
-    button.addEventListener('click', function() {
+<img id="tree-image" src="">
+<script>
+    document.querySelectorAll('.show-button').forEach(function(button) {
+        button.addEventListener('click', function() {
 
-        var filename = button.getAttribute('data-filename');
-        var folder = document.querySelector('input[name="folder"]:checked').value;
+            var filename = button.getAttribute('data-filename');
+            var folder = document.querySelector('input[name="folder"]:checked').value;
 
-        fetch('/tree', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                'folder': folder,
-                'filename': filename
-            }),
+            fetch('/phylotree_render', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'folder': folder,
+                    'filename': filename
+                }),
             })
-            .then(response => response.text())
-            .then(data => console.log(data))
-            .catch(error => console.error('Error:', error));
 
         });
     });
-    </script>
+</script>
+
 
 {% endblock %}

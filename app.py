@@ -1,21 +1,22 @@
 # app.py
 from flask import Flask, render_template, request, redirect, url_for, Response, session
 from flask import send_from_directory
-from ete3 import Tree
-from ete3 import Tree, WebTreeApplication, NodeStyle
-from ete3 import TreeStyle
-from WSGIMiddleware import WSGIMiddleware
+#from ete3 import Tree
+#from ete3 import Tree, WebTreeApplication, NodeStyle
+#from ete3 import TreeStyle
+#from WSGIMiddleware import WSGIMiddleware
 import os
 import logging
 #from ete3 import TreeStyle
 
-ts = TreeStyle()
+#ts = TreeStyle()
 
 
 
 flask_app = Flask(__name__)
 flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
-app = WSGIMiddleware(flask_app)
+app=flask_app
+#app = WSGIMiddleware(flask_app)
 
 
 @app.route('/')
@@ -52,37 +53,43 @@ def database_page():
 
     # Pass the list of files to the template
     return render_template('database.html', folders=folders)
-def draw_tree(t):
-    # Create a tree
-    # Create a WebTreeApplication instance
-    web_tree_app = WebTreeApplication(t)
-    # Render the tree
-    tree_html = web_tree_app.render()
-    return render_template('database.html', tree_html=tree_html)
+# def draw_tree(t):
+#     # Create a tree
+#     # Create a WebTreeApplication instance
+#     web_tree_app = WebTreeApplication(t)
+#     # Render the tree
+#     tree_html = web_tree_app.render()
+#     return render_template('database.html', tree_html=tree_html)
 
 
-@app.route('/tree', methods=['POST'])
+# @app.route('/tree', methods=['POST'])
+# def tree_renderer():
+#     logging.info(f"Received form data: {request.form}")
+#     app.wsgi_app = WSGIMiddleware(app.wsgi_app)
+#     return 'Data set'
+
+@app.route('/phylotree_render', methods=['POST','GET'])
 def tree_renderer():
     logging.info(f"Received form data: {request.form}")
-    app.wsgi_app = WSGIMiddleware(app.wsgi_app)
-    return 'Data set'
+    folder = request.form['folder']
+    file = request.form['file']
 
-@app.route('/phylotree_render', methods=['POST'])
-def tree_renderer():
-    logging.info(f"Received form data: {request.form}")
-    app.wsgi_app = WSGIMiddleware(app.wsgi_app)
-    return 'Data set'
+    with open(os.path.join('database',folder,file), 'r') as f:
+        content = f.read()
+    return render_template('phylotree_render.html', content = content)
 
 
-@app.route('/get_file/<path:filename>')
-def get_file(filename):
-    return send_from_directory('database', filename)
+@app.route('/get_file',methods=['POST','GET'])
+def get_file():
+    folder=request.form['folder']
+    file=request.form['file']
+    return send_from_directory('database', os.path.join(folder,file))
 
 # @app.route('/get_file/<filename>')
-# def get_file(filename):
-#     # Read the .contree file and return its contents
-#     with open('path/to/mt_test/' + filename + '.contree', 'r') as f:
-#         return f.read()
+def get_file(filename):
+    # Read the .contree file and return its contents
+    with open('path/to/mt_test/' + filename + '.contree', 'r') as f:
+        return f.read()
 
 '''
 @app.route('/submit', methods=['POST'])
@@ -91,6 +98,10 @@ def submit_sequence():
     # Compare sequence with database and calculate results
     return render_template('results.html', results=results)
 '''
+@app.route('/tutorial',methods=['POST','GET'])
+def tutorial():
+    return render_template('tutorial.html')
+
 @app.route('/results')
 def results():
     return render_template('results.html')
