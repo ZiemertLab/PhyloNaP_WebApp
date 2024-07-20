@@ -1,6 +1,3 @@
-[submodule "phylotree.js"]
-	path = phylotree.js
-	url = https://github.com/veg/phylotree.js.git
 [submodule "static/phylotree.js"]
 	path = static/phylotree.js
 	url = https://github.com/veg/phylotree.js.git

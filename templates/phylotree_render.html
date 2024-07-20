@@ -43,45 +43,82 @@
     <div id="tree"></div>
 
     <script async="true">
-        const height=500;
-        const width=500;
-        const nwk = `{{ content }}`
-        // const nwk = `(((EELA:0.150276,CONGERA:0.213019):0.230956,(EELB:0.263487,CONGERB:0.202633):0.246917):0.094785,((CAVEFISH:0.451027,(GOLDFISH:0.340495,ZEBRAFISH:0.390163):0.220565):0.067778,((((((NSAM:0.008113,NARG:0.014065):0.052991,SPUN:0.061003,(SMIC:0.027806,SDIA:0.015298,SXAN:0.046873):0.046977):0.009822,(NAUR:0.081298,(SSPI:0.023876,STIE:0.013652):0.058179):0.091775):0.073346,(MVIO:0.012271,MBER:0.039798):0.178835):0.147992,((BFNKILLIFISH:0.317455,(ONIL:0.029217,XCAU:0.084388):0.201166):0.055908,THORNYHEAD:0.252481):0.061905):0.157214,LAMPFISH:0.717196,((SCABBARDA:0.189684,SCABBARDB:0.362015):0.282263,((VIPERFISH:0.318217,BLACKDRAGON:0.109912):0.123642,LOOSEJAW:0.3971):0.287152):0.140663):0.206729):0.222485,(COELACANTH:0.558103,((CLAWEDFROG:0.441842,SALAMANDER:0.299607):0.135307,((CHAMELEON:0.771665,((PIGEON:0.150909,CHICKEN:0.172733):0.082163,ZEBRAFINCH:0.099172):0.272338):0.014055,((BOVINE:0.167569,DOLPHIN:0.15745):0.104783,ELEPHANT:0.166557):0.367205):0.050892):0.114731):0.295021)`;
+        const height = 500;
+        const width = 500;
+        const nwk = `{{ content }}`;
 
         const tree = new phylotree.phylotree(nwk);
 
-        // render bootstrap values
-        bootstrapNodes = tree.getInternals()
+        // Render bootstrap values
+        bootstrapNodes = tree.getInternals();
         colorScale = d3.scaleSequential(d3.interpolateReds);
         colorNodesByName = function (element, data) {
-        if(_.includes(bootstrapNodes, data)) {
-          element.style ("stroke", colorScale(parseFloat(data.data.name)/100));
-        }
-    };
-
-        //trying to add images here
-        let leafNodes = tree.getTips();
-        
-        let images = {
-            A: "path/to/imageA.png",
-            B: "path/to/imageB.png",
-            C: "path/to/imageC.png",
-            D: "path/to/imageD.png"
+          if (_.includes(bootstrapNodes, data)) {
+            element.style("stroke", colorScale(parseFloat(data.data.name) / 100));
+          }
         };
-        leafNodes.forEach(node => {
+
+        // Define the images and their corresponding node IDs
+        let images = {
+          "BGC0001061_ACN64833.1": "static/pictures/1.jpg",
+          "BGC0000247_CAK50791.1": "static/pictures/5.jpg",
+          "BGC0000269_ADE34508.1": "static/pictures/3.jpg",
+          "BGC0000230_AAM33664.1": "static/pictures/4.jpg"
+        };
+
+        // Assign the images to the leaf nodes
+        tree.getTips().forEach(node => {
+          if (images.hasOwnProperty(node.name)) {
             tree.assignAttributes({ [node.name]: { image: images[node.name] } });
+          }
         });
-        // rendering the tree
-        renderedTree = tree.render({
-            container: '#tree',
-            height:height, 
-            width:width,
-            //'left-right-spacing': 'fit-to-size', 
-            'align-tips':false,
-            'internal-names': true,
-            'zoom':true,
-            'node-styler': colorNodesByName
-            });
+
+        // Render the tree
+        const renderedTree = tree.render({
+          container: '#tree',
+          height: height,
+          width: width,
+          'align-tips': false,
+          'internal-names': true,
+          'zoom': true,
+          'node-styler': colorNodesByName
+        });
+
+        // Add images after the tree has been rendered
+        setTimeout(function() {
+          // Select the nodes where you want to add the image
+          let nodes = d3.selectAll('.node').filter(d => images.hasOwnProperty(d.data.name));
+
+          // Append an image to these nodes
+          nodes.append("image")
+            .attr('xlink:href', function (d) { return images[d.data.name]; })
+            .attr('x', 200)
+            .attr('y', -50)
+            .attr('width', 100)
+            .attr('height', 100);
+        }, 0);
+            // Render the tree from chatgpt
+        //let treeContainer = d3.select("#tree-container");
+
+        //treeContainer.call(tree.render);
+
+        // Add images next to leaf nodes
+        // tree.selectAll(".node")
+        //     .filter(d => tree.isLeafNode(d))
+        //     .append("image")
+        //     .attr("xlink:href", d => d.annotations.image)
+        //     .attr("x", 8)  // Adjust position as needed
+        //     .attr("y", -8) // Adjust position as needed
+        //     .attr("width", 16)  // Adjust size as needed
+        //     .attr("height", 16) // Adjust size as needed
+        //     .attr("class", "leaf-image");
+
+
+
+
+
+
+
         // const renderedTree = tree.render({
         //     container: '#tree',
         //     height:500, 

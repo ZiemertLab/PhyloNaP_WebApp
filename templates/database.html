@@ -26,25 +26,16 @@
 </form>
 <div id="tree"></div>
 
-<img id="tree-image" src="">
+<img id="tree-image" src="static/1.jpg">
 <script>
+
     document.querySelectorAll('.show-button').forEach(function(button) {
         button.addEventListener('click', function() {
-
             var filename = button.getAttribute('data-filename');
             var folder = document.querySelector('input[name="folder"]:checked').value;
+            
 
-            fetch('/phylotree_render', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    'folder': folder,
-                    'filename': filename
-                }),
-            })
-
+           
         });
     });
 </script>

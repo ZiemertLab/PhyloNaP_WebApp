@@ -83,6 +83,7 @@ def tree_renderer():
 def get_file():
     folder=request.form['folder']
     file=request.form['file']
+    pictures=os.listdir('database/'+folder+'/pictures')
     return send_from_directory('database', os.path.join(folder,file))
 
 # @app.route('/get_file/<filename>')
