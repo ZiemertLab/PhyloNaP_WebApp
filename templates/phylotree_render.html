@@ -41,8 +41,9 @@
     <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
 
     <div id="tree"></div>
-
-    <script async="true">
+    <div id="tree-container" nwk_data="{{ content }}"></div>
+    <script src="static/js/tree_rendering.js" async="true"></script>
+    <!-- <script async="true">
         const height = 500;
         const width = 500;
         const nwk = `{{ content }}`;
@@ -96,7 +97,14 @@
             .attr('y', -50)
             .attr('width', 100)
             .attr('height', 100);
-        }, 0);
+
+          nodes.append("line")
+            .attr("x1", 0)
+            .attr("y1", 0)
+            .attr("x2", 200)
+            .attr("y2", 0)
+            .attr("stroke", "black");
+          }, 0);
             // Render the tree from chatgpt
         //let treeContainer = d3.select("#tree-container");
 
@@ -129,5 +137,5 @@
 
         // $(tree.display.container).empty();
         $(tree.display.container).html(tree.display.show());
-    </script>
+    </script> -->
 {% endblock %}
