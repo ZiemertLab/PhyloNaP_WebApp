@@ -1,0 +1,18 @@
+{
+    "superfamilies": [
+        {
+            "name": "SAM dependent methyltransferase",
+            "datasets": [
+                {
+                    "name": "mt_test",
+                    "tree": "database/mt_test/group1.1.nwk",
+                    "metadata": "database/mt_test/group1.1.tsv"
+                }
+            ]
+        },
+        {
+            "name": "P450",
+            "datasets": []
+        }
+    ]
+}
