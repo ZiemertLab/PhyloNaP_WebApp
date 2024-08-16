@@ -79,6 +79,13 @@ console.log(nwk);
 const tree = new phylotree.phylotree(nwk);
 // Compute the layout of the tree
 
+leaves=tree.getTips();
+leaves.forEach(leaf => {
+  if (leaf.name === "BGC0001061_ACN64833.1") {
+    leaf.name = "BGC0001061_ACN64833.1";
+  }
+});
+console.log(leaves);
 //leaves=tree.getLeaves();
 console.log("printing leaves");
 
