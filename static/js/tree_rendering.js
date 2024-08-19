@@ -72,9 +72,14 @@ const height = 500;
 const width = 500;
 //const nwk = `{{ content }}`;
 var nwk = document.getElementById('tree-container').getAttribute('nwk_data');
+//var metadata = document.getElementById('tree-container').getAttribute('metadata');
+var metadata = JSON.parse(document.getElementById('metadata-container').getAttribute('metadata'));
 
 console.log("printing nwk");
 console.log(nwk);
+
+console.log("printing metadata");
+console.log(metadata);
 
 const tree = new phylotree.phylotree(nwk);
 // Compute the layout of the tree
@@ -180,6 +185,107 @@ setTimeout(function() {
 //     width:500,
 //     'left-right-spacing': 'fit-to-size', 
 //     'top-bottom-spacing': 'fit-to-size'
+// });
+
+
+
+// function renderMetadata(columnName) {
+//   // Find the column in the metadata
+//   var column = metadata.find(function(column) {
+//       return column.name === columnName;
+//   });
+//   console.log('column:', column); 
+//   console.log('metadata:', metadata); 
+//   // If the column was found, render its values
+//   if (column) {
+//       tree.getTips().forEach(function(node) {
+//           // Find the row in the column for this node
+//           console.log("Debugging message");
+//           var row = column.values.find(function(row) {
+//               return row.id === node.name;
+//           });
+//           console.log('row:', row);
+//           // If the row was found, render its value
+//           if (row) {
+//               node.text = row.value;
+//           }
+//       });
+
+//       // Re-render the tree
+//       tree.render();
+//   }
+// }
+
+function renderMetadata(columnName){
+  let annot = metadata.reduce((obj, item) => {
+    obj[item["ID"]] = item[columnName];
+    return obj;
+  }, {});
+  console.log('metadata:', columnName, annot);
+  setTimeout(function() {
+    // Select the nodes where you want to add the image
+    // let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+    // nodes.append("text")
+    // .text(function (d) { return annot[d.data.name]; }) // Use the text method here
+    // .attr('x', 400)
+    // .attr('y', 0);
+    let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+    nodes.each(function(d) {
+      let text = annot[d.data.name];
+      if (text) { // Check if text is not null
+        let textElement = d3.select(this).append('text').attr('x', 400).attr('y', 0).attr('class', columnName);
+    
+        if (text.length > 80) {
+          let firstLine = text.substring(0, 80);
+          let secondLine = text.substring(80);
+    
+          textElement.append('tspan').text(firstLine);
+          textElement.append('tspan').attr('x', 400).attr('dy', '1em').text(secondLine);
+        } else {
+          textElement.text(text);
+        }
+      }
+    });
+  }, 0);
+
+}
+function hideMetadata(columnName){
+  // Remove the text elements associated with this columnName
+  d3.selectAll(`text.${columnName}`).remove();
+}
+// Check if the buttons exist and the event listeners are being attached
+// console.log(document.getElementById('enzyme-function-button'));
+// console.log(document.getElementById('species-button'));
+// console.log(document.getElementById('biosyn-class-button'));
+
+['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
+  let button = document.getElementById(id);
+  button.dataset.active = 'false'; // Add data-active attribute
+
+  button.addEventListener('click', function() {
+    if (button.dataset.active === 'false') {
+      // If the button is not active, display the content and set the button to active
+      renderMetadata(id);
+      button.dataset.active = 'true';
+    } else {
+      // If the button is active, hide the content and set the button to inactive
+      hideMetadata(id);
+      button.dataset.active = 'false';
+    }
+  });
+});
+
+// display metadata
+// document.getElementById('enzyme-function-button').addEventListener('click', function() {
+//   renderMetadata('Enzyme_function');
+// });
+
+// document.getElementById('species-button').addEventListener('click', function() {
+//   renderMetadata('Species');
+// });
+
+// document.getElementById('biosyn-class-button').addEventListener('click', function() {
+//   renderMetadata('biosyn_class');
 // });
 
 // $(tree.display.container).empty();

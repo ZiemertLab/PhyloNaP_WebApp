@@ -3,41 +3,70 @@
 {% block content %}
 <form method="post" action="/phylotree_render">
     <ul id="file-list">
-        {% for folder, files in folders.items() %}
 
-        <input type="radio" id="{{ folder }}" name="folder" value="{{ folder }}">
-        <label for="{{ folder }}">{{ folder }}</label>
+        {% for superfamily in superfamilies %}
+            <input type="radio" id="{{ superfamily.name }}" name="superfamily" value="{{ superfamily.name }}">
+            <label for="{{ superfamily.name }}">{{ superfamily.name }}</label>
+            <ul> <!-- Add missing <ul> tag here -->
+                {% for dataset in superfamily.datasets %}
+                    <li>
+                        <label for="{{ dataset.name }}">{{ dataset.name }}</label>
+                        <input type="radio" id="{{ dataset.name }}" name="dataset" value="{{ dataset.name }}">
 
-            {% for file in files %}
-                <li>
-                    <label for="{{ file }}">{{ file }}</label>
-                    <input type="radio" id="{{ file }}" name="file" value="{{ file }}">
-                    <button class="show-button" type="submit">Show</button>
-
-
-                    <label for="{{ nwk }}">{{ nwk }}</label>
-                    <input type="radio" id="{{nwk}}" name="nwk" value="{{nwk}}">
-                    <input type="hidden" id="nwk-file" value="{{ url_for('get_file', filename=nwk) }}">
-
-                </li>
-            {% endfor %}
+                        <input type="hidden" id="tree-file" value="{{ url_for('get_file', filename=dataset.tree) }}">
+                        <input type="hidden" id="metadata-file" value="{{ url_for('get_file', filename=dataset.metadata) }}">
+                        <button class="show-button" type="button" data-tree="{{ dataset.tree }}" 
+                        data-metadata="{{ dataset.metadata }}">Show</button>
+                        <!-- <button class="show-button" type="button" data-tree="{{ url_for('get_file', filename=dataset.tree) }}" 
+                        data-metadata="{{ url_for('get_file', filename=dataset.metadata) }}">Show</button> -->
+                    </li>
+                {% endfor %}
+            </ul> <!-- Add missing </ul> tag here -->
         {% endfor %}
     </ul>
+
 </form>
 <div id="tree"></div>
 
-<img id="tree-image" src="static/1.jpg">
+<!-- <img id="tree-image" src="static/1.jpg"> -->
 <script>
+    // console.log({{ superfamilies | tojson }});
 
-    document.querySelectorAll('.show-button').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var filename = button.getAttribute('data-filename');
-            var folder = document.querySelector('input[name="folder"]:checked').value;
+    // document.querySelectorAll('.show-button').forEach(function(button) {
+    //     button.addEventListener('click', function() {
+    //         var filename = button.getAttribute('data-filename');
+    //         var folder = document.querySelector('input[name="folder"]:checked').value;
             
 
            
+    //     });
+    // });
+    document.querySelectorAll('.show-button').forEach(function(button) {
+        button.addEventListener('click', function() {
+            var treeFile = button.getAttribute('data-tree');
+            var metadataFile = button.getAttribute('data-metadata');
+            // window.location.href = '/phylotree_render?filename=' + encodeURIComponent(treeFile);
+            window.location.href = '/phylotree_render?treefile=' + encodeURIComponent(treeFile) + '&metadatafile=' + encodeURIComponent(metadataFile);
         });
     });
+    // document.querySelectorAll('.show-button').forEach(function(button) {
+    //     button.addEventListener('click', function() {
+    //         var treeUrl = button.getAttribute('data-tree');
+    //         var metadataUrl = button.getAttribute('data-metadata');
+
+    //         fetch(treeUrl)
+    //             .then(response => response.text())
+    //             .then(data => {
+    //                 console.log('Tree file content:', data);
+    //             });
+
+    //         fetch(metadataUrl)
+    //             .then(response => response.text())
+    //             .then(data => {
+    //                 console.log('Metadata file content:', data);
+    //             });
+    //     });
+    // });
 </script>
 
 

@@ -5,8 +5,8 @@
             "datasets": [
                 {
                     "name": "mt_test",
-                    "tree": "database/mt_test/group1.1.nwk",
-                    "metadata": "database/mt_test/group1.1.tsv"
+                    "tree": "mt_test/group1.1.nwk",
+                    "metadata": "mt_test/group1.1.tsv"
                 }
             ]
         },

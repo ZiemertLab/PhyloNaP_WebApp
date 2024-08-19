@@ -1,5 +1,23 @@
 {% extends "database.html" %}
 {% block content %}
+<style>
+  .no-overlap {
+    position: relative;
+    z-index: 1;
+  }
+  #tree-container {
+      width: 100%;
+    } 
+</style>
+<div> <!-- Remove top margin -->
+  <div class="d-flex justify-content-end">
+      <div style="background-color: white; padding: 10px; margin-top: 1rem;"> <!-- Add background color, padding and top margin -->
+          <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
+          <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
+          <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
+      </div>
+  </div>
+</div>
 <h1>{{ file }} </h1>
 
     <!-- Latest compiled and minified CSS -->
@@ -41,7 +59,14 @@
     <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
 
     <div id="tree"></div>
-    <div id="tree-container" nwk_data="{{ content }}"></div>
+    <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
+    <div id="metadata-container" metadata="{{ metadata }}"></div>
+
+    <script>
+      const content = "{{ content }}";
+      console.log("phylotree_render.html content:");
+      console.log(content);
+    </script>
     <script src="static/js/tree_rendering.js" async="true"></script>
     <!-- <script async="true">
         const height = 500;
