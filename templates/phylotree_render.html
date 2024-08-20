@@ -1,5 +1,23 @@
 {% extends "database.html" %}
 {% block content %}
+<head>
+  <!-- Your existing head content... -->
+
+  <style>
+    #enlarged-image-container {
+      position: fixed;
+      right: -140px;
+      top: 80%;
+      transform: translateY(-50%);
+      width: 50%; /* Adjust as needed */
+    }
+
+    #enlarged-image {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
 <style>
   .no-overlap {
     position: relative;
@@ -9,14 +27,99 @@
       width: 100%;
     } 
 </style>
-<div> <!-- Remove top margin -->
-  <div class="d-flex justify-content-end">
-      <div style="background-color: white; padding: 10px; margin-top: 1rem;"> <!-- Add background color, padding and top margin -->
-          <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
-          <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
-          <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
-      </div>
+<div class="d-flex align-items-center justify-content-between"> 
+  <div class="btn-group" role="group">
+    <button
+    type="button"
+    class="btn btn-light btn-sm"
+    data-direction="vertical"
+    data-amount="1"
+    title="Expand vertical spacing"
+  >
+    <i class="fa fa-arrows-v"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    data-direction="vertical"
+    data-amount="-1"
+    title="Compress vertical spacing"
+  >
+    <i class="fa  fa-compress fa-rotate-135"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    data-direction="horizontal"
+    data-amount="1"
+    title="Expand horizonal spacing"
+  >
+    <i class="fa fa-arrows-h"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    data-direction="horizontal"
+    data-amount="-1"
+    title="Compress horizonal spacing"
+  >
+    <i class="fa  fa-compress fa-rotate-45"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    id="sort_ascending"
+    title="Sort deepest clades to the bototm"
+  >
+    <i class="fa fa-sort-amount-asc"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    id="sort_descending"
+    title="Sort deepsest clades to the top"
+  >
+    <i class="fa fa-sort-amount-desc"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    id="sort_original"
+    title="Restore original order"
+  >
+    <i class="fa fa-sort"></i>
+  </button>
+  <button
+    type="button"
+    class="btn btn-light btn-sm"
+    id="save_image"
+    title="Save image"
+  >
+    <button
+      class="btn btn-light btn-sm active phylotree-align-toggler"
+      data-align="left"
+    >
+      <i class="fa fa-align-left"></i>
+    </button>
+    <button
+      class="btn btn-light btn-sm phylotree-align-toggler"
+      data-align="right"
+    >
+      <i class="fa fa-align-right"></i>
+    </button>
   </div>
+
+  <!-- <div class="d-flex justify-content-end"> -->
+    <div style="background-color: white; padding: 10px; margin-top: 1rem;"> <!-- Add background color, padding and top margin -->
+        <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
+        <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
+        <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
+        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+    </div>
+</div>
+<div id="enlarged-image-container">
+  <!-- <img id="enlarged-image" src="" alt="Enlarged image" /> -->
+  <img id="enlarged-image" src="" />
 </div>
 <h1>{{ file }} </h1>
 
