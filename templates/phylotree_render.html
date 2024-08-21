@@ -2,8 +2,68 @@
 {% block content %}
 <head>
   <!-- Your existing head content... -->
+      <!-- Latest compiled and minified CSS -->
+      <script src="https://code.jquery.com/jquery.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  
+      <link
+        rel="stylesheet"
+        href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous"
+      />
+      <link
+        href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
+        rel="stylesheet"
+      />
+  
+      <!-- Optional theme -->
+      <link
+        rel="stylesheet"
+        href="//stackpath.bootstrapcdn.com/bootswatch/4.1.1/spacelab/bootstrap.min.css"
+      />
+     <!-- Latest compiled and minified JavaScript -->
+     <script
+     src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+     integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+     crossorigin="anonymous" defer
+   ></script>
+   <script
+     src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+     integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+     crossorigin="anonymous" defer
+   ></script>
+
+   <script src="//d3js.org/d3.v6.js" defer></script>
+   <script src="/static/js/phylotree.js/dist/phylotree.js" defer></script>
+
+   <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
 
   <style>
+    
+    body, html {
+      background-color: #D8BFD8;
+      margin: 0;
+      padding: 0;
+    }
+    .layout {
+      display: flex;
+      width: 100%; /* Use full viewport width */
+      height: 100vh; /* Use full viewport height */
+    }
+
+    .tree {
+      flex: 4; /* Take up 1 part of the available space */
+      background-color: #fff; /* White background */
+      overflow: auto; /* Add scrollbars if necessary */
+    }
+
+    .details {
+      flex: 1; /* Take up 2 parts of the available space */
+      background-color: #ccc; /* Grey background */
+      overflow: auto; /* Add scrollbars if necessary */
+    }
+
     #enlarged-image-container {
       position: fixed;
       right: -140px;
@@ -16,10 +76,7 @@
       width: 100%;
       height: auto;
     }
-  </style>
-</head>
-<style>
-  .no-overlap {
+    .no-overlap {
     position: relative;
     z-index: 1;
   }
@@ -31,230 +88,121 @@
       /* overflow: auto;  */
 
     } 
-</style>
-<div class="d-flex align-items-center justify-content-between"> 
-  <div class="btn-group" role="group">
-    <button
-    type="button"
-    class="btn btn-light btn-sm"
-    data-direction="vertical"
-    data-amount="1"
-    title="Expand vertical spacing"
-  >
-    <i class="fa fa-arrows-v"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    data-direction="vertical"
-    data-amount="-1"
-    title="Compress vertical spacing"
-  >
-    <i class="fa  fa-compress fa-rotate-135"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    data-direction="horizontal"
-    data-amount="1"
-    title="Expand horizonal spacing"
-  >
-    <i class="fa fa-arrows-h"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    data-direction="horizontal"
-    data-amount="-1"
-    title="Compress horizonal spacing"
-  >
-    <i class="fa  fa-compress fa-rotate-45"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    id="sort_ascending"
-    title="Sort deepest clades to the bototm"
-  >
-    <i class="fa fa-sort-amount-asc"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    id="sort_descending"
-    title="Sort deepsest clades to the top"
-  >
-    <i class="fa fa-sort-amount-desc"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    id="sort_original"
-    title="Restore original order"
-  >
-    <i class="fa fa-sort"></i>
-  </button>
-  <button
-    type="button"
-    class="btn btn-light btn-sm"
-    id="save_image"
-    title="Save image"
-  >
-    <button
-      class="btn btn-light btn-sm active phylotree-align-toggler"
-      data-align="left"
-    >
-      <i class="fa fa-align-left"></i>
-    </button>
-    <button
-      class="btn btn-light btn-sm phylotree-align-toggler"
-      data-align="right"
-    >
-      <i class="fa fa-align-right"></i>
-    </button>
-  </div>
-
-  <!-- <div class="d-flex justify-content-end"> -->
-  <div style="display: flex; justify-content: flex-end;">
-    <div style="background-color: white; padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
-        <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
-        <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
-        <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
-        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+  </style>
+</head>
+<div class="layout">
+  <div class="tree">
+      <div class="d-flex align-items-center justify-content-between"> 
+      <div class="btn-group" role="group">
+        <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="vertical"
+        data-amount="1"
+        title="Expand vertical spacing"
+      >
+        <i class="fa fa-arrows-v"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="vertical"
+        data-amount="-1"
+        title="Compress vertical spacing"
+      >
+        <i class="fa  fa-compress fa-rotate-135"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="horizontal"
+        data-amount="1"
+        title="Expand horizonal spacing"
+      >
+        <i class="fa fa-arrows-h"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="horizontal"
+        data-amount="-1"
+        title="Compress horizonal spacing"
+      >
+        <i class="fa  fa-compress fa-rotate-45"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_ascending"
+        title="Sort deepest clades to the bototm"
+      >
+        <i class="fa fa-sort-amount-asc"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_descending"
+        title="Sort deepsest clades to the top"
+      >
+        <i class="fa fa-sort-amount-desc"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_original"
+        title="Restore original order"
+      >
+        <i class="fa fa-sort"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="save_image"
+        title="Save image"
+      >
+      </button>
+        <button
+          class="btn btn-light btn-sm active phylotree-align-toggler"
+          data-align="left"
+        >
+          <i class="fa fa-align-left"></i>
+        </button>
+        <button
+          class="btn btn-light btn-sm phylotree-align-toggler"
+          data-align="right"
+        >
+          <i class="fa fa-align-right"></i>
+        </button>
+      </div>
     </div>
-    </div>
-</div>
-<div id="enlarged-image-container">
-  <!-- <img id="enlarged-image" src="" alt="Enlarged image" /> -->
-  <img id="enlarged-image" src="" />
-</div>
-<h1>{{ file }} </h1>
+    
 
-    <!-- Latest compiled and minified CSS -->
-    <script src="https://code.jquery.com/jquery.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
-
-    <link
-      rel="stylesheet"
-      href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-      crossorigin="anonymous"
-    />
-    <link
-      href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
-      rel="stylesheet"
-    />
-
-    <!-- Optional theme -->
-    <link
-      rel="stylesheet"
-      href="//stackpath.bootstrapcdn.com/bootswatch/4.1.1/spacelab/bootstrap.min.css"
-    />
-
-    <!-- Latest compiled and minified JavaScript -->
-    <script
-      src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-      crossorigin="anonymous"
-    ></script>
-
-    <script src="//d3js.org/d3.v6.js"></script>
-    <script src="/static/js/phylotree.js/dist/phylotree.js"></script>
-
-    <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
 
     <div id="tree"></div>
     <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
     <div id="metadata-container" metadata="{{ metadata }}"></div>
 
-    <script>
-      const content = "{{ content }}";
-      console.log("phylotree_render.html content:");
-      console.log(content);
-    </script>
-    <script src="static/js/tree_rendering.js" async="true"></script>
-    <!-- <script async="true">
-        const height = 500;
-        const width = 500;
-        const nwk = `{{ content }}`;
+  
+    
+  </div>
+  <div class="details">
+      <!-- <div class="d-flex justify-content-end"> -->
+    <div style="display: flex; justify-content: flex-end;">
+      <div style="background-color: white; padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
+          <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
+          <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
+          <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
+          <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+      </div>
+      </div>
 
-        const tree = new phylotree.phylotree(nwk);
+      <div id="enlarged-image-container">
+        <!-- <img id="enlarged-image" src="" alt="Enlarged image" /> -->
+        <img id="enlarged-image" src="" />
+      </div>
+</div>
 
-        // Render bootstrap values
-        bootstrapNodes = tree.getInternals();
-        colorScale = d3.scaleSequential(d3.interpolateReds);
-        colorNodesByName = function (element, data) {
-          if (_.includes(bootstrapNodes, data)) {
-            element.style("stroke", colorScale(parseFloat(data.data.name) / 100));
-          }
-        };
-
-        // Define the images and their corresponding node IDs
-        let images = {
-          "BGC0001061_ACN64833.1": "static/pictures/1.jpg",
-          "BGC0000247_CAK50791.1": "static/pictures/5.jpg",
-          "BGC0000269_ADE34508.1": "static/pictures/3.jpg",
-          "BGC0000230_AAM33664.1": "static/pictures/4.jpg"
-        };
-
-        // Assign the images to the leaf nodes
-        tree.getTips().forEach(node => {
-          if (images.hasOwnProperty(node.name)) {
-            tree.assignAttributes({ [node.name]: { image: images[node.name] } });
-          }
-        });
-
-        // Render the tree
-        const renderedTree = tree.render({
-          container: '#tree',
-          height: height,
-          width: width,
-          'align-tips': false,
-          'internal-names': true,
-          'zoom': true,
-          'node-styler': colorNodesByName
-        });
-
-        // Add images after the tree has been rendered
-        setTimeout(function() {
-          // Select the nodes where you want to add the image
-          let nodes = d3.selectAll('.node').filter(d => images.hasOwnProperty(d.data.name));
-
-          // Append an image to these nodes
-          nodes.append("image")
-            .attr('xlink:href', function (d) { return images[d.data.name]; })
-            .attr('x', 200)
-            .attr('y', -50)
-            .attr('width', 100)
-            .attr('height', 100);
-
-          nodes.append("line")
-            .attr("x1", 0)
-            .attr("y1", 0)
-            .attr("x2", 200)
-            .attr("y2", 0)
-            .attr("stroke", "black");
-          }, 0);
-            // Render the tree from chatgpt
-        //let treeContainer = d3.select("#tree-container");
-
-        //treeContainer.call(tree.render);
-
-        // Add images next to leaf nodes
-        // tree.selectAll(".node")
-        //     .filter(d => tree.isLeafNode(d))
-        //     .append("image")
-        //     .attr("xlink:href", d => d.annotations.image)
-        //     .attr("x", 8)  // Adjust position as needed
-        //     .attr("y", -8) // Adjust position as needed
-        //     .attr("width", 16)  // Adjust size as needed
-        //     .attr("height", 16) // Adjust size as needed
-        //     .attr("class", "leaf-image");
+  </div>
 
 
 
@@ -262,15 +210,13 @@
 
 
 
-        // const renderedTree = tree.render({
-        //     container: '#tree',
-        //     height:500, 
-        //     width:500,
-        //     'left-right-spacing': 'fit-to-size', 
-        //     'top-bottom-spacing': 'fit-to-size'
-        // });
+<script>
+  const content = "{{ content }}";
+  console.log("phylotree_render.html content:");
+  console.log(content);
+</script>
+<script src="static/js/tree_rendering.js" async="true"></script>
 
-        // $(tree.display.container).empty();
-        $(tree.display.container).html(tree.display.show());
-    </script> -->
+
+
 {% endblock %}

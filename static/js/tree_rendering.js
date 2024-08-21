@@ -225,9 +225,8 @@ const renderedTree = tree.render({
   container: '#tree',
   height: height,
   width: width,
-  'align-tips': false,
+  'align-tips': true,
   'internal-names': true,
-  'alignTips': false ,
   'left-right-spacing': 'fit-to-size', 
   // 'top-bottom-spacing': 'fit-to-size',
   'zoom': true,
@@ -323,7 +322,7 @@ function renderMetadata(columnName){
     nodes.each(function(d) {
       let text = annot[d.data.name];
       if (text) { // Check if text is not null
-        let textElement = d3.select(this).append('text').attr('x', 400+activeColumns*200).attr('y', 0).attr('class', columnName);
+        let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200).attr('y', 0).attr('class', columnName);
     
         if (text.length > 80) {
           let firstLine = text.substring(0, 80);
