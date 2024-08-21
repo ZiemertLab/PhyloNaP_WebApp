@@ -24,7 +24,12 @@
     z-index: 1;
   }
   #tree-container {
-      width: 100%;
+      width: 300%;
+      height: 800px; /* Adjust this value as needed */
+
+      /* Add scrollbars if the content is larger than the container */
+      /* overflow: auto;  */
+
     } 
 </style>
 <div class="d-flex align-items-center justify-content-between"> 
@@ -110,11 +115,13 @@
   </div>
 
   <!-- <div class="d-flex justify-content-end"> -->
-    <div style="background-color: white; padding: 10px; margin-top: 1rem;"> <!-- Add background color, padding and top margin -->
+  <div style="display: flex; justify-content: flex-end;">
+    <div style="background-color: white; padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
         <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
         <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
         <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
         <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+    </div>
     </div>
 </div>
 <div id="enlarged-image-container">

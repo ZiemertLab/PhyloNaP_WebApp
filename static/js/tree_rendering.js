@@ -1,5 +1,5 @@
 const height = 500;
-const width = 500;
+const width = 1000;
 //const nwk = `{{ content }}`;
 var nwk = document.getElementById('tree-container').getAttribute('nwk_data');
 //var metadata = document.getElementById('tree-container').getAttribute('metadata');
@@ -228,7 +228,7 @@ const renderedTree = tree.render({
   'align-tips': false,
   'internal-names': true,
   'alignTips': false ,
-  // 'left-right-spacing': 'fit-to-size', 
+  'left-right-spacing': 'fit-to-size', 
   // 'top-bottom-spacing': 'fit-to-size',
   'zoom': true,
   'node-styler': colorNodesByName
