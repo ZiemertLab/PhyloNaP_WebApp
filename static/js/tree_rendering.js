@@ -1,5 +1,11 @@
-const height = 500;
-const width = 1000;
+// const container = document.getElementById('tree');
+// const width = container.clientWidth;
+// const height = container.clientHeight;
+let treeDiv = document.querySelector('.tree');
+let width = treeDiv.clientWidth;
+let height = treeDiv.clientHeight;
+
+console.log(`Width: ${width}, Height: ${height}`);
 //const nwk = `{{ content }}`;
 var nwk = document.getElementById('tree-container').getAttribute('nwk_data');
 //var metadata = document.getElementById('tree-container').getAttribute('metadata');
@@ -225,9 +231,10 @@ const renderedTree = tree.render({
   container: '#tree',
   height: height,
   width: width,
+  "left-right-spacing": "fixed-step",
   'align-tips': true,
   'internal-names': true,
-  'left-right-spacing': 'fit-to-size', 
+  // 'left-right-spacing': 'fit-to-size', 
   // 'top-bottom-spacing': 'fit-to-size',
   'zoom': true,
   'node-styler': colorNodesByName
@@ -322,7 +329,10 @@ function renderMetadata(columnName){
     nodes.each(function(d) {
       let text = annot[d.data.name];
       if (text) { // Check if text is not null
-        let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200).attr('y', 0).attr('class', columnName);
+        let transformValue = d3.select(this).attr('transform');
+        let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
+
+        let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues[0]).attr('y', 0).attr('class', columnName);
     
         if (text.length > 80) {
           let firstLine = text.substring(0, 80);
