@@ -38,9 +38,12 @@
    <script src="/static/js/phylotree.js/dist/phylotree.js" defer></script>
 
    <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
-
+   <script src="https://cdn.jsdelivr.net/npm/split.js"></script>
   <style>
-    
+    * {
+      margin: 0;
+      padding: 0;
+    }
     body, html {
       background-color: #D8BFD8;
       margin: 0;
@@ -60,21 +63,45 @@
 
     .details {
       flex: 1; /* Take up 2 parts of the available space */
-      background-color: #ccc; /* Grey background */
+      background-color: #D1E7E0; /* Grey background */
       overflow: auto; /* Add scrollbars if necessary */
+      margin: 0; /* Remove all margins */
+      padding: 0; /* Remove all padding */
     }
-
+    .collapsible {
+      height: 4em; /* Adjust as needed */
+      overflow: hidden;
+      position: relative;
+    }
+    .collapsible::after {
+      content: "...";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: white;
+      padding-left: 1em;
+    }
     #enlarged-image-container {
+      position: relative;
+      width: 100%; /* Adjust as needed */
+      max-width: 100%;
+      max-height: 100%;
+    }
+    /* #enlarged-image-container {
       position: fixed;
       right: -140px;
       top: 80%;
       transform: translateY(-50%);
-      width: 50%; /* Adjust as needed */
-    }
+      width: 50%; 
+      max-width: 100%;
+      max-height: 100%;
+    } */
 
     #enlarged-image {
       width: 100%;
-      height: auto;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
     }
     .no-overlap {
     position: relative;
@@ -82,7 +109,7 @@
   }
   #tree-container {
       width: 100%;
-      height: 800px; /* Adjust this value as needed */
+      height: 100%; /* Adjust this value as needed */
 
       /* Add scrollbars if the content is larger than the container */
       /* overflow: auto;  */
@@ -91,7 +118,7 @@
   </style>
 </head>
 <div class="layout">
-  <div class="tree">
+  <div class="tree" id="tree">
       <div class="d-flex align-items-center justify-content-between"> 
       <div class="btn-group" role="group">
         <button
@@ -177,25 +204,33 @@
     </div>
     
 
-
+<!-- 
     <div id="tree"></div>
     <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
-    <div id="metadata-container" metadata="{{ metadata }}"></div>
+    <div id="metadata-container" metadata="{{ metadata }}"></div> -->
 
-  
+    <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}"></div>
     
   </div>
   <div class="details">
       <!-- <div class="d-flex justify-content-end"> -->
     <div style="display: flex; justify-content: flex-end;">
-      
       <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
-          <h4>Annotation</h4>
-          <button id="Enzyme_function" class="btn m-1" style="background-color: #a61e37; color: white;">Enzyme Function</button>
-          <button id="Species" class="btn m-1" style="background-color: #a61e37; color: white;">Species</button>
-          <button id="biosyn_class" class="btn m-1" style="background-color: #a61e37; color: white;">BGC type</button>
-          <h4>Structures</h4>
-          <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+        <div style="display: flex; justify-content: center;">
+          <h3>Tree name</h3>
+        </div>
+        <h10>The descripton of the treeThe descripton of the treeThe descripton of the treeThe descripton of the tree</h10>
+        <h4>Annotation</h4>
+        <script>
+          const color_buttons = "#982B1C";
+          const color_old = "#a61e37";
+        </script>
+        <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
+        <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
+        <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button>
+        <h4>Structures</h4>
+        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+        <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button>
       </div>
       </div>
 
@@ -219,7 +254,6 @@
   console.log(content);
 </script>
 <script src="static/js/tree_rendering.js" async="true"></script>
-
-
+<!-- <script src="static/js/tree_rendering.js"></script> -->
 
 {% endblock %}

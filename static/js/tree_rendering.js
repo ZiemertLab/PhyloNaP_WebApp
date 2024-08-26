@@ -1,24 +1,17 @@
-// const container = document.getElementById('tree');
-// const width = container.clientWidth;
-// const height = container.clientHeight;
-let treeDiv = document.querySelector('.tree');
-let width = treeDiv.clientWidth;
-let height = treeDiv.clientHeight;
+let container = d3.select('#tree');
+const width = container.node().getBoundingClientRect().width;
+const height = container.node().getBoundingClientRect().height;
+
 
 console.log(`Width: ${width}, Height: ${height}`);
-//const nwk = `{{ content }}`;
-var nwk = document.getElementById('tree-container').getAttribute('nwk_data');
-//var metadata = document.getElementById('tree-container').getAttribute('metadata');
-var metadata = JSON.parse(document.getElementById('metadata-container').getAttribute('metadata'));
 
-console.log("printing nwk");
-console.log(nwk);
-
-console.log("printing metadata");
-console.log(metadata);
+var nwk = document.getElementById('tree_data').getAttribute('nwk_data');
+var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
 
 let activeColumns = 0;
 const tree = new phylotree.phylotree(nwk);
+
+
 
 document.querySelectorAll("[data-direction]").forEach(function(element) {
   element.addEventListener("click", function(e) {
@@ -189,9 +182,9 @@ leaves.forEach(leaf => {
     leaf.name = "BGC0001061_ACN64833.1";
   }
 });
-console.log(leaves);
+//console.log(leaves);
 //leaves=tree.getLeaves();
-console.log("printing leaves");
+//console.log("printing leaves");
 
 
 // Render bootstrap values
@@ -203,55 +196,60 @@ colorNodesByName = function (element, data) {
   }
 };
 
-// Define the images and their corresponding node IDs
-let images = {
-  "BGC0001061_ACN64833.1": "static/pictures/1.jpg",
-  "BGC0000247_CAK50791.1": "static/pictures/5.jpg",
-  "BGC0000269_ADE34508.1": "static/pictures/3.jpg",
-  "BGC0000230_AAM33664.1": "static/pictures/4.jpg"
-};
-
-// let images = {
-//   "BGC0001061_ACN64833.1": "images/1.jpg",
-//   "BGC0000247_CAK50791.1": "images/5.jpg",
-//   "BGC0000269_ADE34508.1": "images/3.jpg",
-//   "BGC0000230_AAM33664.1": "images/4.jpg"
-// };
-
-// Assign the images to the leaf nodes
-tree.getTips().forEach(node => {
-  if (images.hasOwnProperty(node.name)) {
-    tree.assignAttributes({ [node.name]: { image: images[node.name] } });
-  }
-});
 
 
 // Render the tree
-const renderedTree = tree.render({
+let renderedTree = tree.render({
   container: '#tree',
   height: height,
   width: width,
   "left-right-spacing": "fixed-step",
   'align-tips': true,
   'internal-names': true,
-  // 'left-right-spacing': 'fit-to-size', 
-  // 'top-bottom-spacing': 'fit-to-size',
+  //'left-right-spacing': 'fit-to-size', 
+  'top-bottom-spacing': 'fit-to-size',
   'zoom': true,
-  'node-styler': colorNodesByName
+  'node-styler': colorNodesByName,
+  "draw_scale_bar": true,
 });
+// Set up a click event handler on the SVG
+// $('#tree svg').on('click', function() {
+//   // Set the width and height to the initial values
+//   $(this).attr('width', initialWidth);
+//   $(this).attr('height', initialHeight);
+// });
+d3.select('#tree svg')
+  .call(d3.drag().on("drag", null));
 
-// Add images after the tree has been rendered
+
+
+// Select the SVG element
+var svg = document.querySelector('#tree svg');
+
+// Create a new MutationObserver
 setTimeout(function() {
-  // Select the nodes where you want to add the image
-  let nodes = d3.selectAll('.node').filter(d => images.hasOwnProperty(d.data.name));
+  // Select the SVG element
+  var svg = document.querySelector('#tree svg');
 
-  // Append an image to these nodes
-  // nodes.append("image")
-  //   .attr('xlink:href', function (d) { return images[d.data.name]; })
-  //   .attr('x', 200)
-  //   .attr('y', -50)
-  //   .attr('width', 100)
-  //   .attr('height', 100);
+  // Create a new MutationObserver
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'width' || mutation.attributeName === 'height') {
+        console.log('SVG size changed:', svg.getAttribute('width'), svg.getAttribute('height'));
+      }
+    });
+  });
+
+// Start observing the SVG for attribute changes
+observer.observe(svg, { attributes: true });
+}, 1000);
+
+console.log(tree.Width, tree.Height);
+console.log(`Width: ${width}, Height: ${height}`);
+d3.select('#tree svg')
+  .attr('width', width)
+  .attr('height', height);
+// Add images after the tree has been rendered
 
   // nodes.append("line")
   //   .attr("x1", 0)
@@ -259,56 +257,80 @@ setTimeout(function() {
   //   .attr("x2", 200)
   //   .attr("y2", 0)
   //   .attr("stroke", "black");
-  }, 0);
-    // Render the tree from chatgpt
-//let treeContainer = d3.select("#tree-container");
 
-//treeContainer.call(tree.render);
+
 
 function renderNP(){
+  activeColumns++;
+
   let nodes = d3.selectAll('.node').filter(d => d.data.name.startsWith("BGC"));
   nodes.each(function(d) {
+    let transformValue = d3.select(this).attr('transform');
+    let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
     let bgc = d.data.name.split("_")[0];
     let image = "static/images/"+bgc+"_1.png";
     if (image) {
       let img = d3.select(this).append("image")
         .attr('xlink:href', image)
-        .attr('x', 200)
+        .attr('x', 200+activeColumns*200-translateValues[0])
         .attr('y', -50)
         .attr('width', 100)
         .attr('height', 100)
         .attr('class', "NP");
+        console.log('image:width', img.attr('width'));
 
       img.on('click', function() {
         d3.select('#enlarged-image').attr('src', image);
       });
 
-
-      // let link = d3.select(this).append('a')
-      //   .attr('href', image)
-      //   .attr('target', '_blank');
-
-      // link.append("image")
-      //   .attr('xlink:href', image)
-      //   .attr('x', 200)
-      //   .attr('y', -50)
-      //   .attr('width', 100)
-      //   .attr('height', 100)
-      //   .attr('class', "NP");
-
-      
-      // d3.select(this).append("image")
-      //   .attr('xlink:href', image)
-      //   .attr('x', 200)
-      //   .attr('y', -50)
-      //   .attr('width', 100)
-      //   .attr('height', 100)
-      //   .attr('class', "NP");
     }
   });
 }
+
 function hideNP(){
+  activeColumns--;
   d3.selectAll('image.NP').remove();
+}
+
+function renderReaction() {
+  activeColumns++;
+
+  let nodes = d3.selectAll('.node').filter(d => !d.data.name.startsWith("AS0"));
+  nodes.each(function(d) {
+    let transformValue = d3.select(this).attr('transform');
+    let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
+    let id = d.data.name;
+    let image = "static/images_reactions/" + id + ".png";
+    if (image) {
+      fetch(image)
+        .then(response => {
+          if (response.ok) {
+            let img = d3.select(this).append("image")
+              .attr('xlink:href', image)
+              .attr('x', 200+activeColumns*200-translateValues[0])
+              .attr('y', -50)
+              .attr('width', 100)
+              .attr('height', 100)
+              .attr('class', "Reaction");
+
+            img.on('click', function() {
+              d3.select('#enlarged-image').attr('src', image);
+            });
+
+          } else {
+            console.log('Image does not exist:', image);
+          }
+        })
+        .catch(error => {
+          console.log('Error checking image:', error);
+        });
+    }
+  });
+}
+
+function hideReaction(){
+  activeColumns--;
+  d3.selectAll('image.Reaction').remove();
 }
 
 function renderMetadata(columnName){
@@ -386,27 +408,28 @@ function hideMetadata(columnName){
       button.dataset.active = 'true';
     } else {
       // If the button is active, hide the content and set the button to inactive
-      hideMetadata(id);
+      hideNP(id);
       button.dataset.active = 'false';
     }
   });
 });
 
-// display metadata
-// document.getElementById('enzyme-function-button').addEventListener('click', function() {
-//   renderMetadata('Enzyme_function');
-// });
+["Reaction"].forEach(id => {
+  let button = document.getElementById(id);
+  button.dataset.active = 'false'; // Add data-active attribute
 
-// document.getElementById('species-button').addEventListener('click', function() {
-//   renderMetadata('Species');
-// });
-
-// document.getElementById('biosyn-class-button').addEventListener('click', function() {
-//   renderMetadata('biosyn_class');
-// });
-
-
-
+  button.addEventListener('click', function() {
+    if (button.dataset.active === 'false') {
+      // If the button is not active, display the content and set the button to active
+      renderReaction();
+      button.dataset.active = 'true';
+    } else {
+      // If the button is active, hide the content and set the button to inactive
+      hideReaction(id);
+      button.dataset.active = 'false';
+    }
+  });
+});
 
 // Save the image
 var saveImageBtn = document.querySelector("#save_image");
@@ -417,5 +440,24 @@ if (saveImageBtn) {
 } else {
   console.log('Save image button not found');
 }
+console.log('Tree rendered, set up the proper size');
+setTimeout(function() {
+  d3.select('#tree svg')
+    .attr('width', width)
+    .attr('height', height);
+}, 1000);
+
 // $(tree.display.container).empty();
+console.log('showing tree');
+
 $(tree.display.container).html(tree.display.show());
+
+// At the end of tree_rendering.js
+$(document).ready(function() {
+  Split(['.tree', '.details'], {
+    sizes: [75, 25],
+    minSize: 100,
+    gutterSize: 5,
+    cursor: 'col-resize'
+  });
+});
