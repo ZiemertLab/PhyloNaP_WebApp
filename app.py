@@ -12,7 +12,7 @@ import os
 import logging
 import json
 import pandas as pd
-
+import ast
 #from ete3 import TreeStyle
 
 #ts = TreeStyle()
@@ -41,11 +41,11 @@ def help_page():
 
 
 
-def change_color(node):
-    # This function changes the color of a node
-    nstyle = NodeStyle()
-    nstyle["fgcolor"] = "red"
-    node.set_style(nstyle)
+# def change_color(node):
+#     # This function changes the color of a node
+#     nstyle = NodeStyle()
+#     nstyle["fgcolor"] = "red"
+#     node.set_style(nstyle)
 
 
 #############################
@@ -79,33 +79,24 @@ def database_page():
 
 @app.route('/phylotree_render', methods=['POST','GET'])
 def tree_renderer():
-    #logging.info(f"Received form data: {request.form}")
-    #folder = request.form['folder']
 
-
-    # print('Inside tree_renderer')
-
-    # the_file_url = request.args.get('filename')
-    # the_file_path = urlparse(the_file_url).path
-    # print(the_file_path)
-    # the_file = unquote(the_file_path)
-    # #file = request.form['file']
-
-    # #with open(os.path.join('database',folder,file), 'r') as f:
-    # with open(os.path.join('database',the_file), 'r') as f:
-    #     content = f.read()
-    # return render_template('phylotree_render.html', content = content)
     tree_file = request.args.get('treefile')
     metadata_file = request.args.get('metadatafile')
+    metadata_list = request.args.get('metadataList')
+    datasetDescr = request.args.get('datasetDescr')
 
     with open(os.path.join('database',tree_file), 'r') as f:
         tree_content = f.read()
 
     df = pd.read_csv(os.path.join('database',metadata_file),sep='\t')
     metadata_json = df.to_json(orient='records')
+
+
+    metadata_list_json = json.dumps(metadata_list)
+    metadata_list = ast.literal_eval(metadata_list)
     #columns = df.columns.tolist()
 
-    return render_template('phylotree_render.html', nwk_data=tree_content, metadata=metadata_json)
+    return render_template('phylotree_render.html', nwk_data=tree_content, metadata=metadata_json, metadata_list=metadata_list, datasetDescr=datasetDescr)
 
 
 @app.route('/get_file',methods=['POST','GET'])
@@ -194,5 +185,5 @@ def page_not_found(error):
     return "Page not found", 404
 
 if __name__ == '__main__':
-    db.create_all()  # create tables
+    # db.create_all()  # create tables
     app.run(debug=True)

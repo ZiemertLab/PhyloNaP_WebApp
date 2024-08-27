@@ -41,13 +41,14 @@
    <script src="https://cdn.jsdelivr.net/npm/split.js"></script>
   <style>
     * {
+      box-sizing: border-box;
+    }
+    * {
       margin: 0;
       padding: 0;
     }
     body, html {
       background-color: #D8BFD8;
-      margin: 0;
-      padding: 0;
     }
     .layout {
       display: flex;
@@ -55,10 +56,29 @@
       height: 100vh; /* Use full viewport height */
     }
 
-    .tree {
+    .tree-panel {
+      display: flex;
+      flex-direction: column;
       flex: 4; /* Take up 1 part of the available space */
       background-color: #fff; /* White background */
-      overflow: auto; /* Add scrollbars if necessary */
+      /* overflow: auto; */
+      margin: 0;
+      padding: 0;
+    }
+    .tree-controls {
+      flex-shrink: 0;
+      background-color: peachpuff; /* White background */
+      height: 50px;
+      /* overflow: auto; */
+    }
+    .tree {
+      height: calc(100% - 50px);
+      width: 100% !important;
+      flex-grow: 1;
+      background-color: beige;
+      /* overflow: auto; */
+      /* margin: 0;
+      padding: 0; */
     }
 
     .details {
@@ -68,19 +88,19 @@
       margin: 0; /* Remove all margins */
       padding: 0; /* Remove all padding */
     }
-    .collapsible {
-      height: 4em; /* Adjust as needed */
+    /* .collapsible {
+      height: 4em;
       overflow: hidden;
       position: relative;
-    }
-    .collapsible::after {
+    } */
+    /* .collapsible::after {
       content: "...";
       position: absolute;
       bottom: 0;
       right: 0;
       background: white;
       padding-left: 1em;
-    }
+    } */
     #enlarged-image-container {
       position: relative;
       width: 100%; /* Adjust as needed */
@@ -117,8 +137,10 @@
     } 
   </style>
 </head>
+
 <div class="layout">
-  <div class="tree" id="tree">
+  <div class="tree-panel">
+  <div class="tree-controls">
       <div class="d-flex align-items-center justify-content-between"> 
       <div class="btn-group" role="group">
         <button
@@ -202,15 +224,17 @@
         </button>
       </div>
     </div>
+  </div>
     
 
 <!-- 
     <div id="tree"></div>
     <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
     <div id="metadata-container" metadata="{{ metadata }}"></div> -->
-
-    <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}"></div>
-    
+    <!-- <div id="tree_data" style="margin-top: 20%;" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div> -->
+    <div class="tree" id="tree">
+      <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div>
+    </div>
   </div>
   <div class="details">
       <!-- <div class="d-flex justify-content-end"> -->
@@ -225,6 +249,12 @@
           const color_buttons = "#982B1C";
           const color_old = "#a61e37";
         </script>
+        <!-- {{ metadata_list }} 
+        
+        {{ metadata_list }} 
+        {% for item in metadata_list %}
+            <button id="{{ item }}" class="btn m-1" style="background-color: #a61e37; color: white;">{{ item.replace('_', ' ') }}</button>
+        {% endfor %} -->
         <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
         <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
         <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button>

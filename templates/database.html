@@ -21,11 +21,12 @@
                                     {{ dataset.name }}
                                     <input type="hidden" id="tree-file" value="{{ url_for('get_file', filename=dataset.tree) }}">
                                     <input type="hidden" id="metadata-file" value="{{ url_for('get_file', filename=dataset.metadata) }}">
+                                    <input type="hidden" id="column_list" value="{{ dataset.metadata_columns }}">
                                     <!-- <button class="btn btn-outline-secondary m-1" type="button" onclick="location.href='/phylotree_render?dataset={{ dataset.name }}';">
                                         {{ dataset.name }}
                                     </button> -->
                                     <button class="btn btn-primary show-button m-1" type="button" data-tree="{{ dataset.tree }}" 
-                                    data-metadata="{{ dataset.metadata }}" style="background-color: #a61e37; color: white;">Show Tree</button>
+                                    data-metadata="{{ dataset.metadata }}" metadata-list="{{ dataset.metadata_columns }}" data-descr="{{ dataset.descripton }}" style="background-color: #a61e37; color: white;">Show Tree</button>
                                 </li>
                             {% endfor %}
                         </div>
@@ -55,10 +56,16 @@
         button.addEventListener('click', function() {
             var treeFile = button.getAttribute('data-tree');
             var metadataFile = button.getAttribute('data-metadata');
+            var metadataList = button.getAttribute('metadata-list');
+            var datasetDescr = button.getAttribute('data-descr');
             // window.location.href = '/phylotree_render?filename=' + encodeURIComponent(treeFile);
-            window.location.href = '/phylotree_render?treefile=' + encodeURIComponent(treeFile) + '&metadatafile=' + encodeURIComponent(metadataFile);
+            window.location.href = '/phylotree_render?treefile=' + encodeURIComponent(treeFile) + '&metadatafile=' + encodeURIComponent(metadataFile)
+            + '&metadataList=' + encodeURIComponent(metadataList)
+            + '&datasetDescr=' + encodeURIComponent(datasetDescr);
         });
     });
+
+    // localStorage.setItem('metadataList', JSON.stringify(metadataList));
     // document.querySelectorAll('.show-button').forEach(function(button) {
     //     button.addEventListener('click', function() {
     //         var treeUrl = button.getAttribute('data-tree');

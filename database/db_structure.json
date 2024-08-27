@@ -6,13 +6,30 @@
                 {
                     "name": "mt_test",
                     "tree": "mt_test/group1.1.nwk",
-                    "metadata": "mt_test/group1.1.tsv"
+                    "metadata": "mt_test/group1.1.tsv",
+                    "metadata_columns": [
+                        "Species",
+                        "BGC_type",
+                        "Enzyme_function"
+                    ]
                 }
             ]
         },
         {
             "name": "P450",
-            "datasets": []
+            "datasets": [
+                {
+                    "name": "biarylitides",
+                    "description": "Biarylitides",
+                    "tree": "p450/biarylitides_root.nwk",
+                    "metadata": "p450/biarylitides_metadata.tsv",
+                    "metadata_columns": [
+                        "Species",
+                        "Precursor_sequence"
+                    ],
+                    "alignment": "p450/biarylitides_alignment.fasta"
+                }
+            ]
         }
     ]
 }

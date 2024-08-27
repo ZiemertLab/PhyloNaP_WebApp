@@ -1,16 +1,26 @@
 let container = d3.select('#tree');
 const width = container.node().getBoundingClientRect().width;
-const height = container.node().getBoundingClientRect().height;
+// const height = container.node().getBoundingClientRect().height*0.8;
+const height = container.node().offsetHeight;
+// window.onload = function() {
+//   const container = d3.select('#tree');
+//   const height = container.node().getBoundingClientRect().height;
+//   c
+// }
+// const height = container.node().getBoundingClientRect().height;
+console.log( `initiate Width: ${width}, Height: ${height}`);
 
 
-console.log(`Width: ${width}, Height: ${height}`);
 
 var nwk = document.getElementById('tree_data').getAttribute('nwk_data');
+console.log("nwk = " + nwk);
 var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
-
+var metadataList=document.getElementById('tree_data').getAttribute('metadata_list');
+// var metadataList = JSON.parse(localStorage.getItem('metadataList'));
+console.log("metadataList = " + metadataList);
+console.log(typeof metadataList); 
 let activeColumns = 0;
 const tree = new phylotree.phylotree(nwk);
-
 
 
 document.querySelectorAll("[data-direction]").forEach(function(element) {
@@ -176,25 +186,12 @@ document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) 
 // console.log("printing tree_align");
 // console.log(tree_align);
 //tree.display.alignTips(button_align == "right");
-leaves=tree.getTips();
-leaves.forEach(leaf => {
-  if (leaf.name === "BGC0001061_ACN64833.1") {
-    leaf.name = "BGC0001061_ACN64833.1";
-  }
-});
+
 //console.log(leaves);
 //leaves=tree.getLeaves();
 //console.log("printing leaves");
 
 
-// Render bootstrap values
-bootstrapNodes = tree.getInternals();
-colorScale = d3.scaleSequential(d3.interpolateReds);
-colorNodesByName = function (element, data) {
-  if (_.includes(bootstrapNodes, data)) {
-    element.style("stroke", colorScale(parseFloat(data.data.name) / 100));
-  }
-};
 
 
 
@@ -209,9 +206,23 @@ let renderedTree = tree.render({
   //'left-right-spacing': 'fit-to-size', 
   'top-bottom-spacing': 'fit-to-size',
   'zoom': true,
-  'node-styler': colorNodesByName,
+  // 'node-styler': colorNodesByName,
   "draw_scale_bar": true,
 });
+
+console.log(container.node());  // Check if the #tree element is being selected correctly
+console.log(document.getElementById('tree_data'));  // Check if the #tree_data element is being selected correctly
+console.log(tree);  // Check if the tree object is defined
+
+// Render bootstrap values
+bootstrapNodes = tree.getInternals();
+colorScale = d3.scaleSequential(d3.interpolateReds);
+colorNodesByName = function (element, data) {
+  if (_.includes(bootstrapNodes, data)) {
+    element.style("stroke", colorScale(parseFloat(data.data.name) / 100));
+  }
+};
+
 // Set up a click event handler on the SVG
 // $('#tree svg').on('click', function() {
 //   // Set the width and height to the initial values
@@ -380,6 +391,8 @@ function hideMetadata(columnName){
 // console.log(document.getElementById('species-button'));
 // console.log(document.getElementById('biosyn-class-button'));
 
+
+// metadataList.split(",").forEach(id => {
 ['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
   let button = document.getElementById(id);
   button.dataset.active = 'false'; // Add data-active attribute
@@ -440,12 +453,12 @@ if (saveImageBtn) {
 } else {
   console.log('Save image button not found');
 }
-console.log('Tree rendered, set up the proper size');
-setTimeout(function() {
-  d3.select('#tree svg')
-    .attr('width', width)
-    .attr('height', height);
-}, 1000);
+// console.log('Tree rendered, set up the proper size');
+// setTimeout(function() {
+//   d3.select('#tree svg')
+//     .attr('width', width)
+//     .attr('height', height);
+// }, 10000);
 
 // $(tree.display.container).empty();
 console.log('showing tree');
