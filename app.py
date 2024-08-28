@@ -100,7 +100,7 @@ def tree_renderer():
     metadata_json = df.to_json(orient='records')
 
 
-    metadata_columns = json.dumps(metadata_columns)
+    # metadata_columns = json.dumps(metadata_columns)
 
     #columns = df.columns.tolist()
 

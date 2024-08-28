@@ -1,4 +1,7 @@
 let container = d3.select('#tree');
+var line = d3.line()
+    .x(function(d) { return x(d.date); })
+    .y(function(d) { return y(d.close); });
 const width = container.node().getBoundingClientRect().width;
 // const height = container.node().getBoundingClientRect().height*0.8;
 const height = container.node().offsetHeight;
@@ -14,10 +17,18 @@ var nwk = document.getElementById('tree_data').getAttribute('nwk_data');
 console.log("nwk = " + nwk);
 var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
 var metadataList=document.getElementById('tree_data').getAttribute('metadata_list');
-var metadataList=document.getElementById('tree_data').getAttribute('datasetDescr');
+var darasetDescr=document.getElementById('tree_data').getAttribute('datasetDescr');
+
 // var metadataList = JSON.parse(localStorage.getItem('metadataList'));
 console.log("metadataList = " + metadataList);
-console.log(typeof metadataList); 
+console.log(typeof metadataList);
+
+metadataList = metadataList.replace(/'/g, '"');
+var metadataListArray = JSON.parse(metadataList);
+console.log("metadataListArray = ", metadataListArray);
+console.log(typeof metadataListArray);
+
+
 let activeColumns = 0;
 const tree = new phylotree.phylotree(nwk);
 
@@ -390,9 +401,8 @@ function hideMetadata(columnName){
 // console.log(document.getElementById('species-button'));
 // console.log(document.getElementById('biosyn-class-button'));
 
-
-// metadataList.split(",").forEach(id => {
-['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
+// ['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
+metadataListArray.forEach(id => {
   let button = document.getElementById(id);
   button.dataset.active = 'false'; // Add data-active attribute
 
@@ -407,6 +417,7 @@ function hideMetadata(columnName){
       button.dataset.active = 'false';
     }
   });
+  buttonContainer.appendChild(button);
 });
 
 ["BGC_product"].forEach(id => {
@@ -466,7 +477,8 @@ $(tree.display.container).html(tree.display.show());
 
 // At the end of tree_rendering.js
 $(document).ready(function() {
-  Split(['.tree', '.details'], {
+  Split(['.tree-panel', '.details'], {
+  // Split(['.tree', '.details'], {
     sizes: [75, 25],
     minSize: 100,
     gutterSize: 5,

@@ -39,7 +39,9 @@
    ></script>
 
    <script src="//d3js.org/d3.v6.js" defer></script>
-   <script src="/static/js/phylotree.js/dist/phylotree.js" defer></script>
+   <script src="https://d3js.org/d3.v6.min.js"></script>
+   <!-- <script src="/static/js/phylotree.js/dist/phylotree.js" defer></script> -->
+   <script src="/static/js/phylotree.js/dist/phylotree.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -69,7 +71,7 @@
     .tree-controls {
       flex-shrink: 0;
       background-color: peachpuff; /* White background */
-      height: 50px;
+      height: 30px;
       /* overflow: auto; */
     }
     .tree {
@@ -245,20 +247,39 @@
           <h3>Tree name</h3>
         </div>
         <h10>The descripton of the treeThe descripton of the treeThe descripton of the treeThe descripton of the tree</h10>
+        <div id="button-container">
         <h4>Annotation</h4>
         <script>
           const color_buttons = "#982B1C";
           const color_old = "#a61e37";
         </script>
+
+        <script>
+          var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
+          metadataList = metadataList.replace(/'/g, '"');
+          var metadataListArray = JSON.parse(metadataList);
+
+          var buttonContainer = document.getElementById('button-container');
+
+          metadataListArray.forEach(function(item) {
+            var button = document.createElement('button');
+            button.id = item;
+            button.className = 'btn m-1';
+            button.style.backgroundColor = '#a61e37';
+            button.style.color = 'white';
+            button.textContent = item.replace('_', ' ');
+
+            buttonContainer.appendChild(button);
+          });
+        </script>
+        </div>
         <!-- {{ metadata_list }} 
-        
-        {{ metadata_list }} 
-        {% for item in metadata_list %}
+        {% for item in metadataListArray %}
             <button id="{{ item }}" class="btn m-1" style="background-color: #a61e37; color: white;">{{ item.replace('_', ' ') }}</button>
         {% endfor %} -->
-        <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
+        <!-- <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
         <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
-        <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button>
+        <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button> -->
         <h4>Structures</h4>
         <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
         <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button>
