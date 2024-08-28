@@ -10,12 +10,11 @@ const height = container.node().offsetHeight;
 // const height = container.node().getBoundingClientRect().height;
 console.log( `initiate Width: ${width}, Height: ${height}`);
 
-
-
 var nwk = document.getElementById('tree_data').getAttribute('nwk_data');
 console.log("nwk = " + nwk);
 var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
 var metadataList=document.getElementById('tree_data').getAttribute('metadata_list');
+var metadataList=document.getElementById('tree_data').getAttribute('datasetDescr');
 // var metadataList = JSON.parse(localStorage.getItem('metadataList'));
 console.log("metadataList = " + metadataList);
 console.log(typeof metadataList); 

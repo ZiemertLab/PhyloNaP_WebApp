@@ -22,11 +22,9 @@
                                     <input type="hidden" id="tree-file" value="{{ url_for('get_file', filename=dataset.tree) }}">
                                     <input type="hidden" id="metadata-file" value="{{ url_for('get_file', filename=dataset.metadata) }}">
                                     <input type="hidden" id="column_list" value="{{ dataset.metadata_columns }}">
-                                    <!-- <button class="btn btn-outline-secondary m-1" type="button" onclick="location.href='/phylotree_render?dataset={{ dataset.name }}';">
-                                        {{ dataset.name }}
-                                    </button> -->
-                                    <button class="btn btn-primary show-button m-1" type="button" data-tree="{{ dataset.tree }}" 
-                                    data-metadata="{{ dataset.metadata }}" metadata-list="{{ dataset.metadata_columns }}" data-descr="{{ dataset.descripton }}" style="background-color: #a61e37; color: white;">Show Tree</button>
+                                    <button class="btn btn-primary show-button m-1" type="button"
+                                    style="background-color: #a61e37; color: white;" 
+                                    data-superfamily="{{ superfamily.name }}" data-dataset="{{ dataset.name }}">Show Tree</button>
                                 </li>
                             {% endfor %}
                         </div>
@@ -39,51 +37,15 @@
 </form>
 <div id="tree"></div>
 
-<!-- <img id="tree-image" src="static/1.jpg"> -->
 <script>
-    // console.log({{ superfamilies | tojson }});
-
-    // document.querySelectorAll('.show-button').forEach(function(button) {
-    //     button.addEventListener('click', function() {
-    //         var filename = button.getAttribute('data-filename');
-    //         var folder = document.querySelector('input[name="folder"]:checked').value;
-            
-
-           
-    //     });
-    // });
     document.querySelectorAll('.show-button').forEach(function(button) {
         button.addEventListener('click', function() {
-            var treeFile = button.getAttribute('data-tree');
-            var metadataFile = button.getAttribute('data-metadata');
-            var metadataList = button.getAttribute('metadata-list');
-            var datasetDescr = button.getAttribute('data-descr');
-            // window.location.href = '/phylotree_render?filename=' + encodeURIComponent(treeFile);
-            window.location.href = '/phylotree_render?treefile=' + encodeURIComponent(treeFile) + '&metadatafile=' + encodeURIComponent(metadataFile)
-            + '&metadataList=' + encodeURIComponent(metadataList)
-            + '&datasetDescr=' + encodeURIComponent(datasetDescr);
+            var superfamilyName = button.getAttribute('data-superfamily');
+            var datasetName = button.getAttribute('data-dataset');
+            window.location.href = '/phylotree_render?superfamily=' + encodeURIComponent(superfamilyName) 
+            + '&dataset=' + encodeURIComponent(datasetName);
         });
     });
-
-    // localStorage.setItem('metadataList', JSON.stringify(metadataList));
-    // document.querySelectorAll('.show-button').forEach(function(button) {
-    //     button.addEventListener('click', function() {
-    //         var treeUrl = button.getAttribute('data-tree');
-    //         var metadataUrl = button.getAttribute('data-metadata');
-
-    //         fetch(treeUrl)
-    //             .then(response => response.text())
-    //             .then(data => {
-    //                 console.log('Tree file content:', data);
-    //             });
-
-    //         fetch(metadataUrl)
-    //             .then(response => response.text())
-    //             .then(data => {
-    //                 console.log('Metadata file content:', data);
-    //             });
-    //     });
-    // });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 

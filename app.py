@@ -60,67 +60,59 @@ def database_page():
         data = json.load(f)
     #print(data)
     return render_template('database.html',superfamilies=data['superfamilies'])
-    # Pass the list of files to the template
-    #return render_template('database.html', folders=folders)
-# def draw_tree(t):
-#     # Create a tree
-#     # Create a WebTreeApplication instance
-#     web_tree_app = WebTreeApplication(t)
-#     # Render the tree
-#     tree_html = web_tree_app.render()
-#     return render_template('database.html', tree_html=tree_html)
 
 
-# @app.route('/tree', methods=['POST'])
-# def tree_renderer():
-#     logging.info(f"Received form data: {request.form}")
-#     app.wsgi_app = WSGIMiddleware(app.wsgi_app)
-#     return 'Data set'
 
 @app.route('/phylotree_render', methods=['POST','GET'])
 def tree_renderer():
 
-    tree_file = request.args.get('treefile')
-    metadata_file = request.args.get('metadatafile')
-    metadata_list = request.args.get('metadataList')
-    datasetDescr = request.args.get('datasetDescr')
+    # Open and read JSON file
+    with open('database/db_structure.json') as f:
+        data = json.load(f)
 
-    with open(os.path.join('database',tree_file), 'r') as f:
+    superfamilyName = request.args.get('superfamily')
+    datasetName = request.args.get('dataset')
+    print(superfamilyName)
+    print(datasetName)
+    # Extract necessary data
+    # Find the matching superfamily and dataset
+    success = False
+    for superfamily in data['superfamilies']:
+        if superfamily['name'] == superfamilyName:
+            for dataset in superfamily['datasets']:
+                if dataset['name'] == datasetName:
+                    tree_link = dataset['tree']
+                    metadata_link = dataset['metadata']
+                    metadata_columns = dataset['metadata_columns']
+                    datasetDescr = dataset['description']
+                    success = True
+                    break
+
+    # Handle the case where no matching superfamily or dataset was found
+    if not success:
+        return print({'message': 'No matching superfamily or dataset found'}), 404
+
+
+    with open(os.path.join('database',tree_link), 'r') as f:
         tree_content = f.read()
 
-    df = pd.read_csv(os.path.join('database',metadata_file),sep='\t')
+    df = pd.read_csv(os.path.join('database',metadata_link),sep='\t')
     metadata_json = df.to_json(orient='records')
 
 
-    metadata_list_json = json.dumps(metadata_list)
-    metadata_list = ast.literal_eval(metadata_list)
+    metadata_columns = json.dumps(metadata_columns)
+
     #columns = df.columns.tolist()
 
-    return render_template('phylotree_render.html', nwk_data=tree_content, metadata=metadata_json, metadata_list=metadata_list, datasetDescr=datasetDescr)
+    return render_template('phylotree_render.html', nwk_data=tree_content, metadata=metadata_json, metadata_list=metadata_columns, datasetDescr=datasetDescr)
 
 
 @app.route('/get_file',methods=['POST','GET'])
 def get_file():
-    #folder=request.form['folder']
-    #file=request.form['file']
-    #pictures=os.listdir('database/'+folder+'/pictures')
-    #the_file = request.form['treeUrl']
     the_file = request.args.get('filename')
     return send_from_directory('database', the_file)
 
-# @app.route('/get_file/<filename>')
-# def get_file(filename):
-#     # Read the .contree file and return its contents
-#     with open('path/to/mt_test/' + filename + '.contree', 'r') as f:
-#         return f.read()
 
-'''
-@app.route('/submit', methods=['POST'])
-def submit_sequence():
-    sequence = request.form['sequence']
-    # Compare sequence with database and calculate results
-    return render_template('results.html', results=results)
-'''
 @app.route('/tutorial',methods=['POST','GET'])
 def tutorial():
     return render_template('tutorial.html')
