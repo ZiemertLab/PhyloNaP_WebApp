@@ -13,10 +13,14 @@ import logging
 import json
 import pandas as pd
 import ast
-#from ete3 import TreeStyle
+# from docker import DockerClient
+# #from ete3 import TreeStyle
 
-#ts = TreeStyle()
+# #ts = TreeStyle()
 
+# docker_client = DockerClient(base_url='unix://var/run/docker.sock')
+# # Start a new Docker container
+# container = docker_client.containers.run('phylo-place', detach=True)
 
 
 flask_app = Flask(__name__)

@@ -368,14 +368,17 @@ function renderMetadata(columnName){
     // .text(function (d) { return annot[d.data.name]; }) // Use the text method here
     // .attr('x', 400)
     // .attr('y', 0);
+    //let leaveFontSize = d3.select('.leaf-class').style('font-size');
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
     nodes.each(function(d) {
       let text = annot[d.data.name];
       if (text) { // Check if text is not null
+        let leaveFontSize = d3.select(this).attr('font-size');
         let transformValue = d3.select(this).attr('transform');
         let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-
-        let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues[0]).attr('y', 0).attr('class', columnName);
+        
+        console.log('leaveFontSize:', leaveFontSize);
+        let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues[0]).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
     
         if (text.length > 80) {
           let firstLine = text.substring(0, 80);
@@ -463,12 +466,12 @@ if (saveImageBtn) {
 } else {
   console.log('Save image button not found');
 }
-// console.log('Tree rendered, set up the proper size');
-// setTimeout(function() {
-//   d3.select('#tree svg')
-//     .attr('width', width)
-//     .attr('height', height);
-// }, 10000);
+console.log('Tree rendered, set up the proper size');
+setTimeout(function() {
+  d3.select('#tree svg')
+    .attr('width', width)
+    .attr('height', height);
+}, 10000);
 
 // $(tree.display.container).empty();
 console.log('showing tree');

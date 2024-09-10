@@ -21,8 +21,8 @@
             "datasets": [
                 {
                     "name": "biarylitides",
-                    "description": "Biarylitides",
-                    "tree": "p450/biarylitides_root.nwk",
+                    "description": "A widespread family of enzymes, and the corresponding genes are closely linked to 5-amino acid coding sequences in approximately 200 (actino)bacterial genomes, all with potential for biaryl linkage between amino acids 1 and 3 (Tyr-His in most cases). https://doi.org/10.1016/j.chembiol.2020.11.009",
+                    "tree":"p450/biarylitides_placement.nwk",
                     "metadata": "p450/biarylitides_metadata.tsv",
                     "metadata_columns": [
                         "Species",
