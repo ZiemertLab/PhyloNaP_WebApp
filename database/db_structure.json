@@ -13,6 +13,17 @@
                         "BGC_type",
                         "Enzyme_function"
                     ]
+                },
+                {
+                    "name": "mt_group2",
+                    "description": "",
+                    "tree": "mt_test/group1.2_keep_new_ids_swissprot.fa_mafft.faa.contree",
+                    "metadata": "mt_test/group1.2_metadata_all.tsv",
+                    "metadata_columns": [
+                        "Species",
+                        "BGC_type",
+                        "Enzyme_function"
+                    ]
                 }
             ]
         },

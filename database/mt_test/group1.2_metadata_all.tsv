@@ -1,0 +1,182 @@
+mibig_id	NP_structure	smarts	Substrate	Product	ID	Species	biosyn_class	Entry Name	Rhea	Superkingdom	compound_structure	TE_type	Enzyme_function	Gene	Source
+					A0A172J1V3	Lysobacter antibioticus		PHZM_LYSAN	RHEA:72523 RHEA:72527 RHEA:72635 RHEA:72639 RHEA:72643	 Bacteria			Phenazine O-methyltransferase PhzM (EC 2.1.1.-) (SAM-dependent O-methyltransferase)	phzM	SwissProt
+					AS000021079	Aspergillus fumigatus	NRPS								AS_db
+					AS000044550	Saccharopolyspora erythraea	PKS-like,T3PKS								AS_db
+					AS000045475	Salinispora tropica	T2PKS								AS_db
+					AS000095999	Streptosporangium roseum	NRPS-like,T1PKS,other								AS_db
+					AS000120355	Frankia inefficax,	T2PKS								AS_db
+					AS000144896	Streptomyces sp.	T2PKS,terpene								AS_db
+					AS000214119	Gloeocapsa sp.	T2PKS								AS_db
+					AS000348399	Dothidotthia symphoricarpi	NRPS								AS_db
+					AS000369402	Aspergillus viridinutans	NRPS								AS_db
+					AS000370458	Aspergillus udagawae	NRPS,fungal-RiPP-like								AS_db
+					AS000372777	Aspergillus pseudoviridinutans	NRPS								AS_db
+					AS000413829	Scytonema sp.	T1PKS								AS_db
+					AS000417577	Scytonema sp.	T1PKS								AS_db
+					AS000502647	Streptomyces aurantiacus	PKS-like,T1PKS,T2PKS								AS_db
+					AS000502651	Streptomyces aurantiacus	PKS-like,T1PKS,T2PKS								AS_db
+					AS000595551	Nonomuraea pusilla	LAP,thiopeptide								AS_db
+					AS000597534	Streptomyces turgidiscabies	T2PKS								AS_db
+					AS000622347	Micromonospora yangpuensis	T2PKS,terpene								AS_db
+					AS000623400	Streptomyces albiflavescens	PKS-like,T2PKS,oligosaccharide								AS_db
+					AS000623872	Microbispora bryophytorum	thioamitides,thiopeptide								AS_db
+					AS000632820	Streptomyces ruber	NI-siderophore,PKS-like,T2PKS,other								AS_db
+					AS000642857	Streptomyces niveoruber	crocagin,other								AS_db
+					AS000643444	Streptomyces bellus	PKS-like,T2PKS,other,phenazine								AS_db
+					AS000647006	Streptomyces janthinus	PKS-like,T2PKS,oligosaccharide								AS_db
+					AS000655302	Streptomyces purpurascens	PKS-like,T2PKS,oligosaccharide								AS_db
+					AS000659339	Streptomyces hiroshimensis	NRPS,NRPS-like,RiPP-like								AS_db
+					AS000677183	Amycolatopsis oliviviridis	NRPS,T1PKS,other,thioamitides								AS_db
+					AS000679353	Streptomyces griseocarneus	T1PKS								AS_db
+					AS000720530	Pseudomonas fluorescens	NRPS								AS_db
+					AS000888593	Kutzneria albida	indole								AS_db
+					AS000974456	Streptomyces albus	NRPS-like,T2PKS,betalactone,hglE-KS								AS_db
+					AS000997645	Lysobacter antibioticus	phenazine								AS_db
+					AS001060899	Kibdelosporangium phytohabitans	NRPS,NRPS-like,T1PKS,T2PKS								AS_db
+					AS001073709	Lysobacter antibioticus	phenazine								AS_db
+					AS001104055	Streptomyces globisporus	NRPS,T1PKS,other								AS_db
+					AS001187142	Amycolatopsis orientalis	T1PKS,other,thioamitides								AS_db
+					AS001247944	Nonomuraea sp.	T2PKS								AS_db
+					AS001262092	Streptomyces niveus	NRPS,PKS-like								AS_db
+					AS001262453	Pseudomonas orientalis	NRPS								AS_db
+					AS001308459	Streptomyces pactum	NRPS,NRPS-like,T2PKS,other								AS_db
+					AS001309340	Streptomyces pactum	NRPS,NRPS-like,T2PKS,other								AS_db
+					AS001335772	Streptomyces gilvosporeus	T2PKS,terpene								AS_db
+					AS001409867	Streptomyces peucetius	PKS-like,T2PKS,other								AS_db
+					AS001424803	Nocardiopsis gilva	NRP-metallophore,NRPS,NRPS-like,T1PKS								AS_db
+					AS001462228	Streptomyces coeruleorubidus	PKS-like,T2PKS,other								AS_db
+					AS001463311	Streptomyces alboniger	nucleoside								AS_db
+					AS001476555	Actinoplanes teichomyceticus	indole								AS_db
+					AS001543321	Streptomyces albulus	T2PKS								AS_db
+					AS001546330	Streptomyces sp.	NRPS,NRPS-like,PKS-like,T2PKS,oligosaccharide								AS_db
+					AS001559642	Streptomyces dengpaensis	NRP-metallophore,NRPS,T2PKS,other								AS_db
+					AS001649303	Streptomyces venezuelae	T3PKS,other,phenazine								AS_db
+					AS001649676	Streptomyces venezuelae	T3PKS,butyrolactone,other,phenazine,terpene								AS_db
+					AS001651432	Streptomyces venezuelae	T3PKS,other,phenazine								AS_db
+					AS001656071	Streptomyces sp.	nucleoside								AS_db
+					AS001656209	Streptomyces spongiicola	NI-siderophore,T2PKS								AS_db
+					AS001662377	Streptomyces globisporus	NRPS,T1PKS,other								AS_db
+					AS001722834	Peterkaempfera bronchialis	RiPP-like,T2PKS								AS_db
+					AS001974617	Nocardia otitidiscaviarum	NRP-metallophore,NRPS								AS_db
+					AS002066491	Streptomyces sp.	other								AS_db
+					AS002070818	Streptomyces fagopyri	T2PKS,indole								AS_db
+					AS002076577	Streptomyces sp.	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS002076607	Streptomyces sp.	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS002092580	Nocardia arthritidis	T2PKS,terpene								AS_db
+					AS002108863	Thermus antranikianii	PKS-like								AS_db
+					AS002194862	Streptomyces asoensis	T3PKS,butyrolactone,furan,other,phenazine								AS_db
+					AS002221607	Streptomyces antibioticus	T2PKS								AS_db
+					AS002320325	Streptomyces harbinensis	nucleoside								AS_db
+					AS002348142	Micromonospora carbonacea	PKS-like,T1PKS,lanthipeptide-class-i,oligosaccharide,other								AS_db
+					AS002381169	Actinomadura graeca	NRPS,NRPS-like,T1PKS,T2PKS								AS_db
+					AS002458664	Pseudomonas poae	NRPS								AS_db
+					AS002478101	Streptomyces sp.	T2PKS,butyrolactone,terpene								AS_db
+					AS002647025	Streptomyces griseocarneus	LAP,NRPS-like,thiopeptide								AS_db
+					AS002684813	Streptomyces mobaraensis	NI-siderophore,PKS-like,T1PKS,T3PKS,oligosaccharide								AS_db
+					AS002709338	Dactylosporangium aurantiacum	T2PKS,other								AS_db
+					AS002745349	Streptomyces sp.	PKS-like,T2PKS,linaridin,oligosaccharide								AS_db
+					AS002752335	MAG: Thermus	PKS-like								AS_db
+					AS002756645	Streptomyces sp.	NRPS								AS_db
+					AS002783717	Streptomyces sp.	T1PKS,phenazine								AS_db
+					AS002921607	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS002921610	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS003087011	Streptomyces sp.	HR-T2PKS,NI-siderophore,PKS-like,T1PKS,T3PKS,arylpolyene,oligosaccharide								AS_db
+					AS003089941	Couchioplanes caeruleus	NAPAA,PKS-like,T1PKS,T2PKS,terpene								AS_db
+					AS003105725	Streptomyces sp.	NRPS-like,T2PKS,betalactone,hglE-KS								AS_db
+					AS003255614	Streptomyces sp.	T3PKS,other,phenazine								AS_db
+					AS003355723	Serratia rubidaea	NRPS								AS_db
+					AS003377198	Streptomyces sp.	T2PKS								AS_db
+					AS003381214	Streptomonospora nanhaiensis	T3PKS								AS_db
+					AS003456974	Streptomyces coeruleorubidus	PKS-like,T2PKS,other								AS_db
+					AS003517419	Streptomyces filamentosus	NRPS,T1PKS								AS_db
+					AS003517422	Streptomyces filamentosus	NRPS,T1PKS								AS_db
+					AS003543915	Micromonospora carbonacea	PKS-like,T1PKS,oligosaccharide,other								AS_db
+					AS003604859	Micromonospora sp.	PKS-like,T1PKS,oligosaccharide,other								AS_db
+					AS003611244	Streptomyces sp.	NRPS,NRPS-like,hglE-KS								AS_db
+					AS003682867	Dyella sp.	phenazine								AS_db
+					AS003689418	Microbispora sp.	thioamitides,thiopeptide								AS_db
+					AS003689754	Microbispora sp.	thioamitides,thiopeptide								AS_db
+					AS003708940	Salinispora sp.	T2PKS								AS_db
+					AS003744758	Streptomyces netropsis	NI-siderophore								AS_db
+					AS003761044	Streptomyces violarus	PKS-like,T2PKS,oligosaccharide								AS_db
+					AS003877031	Streptomyces sp.	RRE-containing,T2PKS,phosphonate								AS_db
+					AS003895932	Dyella sp.	phenazine								AS_db
+					AS003896466	Nonomuraea sp.	thioamitides,thiopeptide								AS_db
+					AS003911984	Streptomyces albidoflavus	NRPS,T2PKS								AS_db
+					AS003925791	Streptomyces lateritius	NRPS-like,T1PKS,arylpolyene,butyrolactone,other								AS_db
+					AS003936741	Streptomyces sp.	phenazine								AS_db
+					AS004017073	Salinispora arenicola	PKS-like,T1PKS								AS_db
+					AS004044247	Actinomadura glauciflava	T1PKS,oligosaccharide,other								AS_db
+					AS004140307	Salinispora tropica	T2PKS								AS_db
+					AS004144254	Dyella japonica	phenazine								AS_db
+					AS004154628	Planobispora rosea	LAP,thiopeptide								AS_db
+					AS004162770	Streptomyces sp.	crocagin,other								AS_db
+					AS004212980	Salinispora arenicola	T1PKS,terpene								AS_db
+					AS004222686	Salinispora vitiensis	T2PKS								AS_db
+					AS004244022	Streptomyces sp.	T2PKS								AS_db
+					AS004250104	Salinispora arenicola	NRPS-like,PKS-like,T1PKS,oligosaccharide								AS_db
+					AS004250240	Salinispora arenicola	PKS-like,T1PKS								AS_db
+					AS004277982	Fischerella sp.	NRPS,NRPS-like,T1PKS,betalactone,lanthipeptide-class-ii								AS_db
+					AS004308388	Salinispora fenicalii	T2PKS								AS_db
+					AS004311117	Fischerella sp.	NRPS-like								AS_db
+					AS004382513	Frankia sp.	T2PKS								AS_db
+					AS004394160	Streptomyces curacoi	PKS-like,T1PKS,oligosaccharide								AS_db
+					AS004415336	Streptomyces albidoflavus	NRPS,T2PKS								AS_db
+					AS004419758	Streptomyces sp.	PKS-like,T2PKS,oligosaccharide								AS_db
+					AS004420890	Streptomyces sp.	other								AS_db
+					AS004428831	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004429790	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004429793	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004441918	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004461281	Streptomyces sp.	NRPS-like,T1PKS,arylpolyene,butyrolactone,other								AS_db
+					AS004468538	Streptomyces sp.	NRPS-like,T1PKS,butyrolactone,other								AS_db
+					AS004468717	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004534716	Amycolatopsis regifaucium	T1PKS,blactam								AS_db
+					AS004669247	Pseudomonas aeruginosa	NRP-metallophore,NRPS,phenazine								AS_db
+					AS004685500	Streptomyces sp.	NRPS-like,other								AS_db
+					AS004692768	Pseudomonas aeruginosa	phenazine								AS_db
+					AS004720756	Streptomyces sp.	T2PKS,terpene								AS_db
+					AS004731480	Streptomyces sp.	PKS-like,T1PKS,T2PKS								AS_db
+					AS004731484	Streptomyces sp.	PKS-like,T1PKS,T2PKS								AS_db
+					AS004787560	Streptomyces sp.	NRPS,T1PKS								AS_db
+					AS004789910	Nostoc sp.	NRPS,NRPS-like,microviridin								AS_db
+					AS004823820	Streptomyces albidoflavus	NRPS,T2PKS								AS_db
+					AS004901252	Kitasatospora sp.	NRPS,T1PKS,T3PKS,terpene								AS_db
+					AS004902486	Streptomyces sp.	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS004902516	Streptomyces sp.	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS004987051	Pseudomonas aeruginosa	NRP-metallophore,NRPS,phenazine								AS_db
+					AS004987561	Pseudomonas aeruginosa	phenazine								AS_db
+					AS005052185	Streptomyces lavendulae	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS005052215	Streptomyces lavendulae	PKS-like,T1PKS,T2PKS,oligosaccharide								AS_db
+					AS005122162	Nonomuraea typhae	NRPS								AS_db
+					AS005132977	Nocardiopsis sp.	T1PKS,oligosaccharide								AS_db
+					AS005133245	Nocardiopsis sp.	T1PKS,oligosaccharide								AS_db
+					AS005140811	Streptomyces sp.	other								AS_db
+					AS005142378	Pseudomonas aeruginosa	NRP-metallophore,NRPS,phenazine								AS_db
+					AS005146828	Phytoactinopolyspora mesophila	NRPS								AS_db
+					BGC0000112_AAM77984.1	Streptomyces carzinostaticus subsp. neocarzinostaticus	['Polyketide']				C[C@@H]1[C@@H]([C@@H]([C@H]([C@H](O1)O[C@H]\2[C@@H](C=C3/C2=C\C#C[C@@H]4[C@@](O4)(C#C3)[C@H]5COC(=O)O5)OC(=O)C6=C(C=CC7=C(C=C(C=C76)OC)C)O)NC)O)O	Methylation	O-methyltransferase	ncsB1	MIBIG
+					BGC0000200_AHX24691.1	uncultured bacterium	['Polyketide', 'Saccharide']				O=C(C1=CC=CC(O)=C1O2)C3=C2C([H])=C(CCC4=C5C(O)=C6C(C[C@@](C)(OC[C@]7([H])C(O)=O)N7C6=O)=C4)C5=C3O	Methylation	O-methyltransferase		MIBIG
+		[#6:27]-[#6:26]-[#6:25]-[#6:24]-[#6:23]-[c:22]1[c:21][c:17]2[c:16][c:15][c:14]3[c:13](-[#8:32])[c:8]4-[#6:7](=[O:33])-[c:6]5[c:5](-[#8:34])[c:4][c:3](-[#8:35])[c:2][c:1]5-[#6:10]-[c:9]4[c:12][c:11]3[c:18]2[c:20](-[#8:31])[c:19]1-[#6:28](-[#8:30])=[O:29]>>[#6:27]-[#6:26]-[#6:25]-[#6:24]-[#6:23]-[c:22]1[c:21][c:17]2[c:16][c:15][c:14]3[c:13](-[#8:32])[c:8]4-[#6:7](=[O:33])-[c:6]5[c:5](-[#8:34])[c:4][c:3](-[#8:35])[c:2][c:1]5[C:10]([#6:36])([#6:37])[c:9]4[c:12][c:11]3[c:18]2[c:20](-[#8:31])[c:19]1-[#6:28](-[#8:30])=[O:29]	CCCCCc1cc2ccc3c(O)c4C(=O)c5c(O)cc(O)cc5Cc4cc3c2c(O)c1C(O)=O	CCCCCc1cc2ccc3c(O)c4C(=O)c5c(O)cc(O)cc5C(C)(C)c4cc3c2c(O)c1C(O)=O	BGC0000204_CAM58795.1	Streptomyces sp. A2991200	['Polyketide']				OC1=C(C(C(C(O)=C(CCC2=C3C(O)=C(C(O)=O)C(CCCCC)=C2)C3=C4)=C4C5(C)O)=O)C5=CC(O)=C1	Methylation	C-methyltransferase	benF	Manual
+					BGC0000223_AEE65480.1	uncultured bacterium BAC AB649/1850	['Polyketide']				C[C@@]12[C@H]([C@H](OC(C(CCC)C)=O)C3=C4C(C5=C(C=CC=C5O)C4=O)=C(O)C=C3C2=O)O1	Methylation	putative O-methyltransferase		Manual
+					BGC0000224_AAQ08925.1	Streptomyces griseus	['Polyketide']				COC1=CC(=O)C2=C(C(O)=C3C(=O)[C@]4(CCC5=CC6=C(C(=O)NC(\C=C\C=C\C)=C6)C(O)=C45)C(=O)C3=C2O)C1=O	Methylation	putative o-methyltransferase	fdmN	MIBIG
+					BGC0000240_AHZ61857.1	Salinispora pacifica	['Polyketide', 'Saccharide']				CC[C@@]1([C@H](C(=C2C(=CC3=C2C(=C4C(=O)C=CC(=O)C4=C3O)O)[C@H]1O[C@@H]5C[C@@H]([C@H]([C@@H](O5)C)N(C)C)O)O)[C@H]6C(=O)C7=C([C@H]([C@@]6(CC)O[C@H]8C[C@@H]([C@H]([C@@H](O8)C)OC)OC)O[C@@H]9C[C@@H]([C@H]([C@@H](O9)C)N(C)C)O)C(=[N+]=[N-])C1=C7C(=C2C(=O)C=CC(=O)C2=C1O)O)O[C@H]1C[C@@H]([C@H]([C@@H](O1)C)OC)OC	Methylation	O-methyltransferase	lom23	MIBIG
+	Tetracycline SsfS6	[#7:26]-[#6:24](=[O:25])-[c:16]1[c:17](-[#8:23])[c:18][c:11]2[c:12][c:9]3[c:10][c:1]4[c:2][c:3][c:4][c:5](-[#8:19])[c:6]4[c:7](-[#8:20])[c:8]3[c:13](-[#8:21])[c:14]2[c:15]1-[#8:22]>>[#6:30]-[c:10]1[c:1]2[c:2][c:3][c:4][c:5](-[#8:19])[c:6]2[c:7](-[#8:20])[c:8]2[c:13](-[#8:21])[c:14]3[c:15](-[#8:22])[c:16](-[#6:24](-[#7:26])=[O:25])[c:17](-[#8:23])[c:18][c:11]3[c:12][c:9]12	NC(=O)c1c(O)cc2cc3cc4cccc(O)c4c(O)c3c(O)c2c1O	Cc1c2cccc(O)c2c(O)c2c(O)c3c(O)c(C(N)=O)c(O)cc3cc12	BGC0000269_ADE34484.1	Streptomyces sp. SF2575	['Polyketide', 'Saccharide']				C/C=C(\C)/C(=O)OC1C(OC(CC1O)C2=C(C3=C(C=C2)C(C4CC5C(C(=O)C(=C(C5(C(=O)C4=C3O)OC)O)C(=O)N)OC(=O)C6=CC=CC=C6O)(C)OC)O)C	Methylation	C-methyltransferase of multiple rings	SsfM4	Manual
+	Tetracycline SsfS6	[H:41][C@@:16]12[#6:15][C@@:18]3([H:40])[#6:19](=[#6:14](-[#8:6])[C@:13]1([#8:36])[#6:12](=[O:5])-[#6:11](-[#6:3](-[#7:1])=[O:2])=[#6:10](-[#8:4])-[#6@@H:9]2-[#8:37])-[#6:20](=[O:7])-[c:21]1[c:22](-[#8:8])[c:23]([c:24][c:25][c:26]1[C@:17]3([#6:38])[#8:39])-[#6:27]-1-[#6:28]-[#6:29](-[#8:34])-[#6:30](-[#8:35])-[#6:31](-[#6:32])-[#8:33]-1>>[H:41][C@@:16]12[#6:15][C@@:18]3([H:40])[#6:19](=[#6:14](-[#8:6])[C@:13]1([#8:36])[#6:12](=[O:5])-[#6:11](-[#6:3](-[#7:1])=[O:2])=[#6:10](-[#8:4])-[#6@@H:9]2-[#8:37])-[#6:20](=[O:7])-[c:21]1[c:22](-[#8:8])[c:23]([c:24][c:25][c:26]1[C@:17]3([#6:38])[#8:39]-[#6:46])-[#6:27]-1-[#6:28]-[#6:29](-[#8:34])-[#6:30](-[#8:35])-[#6:31](-[#6:32])-[#8:33]-1 |r,t:5,16,50,61|	[H][C@@]12C[C@@]3([H])C(=C(O)[C@]1(O)C(=O)C(C(N)=O)=C(O)[C@@H]2O)C(=O)c1c(O)c(ccc1[C@]3(C)O)C1CC(O)C(O)C(C)O1 |r,t:5,16|	[H][C@@]12C[C@@]3([H])C(=C(O)[C@]1(O)C(=O)C(C(N)=O)=C(O)[C@@H]2O)C(=O)c1c(O)c(ccc1[C@]3(C)OC)C1CC(O)C(O)C(C)O1 |r,t:5,16|	BGC0000269_ADE34498.1	Streptomyces sp. SF2575	['Polyketide', 'Saccharide']				C/C=C(\C)/C(=O)OC1C(OC(CC1O)C2=C(C3=C(C=C2)C(C4CC5C(C(=O)C(=C(C5(C(=O)C4=C3O)OC)O)C(=O)N)OC(=O)C6=CC=CC=C6O)(C)OC)O)C	Methylation	O-methyltransferase	SsfM2	Manual
+					BGC0000274_AFY23046.1	uncultured bacterium	['Polyketide']				CC1(O)CC(O)CC2=CC3=C(C(O)=C12)C(=O)C1=C(O)C=C(O)C=C1C3(C)C	Methylation	TamO		MIBIG
+		[H:26][C@:7]12[#6:9](=[O:10])-[#7:8]-[c:5]3[c:4][c:3][c:2][c:1]([c:6]13)[C@@:16]1([#7:25]=[C:28]=[S:29])[#6:17](=[O:27])[C@:12]([H:24])([#6:13]=[#6:14]([Cl:23])[C@@:15]1([#6:22])[#6:20]=[#6:21])[C:11]2([#6:19])[#6:18]>>[H:26][C@:7]12[#6:9](=[O:10])-[#7:8](-[#6:30])-[c:5]3[c:4][c:3][c:2][c:1]([c:6]13)[C@@:16]1([#7:25]=[C:28]=[S:29])[#6:17](=[O:27])[C@:12]([H:24])([#6:13]=[#6:14]([Cl:23])[C@@:15]1([#6:22])[#6:20]=[#6:21])[C:11]2([#6:19])[#6:18] |r,t:21,54|	[H][C@]12C(=O)Nc3cccc(c13)[C@@]1(N=C=S)C(=O)[C@]([H])(C=C(Cl)[C@@]1(C)C=C)C2(C)C |r,t:21|	[H][C@]12C(=O)N(C)c3cccc(c13)[C@@]1(N=C=S)C(=O)[C@]([H])(C=C(Cl)[C@@]1(C)C=C)C2(C)C |r,t:22|	BGC0000668_AHI58817.1	Hapalosiphon welwitschii UTEX B 1830	['Terpene', 'Alkaloid']				[C-]#[N+]/C=C\C1=CNC2=CC=CC=C21	Methylation	N-methyltransferase	WelM	Manual
+	methylarcyriarubin	[O:24]=[#6:23]-1-[#7:21]-[#6:22](=[O:25])-[#6:19](=[#6:20]-1-[c:16]1[c:17][n:18][c:9]2[c:10][c:11][c:12][c:7][c:8]12)-[c:13]1[c:15][n:14][c:5]2[c:4][c:3][c:2][c:1][c:6]12>>[#6:30]-[#7:21]-1-[#6:23](=[O:24])-[#6:20](=[#6:19](-[#6:22]-1=[O:25])-[c:13]1[c:15][n:14][c:5]2[c:4][c:3][c:2][c:1][c:6]12)-[c:16]1[c:17][n:18][c:9]2[c:10][c:11][c:12][c:7][c:8]12 |c:5,33|	O=C1NC(=O)C(=C1c1c[nH]c2ccccc12)c1c[nH]c2ccccc12 |c:5|	CN1C(=O)C(=C(C1=O)c1c[nH]c2ccccc12)c1c[nH]c2ccccc12 |c:4|	BGC0000817_AHE14572.1	uncultured bacterium	['Alkaloid']				O=C(N1C)C(C2=CNC3=CC=CC=C32)=C(C4=CNC5=CC=CC=C54)C1=O	Methylation	N-methyltransferase	MarM	Manual
+					BGC0000965_AAL06683.1	Streptomyces globisporus	['Polyketide']				COC1=CC2=C(NC(=O)C(=C)O2)C(=C1)C(=O)OC1COC(=O)CC(N)C2=CC(O)=C(OC3C#CC=C1C#CC1=CC=C[C@]31O[C@@H]1OC(C)(C)[C@H](C(O)C1O)N(C)C)C(Cl)=C2	Methylation	O-methyltransferase	sgcD4	MIBIG
+	Collismycin A	[#6:27]-[#16:16]-[c:11]1[c:10](-[#8:25])[c:9][c:8]([n:7][c:12]1-[#6:13](-[$([#1,*])])=[$([#1,*])])-[c:5]1[c:6][c:1][c:2][c:3][n:4]1>>[#6:28]-[#8:25]-[c:10]1[c:9][c:8]([n:7][c:12](-[#6:13](-[$([#1,*])])=[$([#1,*])])[c:11]1-[#16:16]-[#6:27])-[c:5]1[c:6][c:1][c:2][c:3][n:4]1 |$;;;;;;;;;;_R1;_R0;;;;;;;;;;;;;;;_R1;_R0;;;;;;;;;$|	CSc1c(O)cc(nc1C([*])=[*])-c1ccccn1 |$;;;;;;;;;;_R1;_R0;;;;;;$|	COc1cc(nc(C([*])=[*])c1SC)-c1ccccn1 |$;;;;;;;;_R1;_R0;;;;;;;;;$|	BGC0000973_CCC55909.1	Streptomyces sp. CS40	['NRP', 'Polyketide']				COC1=C(/C(=C\N=O)/NC(=C1)C2=CC=CC=N2)SC	Methylation	O-methyltransferase	clmM2	Manual
+	Collismycin A	[#6:20]-[#6:19](-[#6:21])-[#6:18]-[#6:17](-[#7:15]-1-[#16:16]-[c:11]2[c:12]([n:7][c:8]([c:9][c:10]2-[#8:25])-[c:5]2[c:6][c:1][c:2][c:3][n:4]2)-[#6:13]-1=[O:14])-[#6:22](-[#8:23])=[O:24]>>[#6:27]-[#16:16]-[c:11]1[c:10](-[#8:25])[c:9][c:8]([n:7][c:12]1-[#6:13](=[O:14])-[#7:15]-[#6:17](-[#6:18]-[#6:19](-[#6:20])-[#6:21])-[#6:22](-[#8:23])=[O:24])-[c:5]1[c:6][c:1][c:2][c:3][n:4]1	CC(C)CC(N1Sc2c(nc(cc2O)-c2ccccn2)C1=O)C(O)=O	CSc1c(O)cc(nc1C(=O)NC(CC(C)C)C(O)=O)-c1ccccn1	BGC0000973_CCC55912.1	Streptomyces sp. CS40	['NRP', 'Polyketide']				COC1=C(/C(=C\N=O)/NC(=C1)C2=CC=CC=N2)SC	Methylation	S-methyltransferase	clmM1	Manual
+					BGC0001061_ACN64843.1	Streptomyces diastatochromogenes	['Polyketide', 'Saccharide']				COC1=CC(=O)C2=C(C(C)=C3CC4(O)C(O[C@H]5CC[C@H](O[C@H]6C[C@@](C)(O)[C@H](OC(=O)C7=C(C)C=CC(C)=C7O)[C@H](C)O6)[C@@H](C)O5)C(=O)\C(=C(\C)O)C(=O)C4(O)C(=O)C3=C2O)C1=O	Methylation		pokMT2	MIBIG
+	endophenazine B	[#8:17]-[#6:15](=[O:16])-[c:1]1[c:2][c:3][c:4][c:5]2[n:8][c:9]3[c:12][c:13][c:14][c:11][c:10]3[n:7][c:6]12>>[#6:20]-[n+:8]1[c:9]2[c:12][c:13][c:14][c:11][c:10]2[n:7][c:6]2[c:1]([c:2][c:3][c:4][c:5]12)-[#6:15](-[#8:17])=[O:16]	OC(=O)c1cccc2nc3ccccc3nc12	C[n+]1c2ccccc2nc2c(cccc12)C(O)=O	BGC0001080_CAX48665.1	Streptomyces anulatus	['Other']				CN1C2=CC=CC(C(O)=O)=C2N=C2C(CC=C(C)C)=CC(=O)C=C12	Methylation	N-methyltransferase	ppzM	Manual
+					BGC0001155_AGY49596.1	Planobispora rosea	['RiPP']				CC1=C2C(=O)NCC(=O)NC(C3=NC(=CS3)C4=NC(=CS4)C5=C(C=CC(=N5)C6=NC(=CS6)C7=NC(CO7)C(=O)N8CCCC8C(=O)N)C9=NC(=CS9)C(=O)NC(C3=NC(=C(S3)COC)C(=O)NC(C(=N2)S1)CC(=O)NC)C(C)C)C(C1=CC=CC=C1)O	Methylation	O-methyltransferase	pbtM4	MIBIG
+					BGC0002085_QLD28327.2	Micromonospora carbonacea	['Saccharide']				COC[C@H]1O[C@@H](O[C@@H]2OC[C@@H]3O[C@]4(O[C@H]3[C@H]2OC)OC[C@@](O)([C@H](C)OC)[C@@H]2OCO[C@@H]42)[C@@H](OC)[C@@H](O)[C@@H]1O[C@@H]1O[C@H](C)[C@H](OC)[C@H](O[C@H]2C[C@@]3(C)O[C@@]4(C[C@@H](O)[C@H](O[C@H]5C[C@@H](O[C@H]6C[C@](C)(NO)[C@@H](OC)[C@H](C)O6)[C@H](OC(=O)C6=C(C)C(Cl)=C(O)C(Cl)=C6OC)[C@@H](C)O5)[C@@H](C)O4)O[C@@H]3[C@@H](C)O2)[C@H]1O	Methylation	A1-ring -methyltransferase	evdM5	MIBIG
+					BGC0002141_AKT74301.1	Streptomyces bottropensis DO-45	['Polyketide']				C[C@H]1[C@H]([C@](C[C@@H](O1)O[C@H]2C[C@@H](C(=O)C3=C(C4=C(C=C(C5=C4O[C@@]6([C@@H]7[C@H]5O[C@]([C@]68CO8)(O7)C(OC)OC)O[C@H]9C[C@H]([C@]([C@@H](O9)C)(C(=O)C)O)O)C)C(=C23)OC)O)O)(C)O)OC(=O)C	Methylation	TxnM2		MIBIG
+					BGC0002141_AKT74305.1	Streptomyces bottropensis DO-45	['Polyketide']				C[C@H]1[C@H]([C@](C[C@@H](O1)O[C@H]2C[C@@H](C(=O)C3=C(C4=C(C=C(C5=C4O[C@@]6([C@@H]7[C@H]5O[C@]([C@]68CO8)(O7)C(OC)OC)O[C@H]9C[C@H]([C@]([C@@H](O9)C)(C(=O)C)O)O)C)C(=C23)OC)O)O)(C)O)OC(=O)C	Methylation	TxnM3		MIBIG
+					BGC0002141_AKT74307.1	Streptomyces bottropensis DO-45	['Polyketide']				C[C@H]1[C@H]([C@](C[C@@H](O1)O[C@H]2C[C@@H](C(=O)C3=C(C4=C(C=C(C5=C4O[C@@]6([C@@H]7[C@H]5O[C@]([C@]68CO8)(O7)C(OC)OC)O[C@H]9C[C@H]([C@]([C@@H](O9)C)(C(=O)C)O)O)C)C(=C23)OC)O)O)(C)O)OC(=O)C	Methylation	TxnM4		MIBIG
+					K4RFM2	Streptomyces davaonensis (strain DSM 101723 / JCM 4913 / KCC S-0913 / 768)		ROSA_STRDJ	RHEA:51944	 Bacteria			8-amino-8-demethylriboflavin N,N-dimethyltransferase (EC 2.1.1.343) (AF dimethyltransferase) (N,N-8-amino-8-demethyl-D-riboflavin dimethyltransferase)	rosA BN159_8032	SwissProt
+					P42712	Streptomyces alboniger		DMPM_STRAD	RHEA:22280	 Bacteria			O-demethylpuromycin-O-methyltransferase (EC 2.1.1.38)	dmpM	SwissProt
+					Q06528	Streptomyces peucetius		DNRK_STRPE	RHEA:38311	 Bacteria			Carminomycin 4-O-methyltransferase DnrK (COMT) (EC 2.1.1.292) (Anthracycline 4-O-methyltransferase)	dnrK	SwissProt
+					Q55216	Streptomyces sp. (strain C5)		DNRK_STRS5	RHEA:38311	 Bacteria			Carminomycin 4-O-methyltransferase DauK (COMT) (EC 2.1.1.292) (Anthracycline 4-O-methyltransferase)	dauK	SwissProt
+					Q9HWH2	Pseudomonas aeruginosa (strain ATCC 15692 / DSM 22644 / CIP 104116 / JCM 14847 / LMG 12228 / 1C / PRS 101 / PAO1)		PHZM_PSEAE	RHEA:49112	 Bacteria			Phenazine-1-carboxylate N-methyltransferase (EC 2.1.1.327)	phzM PA4209	SwissProt
