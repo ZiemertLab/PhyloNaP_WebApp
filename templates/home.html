@@ -1,0 +1,12 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+{% block content %}
+
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <!-- <textarea name="sequence" rows="4" cols="50"></textarea>
+        <input type="submit" value="Submit" class="btn btn-primary"> -->
+        <textarea name="sequence" placeholder="Paste your protein sequence here"></textarea><br>
+        <input type="file" name="file"><br>
+        <input type="submit" value="Submit">    
+    </form>
+{% endblock %}

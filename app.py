@@ -1,9 +1,13 @@
 # app.py
 import sys
-print(sys.executable)
+import uuid
+import subprocess
+#print(sys.executable)
 from flask import Flask, render_template, request, redirect, url_for, Response, session
 from flask import send_from_directory
 from urllib.parse import urlparse, unquote
+from werkzeug.utils import secure_filename
+
 #from ete3 import Tree
 #from ete3 import Tree, WebTreeApplication, NodeStyle
 #from ete3 import TreeStyle
@@ -13,6 +17,8 @@ import logging
 import json
 import pandas as pd
 import ast
+from flask_socketio import SocketIO, emit
+import threading
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -22,16 +28,25 @@ import ast
 # # Start a new Docker container
 # container = docker_client.containers.run('phylo-place', detach=True)
 
+tmp_directory = '/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp'
+tree_placement_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_enzPlace'
+database_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_database'
+
 
 flask_app = Flask(__name__)
 flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
 app=flask_app
 #app = WSGIMiddleware(flask_app)
+socketio = SocketIO(app)
 
+def background_thread(job_id, filename):
+    process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    for line in iter(process.stdout.readline, b''):
+        socketio.emit('update', {'data': line.decode('utf-8')})
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('home.html')
 
 @app.route('/help')
 def help_page():
@@ -60,7 +75,7 @@ def database_page():
     #folders = {folder: os.listdir('database/' + folder) for folder in os.listdir('database/') if os.path.isdir('database/' + folder)}
     #print('Printing folders:::')
     #print(folders)  # Debugging line
-    with open('database/db_structure.json') as f:
+    with open(os.path.join(database_dir,'db_structure.json')) as f:
         data = json.load(f)
     #print(data)
     return render_template('database.html',superfamilies=data['superfamilies'])
@@ -71,7 +86,7 @@ def database_page():
 def tree_renderer():
 
     # Open and read JSON file
-    with open('database/db_structure.json') as f:
+    with open(os.path.join(database_dir,'db_structure.json')) as f:
         data = json.load(f)
 
     superfamilyName = request.args.get('superfamily')
@@ -97,10 +112,10 @@ def tree_renderer():
         return print({'message': 'No matching superfamily or dataset found'}), 404
 
 
-    with open(os.path.join('database',tree_link), 'r') as f:
+    with open(os.path.join(database_dir,tree_link), 'r') as f:
         tree_content = f.read()
 
-    df = pd.read_csv(os.path.join('database',metadata_link),sep='\t')
+    df = pd.read_csv(os.path.join(database_dir,metadata_link),sep='\t')
     metadata_json = df.to_json(orient='records')
 
 
@@ -126,12 +141,40 @@ def results():
     return render_template('results.html')
 
 @app.route('/submit', methods=['POST'])
+# def submit():
+#     sequence = request.form['sequence']
+#     # handle the POST request here
+#     # redirect the user to the "Results" page
+#     return redirect(url_for('results'))
 def submit():
+    # Check if a file was uploaded
     sequence = request.form['sequence']
-    # handle the POST request here
-    # redirect the user to the "Results" page
-    return redirect(url_for('results'))
+    file = request.files.get('file')
 
+    if sequence == '' and (file is None or file.filename == ''):
+        return 'No fasta sequence was uploaded', 400
+
+    # Generate a unique job ID
+    job_id = str(uuid.uuid4())
+    print('Job ID:', job_id)
+    os.makedirs(os.path.join(tmp_directory, job_id))
+    if file and file.filename != '':
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(tmp_directory, job_id, filename))
+        print('File uploaded:', filename)
+    elif sequence != '':
+        filename='sequence.fasta'
+        with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
+            f.write(sequence)
+        
+    threading.Thread(target=background_thread, args=(job_id, filename)).start()
+
+    return render_template('waiting_page.html')
+    #return redirect(url_for('results'))
+
+@socketio.on('connect')
+def handle_connect():
+    emit('update', {'data': 'Connected'})
 # @app.route('/tree')
 # def tree_page():
 #     # Parse the tree file
@@ -180,6 +223,9 @@ def submit():
 def page_not_found(error):
     return "Page not found", 404
 
+# if __name__ == '__main__':
+#     # db.create_all()  # create tables
+#     app.run(debug=True)
+
 if __name__ == '__main__':
-    # db.create_all()  # create tables
-    app.run(debug=True)
+    socketio.run(app, debug=True)

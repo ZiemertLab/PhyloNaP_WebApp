@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+    <title>Waiting Room</title>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('update', function(msg) {
+            // Add the update to your page. This example just appends it to a div.
+            document.getElementById('updates').innerHTML += '<p>' + msg.data + '</p>';
+        });
+    </script>
+</head>
+<body>
+    <h1>Waiting for job to complete...</h1>
+    <div id="updates"></div>
+</body>
+
+{% endblock %}

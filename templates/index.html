@@ -1,8 +1,0 @@
-<!-- templates/index.html -->
-{% extends "base.html" %}
-{% block content %}
-    <form action="{{ url_for('submit') }}" method="post">
-        <textarea name="sequence" rows="4" cols="50"></textarea>
-        <input type="submit" value="Submit" class="btn btn-primary">
-    </form>
-{% endblock %}
