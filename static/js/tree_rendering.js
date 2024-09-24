@@ -191,6 +191,7 @@ document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) 
   });
 });
 
+
 // Compute the layout of the tree
 // var tree_align = tree.display.options.alignTips;
 // console.log("printing tree_align");
@@ -201,9 +202,16 @@ document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) 
 //leaves=tree.getLeaves();
 //console.log("printing leaves");
 
-
-
-
+// can draw the node of placement!!!
+bubbleSize = function (a) {
+  if (a.data.annotation == "1") {
+    return 20;
+  } else if (a.data.annotation == "0") {
+    return 30;
+  } else {
+    return null;
+  }
+};
 
 // Render the tree
 let renderedTree = tree.render({
@@ -218,6 +226,10 @@ let renderedTree = tree.render({
   'zoom': true,
   // 'node-styler': colorNodesByName,
   "draw_scale_bar": true,
+
+  // add the placement annotation to the tree
+  'draw-size-bubbles' : true,
+  'node-span': bubbleSize,
 });
 
 console.log(container.node());  // Check if the #tree element is being selected correctly
@@ -488,3 +500,13 @@ $(document).ready(function() {
     cursor: 'col-resize'
   });
 });
+
+// check if the jplace annotation is parsed
+let nodes = d3.selectAll('.node');
+nodes.each(function(d) {
+  annotation = d.data.annotation;
+  console.log(annotation);
+});
+
+// diplay the node of placement on the clade
+

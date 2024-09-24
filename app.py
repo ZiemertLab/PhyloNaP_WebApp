@@ -101,6 +101,7 @@ def tree_renderer():
             for dataset in superfamily['datasets']:
                 if dataset['name'] == datasetName:
                     tree_link = dataset['tree']
+                    print(tree_link)
                     metadata_link = dataset['metadata']
                     metadata_columns = dataset['metadata_columns']
                     datasetDescr = dataset['description']
@@ -111,10 +112,14 @@ def tree_renderer():
     if not success:
         return print({'message': 'No matching superfamily or dataset found'}), 404
 
-
+    print(os.path.join(database_dir,tree_link))
     with open(os.path.join(database_dir,tree_link), 'r') as f:
+        print("reading the tree file")
         tree_content = f.read()
-
+        
+        
+    print(tree_content)
+    print("tree content length:", len(tree_content))
     df = pd.read_csv(os.path.join(database_dir,metadata_link),sep='\t')
     metadata_json = df.to_json(orient='records')
 
