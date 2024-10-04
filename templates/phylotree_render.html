@@ -91,7 +91,8 @@
       /* background-color: #D1E7E0; 
       Grey background */
       /* background-color: #CCDDE2; */
-      background-color:#6BA292;
+      /* background-color:#6BA292; */
+      background-color: #e8e4d8;
       overflow: auto; /* Add scrollbars if necessary */
       margin: 0; /* Remove all margins */
       padding: 0; /* Remove all padding */
@@ -249,9 +250,9 @@
     <div style="display: flex; justify-content: flex-end;">
       <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
         <div style="display: flex; justify-content: center;">
-          <h3>Tree name</h3>
+          <h3 id="tree_name">Tree name</h3>
         </div>
-        <h10>The descripton of the treeThe descripton of the treeThe descripton of the treeThe descripton of the tree</h10>
+        <h10 id="description">The descripton of the treeThe descripton of the treeThe descripton of the treeThe descripton of the tree</h10>
         <div id="button-container">
         <h4>Annotation</h4>
         <script>
@@ -260,6 +261,9 @@
         </script>
 
         <script>
+          var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
+          document.getElementById('description').textContent = datasetDescr;
+          
           var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
           metadataList = metadataList.replace(/'/g, '"');
           var metadataListArray = JSON.parse(metadataList);

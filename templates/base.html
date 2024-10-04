@@ -14,24 +14,26 @@
 
     <style>
         .navbar-brand {
-            font-size: 2em;
+            font-size:2em;
             /* color: #982B1C !important; */
-            color: #CCDDE2 !important;
+            /* color: #CCDDE2 !important; */
+            color: #a51e36 !important;
             margin-right: 5px;
             margin-left: 10px;
         }
         .navbar {
         /* background-color: #ABAD9A !important; */
-            background-color: #982B1C !important;
+            /* background-color: #982B1C !important; */
+            background-color: #b69e6c !important;
         }
     </style>
     {% block css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">PhyloNaP</a>
+        <a class="navbar-brand" href="/">PhyloNaP</a>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
+            <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="/results">Results</a>
                 </li>
@@ -40,9 +42,6 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/help">Help</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/phylotree_render">phylotree_render</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/tutorial">tutorial</a>

@@ -3,17 +3,28 @@
 <head>
     <title>Waiting Room</title>
     <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
-    <script>
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
-        socket.on('update', function(msg) {
-            // Add the update to your page. This example just appends it to a div.
-            document.getElementById('updates').innerHTML += '<p>' + msg.data + '</p>';
-        });
-    </script>
+
 </head>
 <body>
-    <h1>Waiting for job to complete...</h1>
+    <h1 id="jobStatus"></h1>
     <div id="updates"></div>
+    <div id="jobStatus"></div>
+    <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button>
 </body>
+<script>
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('update', function(msg) {
+        // Add the update to your page. This example just appends it to a div.
+        document.getElementById('updates').innerHTML += '<p>' + msg.data + '</p>';
+        if (msg.status === 'running') {
+            document.getElementById('jobStatus').innerHTML = 'Waiting for job to complete...';
+        }
+        // Check if the job is finished
+        if (msg.status === 'finished') {
+            document.getElementById('jobStatus').innerHTML = 'Job Finished';
+            document.getElementById('phylogeneticTreeButton').style.display = 'block';
+        }
+    });
+</script>
 
 {% endblock %}

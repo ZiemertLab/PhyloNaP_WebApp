@@ -42,7 +42,14 @@ socketio = SocketIO(app)
 def background_thread(job_id, filename):
     process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     for line in iter(process.stdout.readline, b''):
-        socketio.emit('update', {'data': line.decode('utf-8')})
+        socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
+        # Wait for the process to finish
+    process.wait()
+
+    # Check if the process has finished
+    if process.poll() is not None:
+        # Emit an 'update' event with the job status
+        socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
 
 @app.route('/')
 def home():
