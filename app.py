@@ -40,8 +40,12 @@ app=flask_app
 socketio = SocketIO(app)
 
 def background_thread(job_id, filename):
+    print('Running background thread for job ', job_id)
+    print("Before subprocess.Popen")
     process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print("After subprocess.Popen")
     for line in iter(process.stdout.readline, b''):
+        print("emitting update running")
         socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
         # Wait for the process to finish
     process.wait()
@@ -49,6 +53,7 @@ def background_thread(job_id, filename):
     # Check if the process has finished
     if process.poll() is not None:
         # Emit an 'update' event with the job status
+        print("emitting update finished")
         socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
 
 @app.route('/')
@@ -178,10 +183,9 @@ def submit():
         filename='sequence.fasta'
         with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
             f.write(sequence)
-        
     threading.Thread(target=background_thread, args=(job_id, filename)).start()
 
-    return render_template('waiting_page.html')
+    return render_template('waiting_page.html', job_id=job_id)
     #return redirect(url_for('results'))
 
 @socketio.on('connect')

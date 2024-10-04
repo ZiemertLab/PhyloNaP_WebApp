@@ -12,16 +12,18 @@
     <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button>
 </body>
 <script>
+    var jobId = "{{ job_id }}";
     var socket = io.connect('http://' + document.domain + ':' + location.port);
     socket.on('update', function(msg) {
         // Add the update to your page. This example just appends it to a div.
-        document.getElementById('updates').innerHTML += '<p>' + msg.data + '</p>';
+        var message = msg.data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        document.getElementById('updates').innerHTML += '<p>' + message + '</p>';
         if (msg.status === 'running') {
-            document.getElementById('jobStatus').innerHTML = 'Waiting for job to complete...';
+            document.getElementById('jobStatus').innerHTML = 'Job' + job_id + 'is running';
         }
         // Check if the job is finished
         if (msg.status === 'finished') {
-            document.getElementById('jobStatus').innerHTML = 'Job Finished';
+            document.getElementById('jobStatus').innerHTML = 'Job' + job_id + 'is finished';
             document.getElementById('phylogeneticTreeButton').style.display = 'block';
         }
     });
