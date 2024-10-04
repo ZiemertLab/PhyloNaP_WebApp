@@ -19,6 +19,7 @@ import pandas as pd
 import ast
 from flask_socketio import SocketIO, emit
 import threading
+
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -153,9 +154,9 @@ def get_file():
 def tutorial():
     return render_template('tutorial.html')
 
-@app.route('/results')
-def results():
-    return render_template('results.html')
+# @app.route('/results')
+# def results():
+#     return render_template('results.html')
 
 @app.route('/submit', methods=['POST'])
 # def submit():
@@ -187,6 +188,22 @@ def submit():
 
     return render_template('waiting_page.html', job_id=job_id)
     #return redirect(url_for('results'))
+
+@app.route('/results/<job_id>', methods=['GET'])
+def results(job_id):
+    # Construct the path to the JSON file
+    json_file_path = os.path.join(tmp_directory, job_id, 'summary.json')
+
+    # Check if the JSON file exists
+    if not os.path.exists(json_file_path):
+        return 'Results not ready', 202
+
+    # Read the JSON data from the file
+    with open(json_file_path, 'r') as f:
+        row_data_json = f.read()
+
+    # Return the JSON data as a response
+    return row_data_json
 
 @socketio.on('connect')
 def handle_connect():

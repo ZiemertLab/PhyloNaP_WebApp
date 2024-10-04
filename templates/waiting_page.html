@@ -3,13 +3,33 @@
 <head>
     <title>Waiting Room</title>
     <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
-
+    <style>
+        #updates {
+            height: 50vh; /* 50% of the viewport height */
+            overflow: auto;
+        }
+        #results {
+            height: 50vh;
+        }
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        </style>
 </head>
 <body>
     <h1 id="jobStatus"></h1>
     <div id="updates"></div>
-    <div id="jobStatus"></div>
-    <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button>
+    <!-- <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button> -->
+    <div id="results"></div>
 </body>
 <script>
     var jobId = "{{ job_id }}";
@@ -19,12 +39,48 @@
         var message = msg.data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
         document.getElementById('updates').innerHTML += '<p>' + message + '</p>';
         if (msg.status === 'running') {
-            document.getElementById('jobStatus').innerHTML = 'Job' + job_id + 'is running';
+            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is running';
         }
         // Check if the job is finished
         if (msg.status === 'finished') {
-            document.getElementById('jobStatus').innerHTML = 'Job' + job_id + 'is finished';
-            document.getElementById('phylogeneticTreeButton').style.display = 'block';
+            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is finished';
+            // document.getElementById('phylogeneticTreeButton').style.display = 'block';
+            fetch('/results/{{ job_id }}')
+                .then(response => {
+                    if (response.status === 202) {
+                        // Results not ready yet, try again later
+                        return;
+                    }
+
+                    // Parse the JSON data and create a table
+                    response.json().then(rowDataList => {
+                        // Create a table
+                    var table = document.createElement('table');
+
+                    // Create a header row
+                    var headerRow = document.createElement('tr');
+                    ['Query', 'Superfamily', 'Family'].forEach(function(header) {
+                        var th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    });
+                    table.appendChild(headerRow);
+
+                    // Create a row for each dictionary in rowDataList
+                    rowDataList.forEach(function(rowData) {
+                        var row = document.createElement('tr');
+                        ['query', 'superfamily', 'family'].forEach(function(key) {
+                            var td = document.createElement('td');
+                            td.textContent = rowData[key];
+                            row.appendChild(td);
+                        });
+                        table.appendChild(row);
+                    });
+
+                    // Append the table to the results div
+                    document.getElementById('results').appendChild(table);
+                    });
+                    });
         }
     });
 </script>
