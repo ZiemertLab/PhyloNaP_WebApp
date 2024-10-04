@@ -23,10 +23,23 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
+            /* Add a new style for the header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100; /* Make sure the header is always on top */
+        }
+
+        /* Add a top padding to the body equal to the height of the header to prevent it from overlapping the content */
+        body {
+            padding-top: 70px; /* Adjust this value based on the actual height of your header */
+        }
         </style>
 </head>
 <body>
     <h1 id="jobStatus"></h1>
+    <button id="toggleUpdatesButton" onclick="toggleUpdates()">Hide Updates</button>
     <div id="updates"></div>
     <!-- <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button> -->
     <div id="results"></div>
@@ -38,12 +51,15 @@
         // Add the update to your page. This example just appends it to a div.
         var message = msg.data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
         document.getElementById('updates').innerHTML += '<p>' + message + '</p>';
+        // Scroll to the bottom of the updates div
+        var updatesDiv = document.getElementById('updates');
+        updatesDiv.scrollTop = updatesDiv.scrollHeight;
         if (msg.status === 'running') {
             document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is running';
         }
         // Check if the job is finished
         if (msg.status === 'finished') {
-            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is finished';
+            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' has finished';
             // document.getElementById('phylogeneticTreeButton').style.display = 'block';
             fetch('/results/{{ job_id }}')
                 .then(response => {
@@ -83,6 +99,25 @@
                     });
         }
     });
+
+
+    function toggleUpdates() {
+        var updatesDiv = document.getElementById('updates');
+        var resultsDiv = document.getElementById('results');
+        var toggleButton = document.getElementById('toggleUpdatesButton');
+
+        if (updatesDiv.style.display !== 'none') {
+            // Hide the updates and give more space to the results
+            updatesDiv.style.display = 'none';
+            resultsDiv.style.height = '90vh'; // Adjust this value as needed
+            toggleButton.textContent = 'Show Updates';
+        } else {
+            // Show the updates and reduce the space for the results
+            updatesDiv.style.display = 'block';
+            resultsDiv.style.height = '50vh'; // Adjust this value as needed
+            toggleButton.textContent = 'Hide Updates';
+        }
+    }
 </script>
 
 {% endblock %}
