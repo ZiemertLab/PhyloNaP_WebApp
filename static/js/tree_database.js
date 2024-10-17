@@ -1,5 +1,6 @@
 async function main() {
     const { container, width, height } = getContainerDimensions();
+
     const { nwk, metadata, metadataListArray:metadataListArray2, datasetDescr } = getTreeData();
     console.log("nwk: ", nwk);
     console.log("metadata: ", metadata);

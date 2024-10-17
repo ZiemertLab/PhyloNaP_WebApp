@@ -91,10 +91,29 @@
                             row.appendChild(td);
                         });
                         table.appendChild(row);
-                    });
 
-                    // Append the table to the results div
-                    document.getElementById('results').appendChild(table);
+                        
+                            // Create a button
+                        var button = document.createElement('button');
+                        button.textContent = 'View .jplace file';
+                        button.onclick = function() {
+                            // Redirect to the jplace_render.html page
+                            window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
+                        };
+
+                        // Add the button to the row
+                        var td = document.createElement('td');
+                        td.appendChild(button);
+                        row.appendChild(td);
+
+                        table.appendChild(row);
+                    
+
+                        // Append the table to the results div
+                        document.getElementById('results').appendChild(table);
+                        });
+
+
                     });
                     });
         }

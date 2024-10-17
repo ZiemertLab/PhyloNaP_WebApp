@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% block content %}
+<head>
+  <!-- Your existing head content... -->
+      <!-- Latest compiled and minified CSS -->
+      <script src="https://code.jquery.com/jquery.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+  
+      <!-- <link
+        rel="stylesheet"
+        href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous"
+      /> --> 
+      {% block css %}
+      <link
+        href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
+        rel="stylesheet"
+      />
+      <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
+      {% endblock %}
+  
+      <!-- Optional theme -->
+      <!-- <link
+        rel="stylesheet"
+        href="//stackpath.bootstrapcdn.com/bootswatch/4.1.1/spacelab/bootstrap.min.css"
+      /> -->
+     <!-- Latest compiled and minified JavaScript -->
+     <script src="https://cdn.jsdelivr.net/npm/split.js"></script>
+     <script
+     src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+     integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+     crossorigin="anonymous" defer
+   ></script>
+   <script
+     src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+     integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+     crossorigin="anonymous" defer
+   ></script>
+
+   <script src="//d3js.org/d3.v6.js" defer></script>
+   <script src="https://d3js.org/d3.v6.min.js"></script>
+   <!-- <script src="/static/js/phylotree.js/dist/phylotree.js" defer></script> -->
+   <script src="/static/js/phylotree.js/dist/phylotree.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      /* background-color: #D8BFD8; */
+    }
+    .layout {
+      display: flex;
+      width: 100%; /* Use full viewport width */
+      height: 100vh; /* Use full viewport height */
+    }
+
+    .tree-panel {
+      display: flex;
+      flex-direction: column;
+      flex: 4; /* Take up 1 part of the available space */
+      /* background-color: #fff;  */
+      /* White background */
+      /* overflow: auto; */
+      margin: 0;
+      padding: 0;
+    }
+    .tree-controls {
+      flex-shrink: 0;
+      /* background-color: peachpuff;  */
+      /* White background */
+      height: 30px;
+      /* overflow: auto; */
+    }
+    .tree {
+      height: calc(100% - 50px);
+      width: 100% !important;
+      flex-grow: 1;
+      /* background-color: beige; */
+      /* overflow: auto; */
+      /* margin: 0;
+      padding: 0; */
+    }
+
+    .details {
+      flex: 1; /* Take up 2 parts of the available space */
+      /* background-color: #D1E7E0; 
+      Grey background */
+      /* background-color: #CCDDE2; */
+      /* background-color:#6BA292; */
+      background-color: #e8e4d8;
+      overflow: auto; /* Add scrollbars if necessary */
+      margin: 0; /* Remove all margins */
+      padding: 0; /* Remove all padding */
+    }
+    /* .collapsible {
+      height: 4em;
+      overflow: hidden;
+      position: relative;
+    } */
+    /* .collapsible::after {
+      content: "...";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: white;
+      padding-left: 1em;
+    } */
+    #enlarged-image-container {
+      position: relative;
+      width: 100%; /* Adjust as needed */
+      max-width: 100%;
+      max-height: 100%;
+    }
+    /* #enlarged-image-container {
+      position: fixed;
+      right: -140px;
+      top: 80%;
+      transform: translateY(-50%);
+      width: 50%; 
+      max-width: 100%;
+      max-height: 100%;
+    } */
+
+    #enlarged-image {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    .no-overlap {
+    position: relative;
+    z-index: 1;
+  }
+  #tree-container {
+      width: 100%;
+      height: 100%; /* Adjust this value as needed */
+
+      /* Add scrollbars if the content is larger than the container */
+      /* overflow: auto;  */
+
+    } 
+  </style>
+</head>
+
+<div class="layout">
+  <div class="tree-panel">
+  <div class="tree-controls">
+      <div class="d-flex align-items-center justify-content-between"> 
+      <div class="btn-group" role="group">
+        <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="vertical"
+        data-amount="1"
+        title="Expand vertical spacing"
+      >
+        <i class="fa fa-arrows-v"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="vertical"
+        data-amount="-1"
+        title="Compress vertical spacing"
+      >
+        <i class="fa  fa-compress fa-rotate-135"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="horizontal"
+        data-amount="1"
+        title="Expand horizonal spacing"
+      >
+        <i class="fa fa-arrows-h"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        data-direction="horizontal"
+        data-amount="-1"
+        title="Compress horizonal spacing"
+      >
+        <i class="fa  fa-compress fa-rotate-45"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_ascending"
+        title="Sort deepest clades to the bototm"
+      >
+        <i class="fa fa-sort-amount-asc"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_descending"
+        title="Sort deepsest clades to the top"
+      >
+        <i class="fa fa-sort-amount-desc"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="sort_original"
+        title="Restore original order"
+      >
+        <i class="fa fa-sort"></i>
+      </button>
+      <button
+        type="button"
+        class="btn btn-light btn-sm"
+        id="save_image"
+        title="Save image"
+      >
+      </button>
+        <button
+          class="btn btn-light btn-sm active phylotree-align-toggler"
+          data-align="left"
+        >
+          <i class="fa fa-align-left"></i>
+        </button>
+        <button
+          class="btn btn-light btn-sm phylotree-align-toggler"
+          data-align="right"
+        >
+          <i class="fa fa-align-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+    
+
+<!-- 
+    <div id="tree"></div>
+    <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
+    <div id="metadata-container" metadata="{{ metadata }}"></div> -->
+    <!-- <div id="tree_data" style="margin-top: 20%;" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div> -->
+    <div class="tree" id="tree">
+      <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div>
+    </div>
+  </div>
+  <div class="details">
+      <!-- <div class="d-flex justify-content-end"> -->
+    <div style="display: flex; justify-content: flex-end;">
+      <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
+        <div style="display: flex; justify-content: center;">
+          <h3 id="tree_name">Tree name</h3>
+        </div>
+        <h10 id="description">The descripton of the treeThe descripton of the treeThe descripton of the treeThe descripton of the tree</h10>
+        <div id="button-container">
+        <h4>Annotation</h4>
+        <script>
+          const color_buttons = "#982B1C";
+          const color_old = "#a61e37";
+        </script>
+
+        <script>
+          var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
+          document.getElementById('description').textContent = datasetDescr;
+          
+          var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
+          metadataList = metadataList.replace(/'/g, '"');
+          var metadataListArray = JSON.parse(metadataList);
+
+          var buttonContainer = document.getElementById('button-container');
+
+          metadataListArray.forEach(function(item) {
+            var button = document.createElement('button');
+            button.id = item;
+            button.className = 'btn m-1';
+            button.style.backgroundColor = '#a61e37';
+            button.style.color = 'white';
+            button.textContent = item.replace('_', ' ');
+
+            buttonContainer.appendChild(button);
+          });
+        </script>
+        </div>
+        <!-- {{ metadata_list }} 
+        {% for item in metadataListArray %}
+            <button id="{{ item }}" class="btn m-1" style="background-color: #a61e37; color: white;">{{ item.replace('_', ' ') }}</button>
+        {% endfor %} -->
+        <!-- <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
+        <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
+        <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button> -->
+        <h4>Structures</h4>
+        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+        <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button>
+      </div>
+      </div>
+
+      <div id="enlarged-image-container">
+        <!-- <img id="enlarged-image" src="" alt="Enlarged image" /> -->
+        <img id="enlarged-image" src="" />
+      </div>
+</div>
+
+  </div>
+
+
+
+
+
+
+
+<script>
+  const content = "{{ content }}";
+  console.log("phylotree_render.html content:");
+  console.log(content);
+</script>
+<script src="static/js/tree_general.js"></script>
+<script src="static/js/tree_placement.js"></script>
+<!-- <script src="static/js/tree_rendering.js"></script> -->
+
+{% endblock %}

@@ -208,6 +208,61 @@ def results(job_id):
 @socketio.on('connect')
 def handle_connect():
     emit('update', {'data': 'Connected'})
+
+@app.route('/jplace_render.html')
+def jplace_render():
+    jobId = request.args.get('jobId')
+    query = request.args.get('query')
+    treeId = request.args.get('treeId')
+
+    # Construct the file path
+    file_path = os.path.join(tmp_directory, jobId, query, treeId, 'epa_result.jplace')
+
+    # Read the file content
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+
+    # Render the jplace_render.html template with the .jplace file content
+    # return render_template('jplace_render.html', jplaceFileContent=file_content)
+    with open(os.path.join(database_dir,'db_structure.json')) as f:
+        data = json.load(f)
+
+
+    # Extract necessary data
+    # Find the matching superfamily and dataset
+    success = False
+    for superfamily in data['superfamilies']:
+        for dataset in superfamily['datasets']:
+            if dataset['id'] == treeId:
+                tree_link = dataset['tree']
+                print(tree_link)
+                metadata_link = dataset['metadata']
+                metadata_columns = dataset['metadata_columns']
+                datasetDescr = dataset['description']
+                success = True
+                break
+
+    # Handle the case where no matching superfamily or dataset was found
+    if not success:
+        return print({'message': 'No matching superfamily or dataset found'}), 404
+
+    print(os.path.join(database_dir,tree_link))
+    with open(os.path.join(file_path), 'r') as f:
+        print("reading the tree file")
+        jplace_content = f.read()
+        
+        
+    print(jplace_content)
+    df = pd.read_csv(os.path.join(database_dir,metadata_link),sep='\t')
+    metadata_json = df.to_json(orient='records')
+
+
+    # metadata_columns = json.dumps(metadata_columns)
+
+    #columns = df.columns.tolist()
+
+    return render_template('jplace_render.html', nwk_data=jplace_content, metadata=metadata_json, metadata_list=metadata_columns, datasetDescr=datasetDescr)
+
 # @app.route('/tree')
 # def tree_page():
 #     # Parse the tree file

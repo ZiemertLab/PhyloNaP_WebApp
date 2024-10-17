@@ -31,7 +31,8 @@ window.getContainerDimensions = function(){
 }
 
 window.getTreeData = function() {
-  var nwk = document.getElementById('tree_data').getAttribute('nwk_data');
+
+  const nwk = document.getElementById('tree_data').getAttribute('nwk_data');
   console.log("nwk = " + nwk);
   var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
   var metadataList=document.getElementById('tree_data').getAttribute('metadata_list');
@@ -45,7 +46,7 @@ window.getTreeData = function() {
   var metadataListArray1 = JSON.parse(metadataList);
   console.log("metadataListArray = ", metadataListArray1);
   console.log(typeof metadataListArray1);
-  return { nwk, metadata, metadataListArray:metadataListArray1, datasetDescr };
+  return {nwk, metadata, metadataListArray:metadataListArray1, datasetDescr };
 }
 
 
