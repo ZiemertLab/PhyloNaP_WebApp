@@ -97,7 +97,21 @@
       overflow: auto; /* Add scrollbars if necessary */
       margin: 0; /* Remove all margins */
       padding: 0; /* Remove all padding */
-      
+      box-sizing: border-box; /* Include padding in the element's total width and height */
+    }
+    .details > div {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .details > div > div {
+      padding: 10px;
+      margin-top: 1rem;
+      width: 100%; /* Ensure the inner content takes the full width */
+    }
+
+    .details h3, .details h10, .details h4 {
+      margin: 0; /* Remove default margins */
     }
     /* .collapsible {
       height: 4em;
