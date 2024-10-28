@@ -13,6 +13,15 @@ async function main() {
     const placements = jplace_content_obj.placements;
     console.log("nwktree: ", nwk);
     console.log("placements: ", placements);
+    let extractedNumbers; 
+    if (placements && Array.isArray(placements[0].p)) {
+        extractedNumbers = placements[0].p.map(subArray => [subArray[0], subArray[2]]);
+        console.log("extractedNumbers: ", extractedNumbers);
+    } else {
+        console.log("placements or placements.p is not defined or not an array");
+    }
+    // const extractedNumbers = placements.p.map(subArray => [subArray[1], subArray[2]]);
+    // console.log("extractedNumbers: ", extractedNumbers);
     // const { container, width, height } = getContainerDimensions();
     // const jplace_file = document.getElementById('tree_data').getAttribute('nwk_data');
     // console.log("nwk = " + jplace_tree);
@@ -28,21 +37,53 @@ async function main() {
     console.log("tree: ", tree);
     customTreeOptions={};
 
-    //     // can draw the node of placement!!!
+        // can draw the node of placement!!!
+    // for (const pair of extractedNumbers) {
+    //     const [num1, num2] = pair;
+    //     console.log("num1: ", num1, ", num2: ", num2);
+    // }
     // bubbleSize = function (a) {
-    //     if (a.data.annotation == "1") {
-    //     return 20;
-    //     } else if (a.data.annotation == "0") {
-    //     return 30;
-    //     } else {
-    //     return null;
+    //     for (const pair of extractedNumbers) {
+    //         const [num1, num2] = pair;
+             
+    //         if (a.data.annotation == num1) {
+    //             return num2*10;
+    //             } 
+    //             // else if (a.data.annotation == "0") {
+    //             // return 30;
+    //             // } else {
+    //             // return null;
+    //             // }
+    //         console.log("num1: ", num1, ", num2: ", num2);
     //     }
+
     // };
-    // customTreeOptions={
-    //     // add the placement annotation to the tree
-    //     'draw-size-bubbles' : true,
-    //     'node-span': bubbleSize,
-    // };
+
+    // Convert extractedNumbers into an object
+    const extractedNumbersObj = Object.fromEntries(extractedNumbers);
+
+    bubbleSize = function (a) {
+        console.log("a.data.annotation: ", a.data.annotation);
+        const num2 = extractedNumbersObj[a.data.annotation];
+        if (num2 !== undefined) {
+            console.log("num2: ", 10);
+            // return num2;
+            return Math.sqrt(parseFloat(num2));
+        }   else {
+            return 0; // return a default value
+        }
+        // else if (a.data.annotation == "0") {
+        //     return 30;
+        // } else {
+        //     return null;
+        // }
+    };
+
+    customTreeOptions={
+        // add the placement annotation to the tree
+        'draw-size-bubbles' : true,
+        'node-span': bubbleSize,
+    };
 
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
     console.log("renderedTree: ", renderedTree);

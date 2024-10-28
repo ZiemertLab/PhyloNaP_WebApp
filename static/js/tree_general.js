@@ -64,6 +64,7 @@ window.setupEventListeners = function(tree) {
                 : tree.display.spacing_y.bind(tree.display);
         which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
     });
+
   });
 
   document.querySelectorAll(".phylotree-layout-mode").forEach(function(element) {
@@ -77,126 +78,25 @@ window.setupEventListeners = function(tree) {
     });
   });
 
+  // document.querySelectorAll(".reroot-button").forEach(function(element) {
+  //   element.addEventListener("click", function(e) {
+  //     const nodeId = this.getAttribute("data-node-id");
+  //     const node = tree.getNodeById(nodeId);
+  //     if (node) {
+  //       const hierarchyNode = d3.hierarchy(node.data);
+  //       debugger
+  //       tree.reroot(node).update();
+  //     }
+  //   });
+  // });
+}
 // document.querySelector("#toggle_animation").addEventListener("click", function(e) {
 //   var current_mode = this.classList.contains("active");
 //   this.classList.toggle("active");
 //   tree.options({ transitions: !current_mode });
 // });
 
-  var datamonkey_save_image = function(type, container) {
-    var prefix = {
-      xmlns: "http://www.w3.org/2000/xmlns/",
-      xlink: "http://www.w3.org/1999/xlink",
-      svg: "http://www.w3.org/2000/svg"
-    };
 
-    function get_styles(doc) {
-      function process_stylesheet(ss) {
-        try {
-          if (ss.cssRules) {
-            for (var i = 0; i < ss.cssRules.length; i++) {
-              var rule = ss.cssRules[i];
-              if (rule.type === 3) {
-                // Import Rule
-                process_stylesheet(rule.styleSheet);
-              } else {
-                // hack for illustrator crashing on descendent selectors
-                if (rule.selectorText) {
-                  if (rule.selectorText.indexOf(">") === -1) {
-                    styles += "\n" + rule.cssText;
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          //console.log("Could not process stylesheet : " + ss); // eslint-disable-line
-        }
-      }
-
-      var styles = "",
-        styleSheets = doc.styleSheets;
-
-      if (styleSheets) {
-        for (var i = 0; i < styleSheets.length; i++) {
-          process_stylesheet(styleSheets[i]);
-        }
-      }
-
-      return styles;
-    }
-    // var svg = $(container).find("svg")[0];
-    // if (!svg) {
-    //   svg = $(container)[0];
-    // }
-    var svg = document.querySelector('svg');
-    if (svg) {
-      svg.setAttribute("version", "1.1");
-    } else {
-      console.log('SVG element not found');
-    }
-
-    var styles = get_styles(window.document);
-
-    svg.setAttribute("version", "1.1");
-
-    var defsEl = document.createElement("defs");
-    svg.insertBefore(defsEl, svg.firstChild);
-
-    var styleEl = document.createElement("style");
-    defsEl.appendChild(styleEl);
-    styleEl.setAttribute("type", "text/css");
-
-    // removing attributes so they aren't doubled up
-    svg.removeAttribute("xmlns");
-    svg.removeAttribute("xlink");
-
-    // These are needed for the svg
-    if (!svg.hasAttributeNS(prefix.xmlns, "xmlns")) {
-      svg.setAttributeNS(prefix.xmlns, "xmlns", prefix.svg);
-    }
-
-    if (!svg.hasAttributeNS(prefix.xmlns, "xmlns:xlink")) {
-      svg.setAttributeNS(prefix.xmlns, "xmlns:xlink", prefix.xlink);
-    }
-
-    var source = new XMLSerializer()
-      .serializeToString(svg)
-      .replace("</style>", "<![CDATA[" + styles + "]]></style>");
-    var doctype =
-      '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-    var to_download = [doctype + source];
-    var image_string =
-      "data:image/svg+xml;base66," + encodeURIComponent(to_download);
-
-    if (navigator.msSaveBlob) {
-      // IE10
-      download(image_string, "image.svg", "image/svg+xml");
-    } else if (type == "png") {
-      b64toBlob(
-        image_string,
-        function(blob) {
-          var url = window.URL.createObjectURL(blob);
-          var pom = document.createElement("a");
-          pom.setAttribute("download", "image.png");
-          pom.setAttribute("href", url);
-          $("body").append(pom);
-          pom.click();
-          pom.remove();
-        },
-        function(error) {
-          console.log(error); // eslint-disable-line
-        }
-      );
-    } else {
-      var pom = document.createElement("a");
-      pom.setAttribute("download", "image.svg");
-      pom.setAttribute("href", image_string);
-      $("body").append(pom);
-      pom.click();
-      pom.remove();
-    }
-  };
 
 
   document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) {
@@ -213,7 +113,7 @@ window.setupEventListeners = function(tree) {
       }
     });
   });
-}
+
 
 // Compute the layout of the tree
 // var tree_align = tree.display.options.alignTips;
@@ -225,7 +125,66 @@ window.setupEventListeners = function(tree) {
 //leaves=tree.getLeaves();
 //console.log("printing leaves");
 
+// additional functions
+function default_tree_settings() {
+  tree = phylotree();
+  tree.branchLength(null);
+  tree.branchName(null);
+  tree.display.radial(false).separation(function(a, b) {
+    return 0;
+  });
+}
+
+function node_colorizer(element, data) {
+  try {
+    var count_class = 0;
+
+    selection_set.forEach(function(d, i) {
+      if (data[d]) {
+        count_class++;
+        element.style(
+          "fill",
+          color_scheme(i),
+          i == current_selection_id ? "important" : null
+        );
+      }
+    });
+
+    if (count_class > 1) {
+    } else {
+      if (count_class == 0) {
+        element.style("fill", null);
+      }
+    }
+  } catch (e) {}
+}
+
+function edge_colorizer(element, data) {
+
+  try {
+    var count_class = 0;
+
+    selection_set.forEach(function(d, i) {
+      if (data[d]) {
+        count_class++;
+        element.style(
+          "stroke",
+          color_scheme(i),
+          i == current_selection_id ? "important" : null
+        );
+      }
+    });
+
+    if (count_class > 1) {
+      element.classed("branch-multiple", true);
+    } else if (count_class == 0) {
+      element.style("stroke", null).classed("branch-multiple", false);
+    }
+  } catch (e) {}
+}
+
 // Render the tree
+// add the selection to the tree
 window.renderTree = function(tree, height, width, customOptions) {
   const commonOptions = {
     container: '#tree',
@@ -233,18 +192,50 @@ window.renderTree = function(tree, height, width, customOptions) {
     width: width,
     "left-right-spacing": "fixed-step",
     'align-tips': true,
-    'internal-names': true,
+    'internal-names': false,
     //'left-right-spacing': 'fit-to-size', 
     'top-bottom-spacing': 'fit-to-size',
-    'zoom': true,
+    // 'zoom': true,
+    'zoom': false,
     // 'node-styler': colorNodesByName,
     "draw_scale_bar": true,
+    // reroot: true,
   };
   const options = {...commonOptions, ...customOptions};
   console.log('options:', options);
 
   let renderedTree = tree.render(options);
 
+  // current_selection_name = $("#selection_name_box").val(),
+  // current_selection_name = selection_set[current_selection_id];
+  // current_selection_id = 0,
+  // $('#tree_container').on('reroot', function (e) {  
+  //   update_selection_names();
+
+  //   tree.display.countHandler(count => {
+  //     $("#selected_branch_counter").text(function(d) {
+  //       return count[current_selection_name];
+  //     });
+  //   });
+
+  // });
+
+  // tree.display.selectionLabel(current_selection_name);
+
+  // tree.display.countHandler(count => {
+  //   $("#selected_branch_counter").text(function(d) {
+  //     return count[current_selection_name];
+  //   });
+  // });
+
+
+
+  // update_selection_names();
+
+  // $("#newick_modal").modal("hide");
+
+  // $(tree.display.container).empty();
+  // $(tree.display.container).html(tree.display.show()); 
   d3.select('#tree svg')
     .call(d3.drag().on("drag", null));
 
@@ -488,6 +479,124 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
 }
 
 window.setupSaveImageButton = function() {
+
+  // define the function for saving the image
+
+  var datamonkey_save_image = function(type, container) {
+    var prefix = {
+      xmlns: "http://www.w3.org/2000/xmlns/",
+      xlink: "http://www.w3.org/1999/xlink",
+      svg: "http://www.w3.org/2000/svg"
+    };
+
+    function get_styles(doc) {
+      function process_stylesheet(ss) {
+        try {
+          if (ss.cssRules) {
+            for (var i = 0; i < ss.cssRules.length; i++) {
+              var rule = ss.cssRules[i];
+              if (rule.type === 3) {
+                // Import Rule
+                process_stylesheet(rule.styleSheet);
+              } else {
+                // hack for illustrator crashing on descendent selectors
+                if (rule.selectorText) {
+                  if (rule.selectorText.indexOf(">") === -1) {
+                    styles += "\n" + rule.cssText;
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          //console.log("Could not process stylesheet : " + ss); // eslint-disable-line
+        }
+      }
+
+      var styles = "",
+        styleSheets = doc.styleSheets;
+
+      if (styleSheets) {
+        for (var i = 0; i < styleSheets.length; i++) {
+          process_stylesheet(styleSheets[i]);
+        }
+      }
+
+      return styles;
+    }
+    // var svg = $(container).find("svg")[0];
+    // if (!svg) {
+    //   svg = $(container)[0];
+    // }
+    var svg = document.querySelector('svg');
+    if (svg) {
+      svg.setAttribute("version", "1.1");
+    } else {
+      console.log('SVG element not found');
+    }
+
+    var styles = get_styles(window.document);
+
+    svg.setAttribute("version", "1.1");
+
+    var defsEl = document.createElement("defs");
+    svg.insertBefore(defsEl, svg.firstChild);
+
+    var styleEl = document.createElement("style");
+    defsEl.appendChild(styleEl);
+    styleEl.setAttribute("type", "text/css");
+
+    // removing attributes so they aren't doubled up
+    svg.removeAttribute("xmlns");
+    svg.removeAttribute("xlink");
+
+    // These are needed for the svg
+    if (!svg.hasAttributeNS(prefix.xmlns, "xmlns")) {
+      svg.setAttributeNS(prefix.xmlns, "xmlns", prefix.svg);
+    }
+
+    if (!svg.hasAttributeNS(prefix.xmlns, "xmlns:xlink")) {
+      svg.setAttributeNS(prefix.xmlns, "xmlns:xlink", prefix.xlink);
+    }
+
+    var source = new XMLSerializer()
+      .serializeToString(svg)
+      .replace("</style>", "<![CDATA[" + styles + "]]></style>");
+    var doctype =
+      '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+    var to_download = [doctype + source];
+    var image_string =
+      "data:image/svg+xml;base66," + encodeURIComponent(to_download);
+
+    if (navigator.msSaveBlob) {
+      // IE10
+      download(image_string, "image.svg", "image/svg+xml");
+    } else if (type == "png") {
+      b64toBlob(
+        image_string,
+        function(blob) {
+          var url = window.URL.createObjectURL(blob);
+          var pom = document.createElement("a");
+          pom.setAttribute("download", "image.png");
+          pom.setAttribute("href", url);
+          $("body").append(pom);
+          pom.click();
+          pom.remove();
+        },
+        function(error) {
+          console.log(error); // eslint-disable-line
+        }
+      );
+    } else {
+      var pom = document.createElement("a");
+      pom.setAttribute("download", "image.svg");
+      pom.setAttribute("href", image_string);
+      $("body").append(pom);
+      pom.click();
+      pom.remove();
+    }
+  };
+
   // Save the image
 
   var saveImageBtn = document.querySelector("#save_image");

@@ -43,16 +43,16 @@ document.querySelectorAll("[data-direction]").forEach(function(element) {
   });
 });
 
-document.querySelectorAll(".phylotree-layout-mode").forEach(function(element) {
-  element.addEventListener("click", function(e) {
-      if (tree.display.radial() != (this.getAttribute("data-mode") == "radial")) {
-          document.querySelectorAll(".phylotree-layout-mode").forEach(function(btn) {
-              btn.classList.toggle("active");
-          });
-          tree.display.radial(!tree.display.radial()).update();
-      }
-  });
-});
+// document.querySelectorAll(".phylotree-layout-mode").forEach(function(element) {
+//   element.addEventListener("click", function(e) {
+//       if (tree.display.radial() != (this.getAttribute("data-mode") == "radial")) {
+//           document.querySelectorAll(".phylotree-layout-mode").forEach(function(btn) {
+//               btn.classList.toggle("active");
+//           });
+//           tree.display.radial(!tree.display.radial()).update();
+//       }
+//   });
+// });
 
 // document.querySelector("#toggle_animation").addEventListener("click", function(e) {
 //   var current_mode = this.classList.contains("active");
@@ -230,6 +230,7 @@ let renderedTree = tree.render({
   // add the placement annotation to the tree
   'draw-size-bubbles' : true,
   'node-span': bubbleSize,
+  'reroot': true,
 });
 
 console.log(container.node());  // Check if the #tree element is being selected correctly
