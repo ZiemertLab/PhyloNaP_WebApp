@@ -613,8 +613,8 @@ window.setTreeSize = function(width, height) {
   console.log('Tree rendered, set up the proper size');
   setTimeout(function() {
     d3.select('#tree svg')
-      .attr('width', width)
-      .attr('height', height);
+      .attr('width', width);
+      // .attr('height', height);
   }, 10000);
 }
 
