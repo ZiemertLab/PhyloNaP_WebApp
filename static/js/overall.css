@@ -1,0 +1,9 @@
+/* Styles for active button */
+.active-button {
+    background-color: #a61e37; /* Active button color */
+    color: #ffffff; /* Text color for better visibility */
+}
+.non-active-button {
+    background-color: #B69E6C; /* Non-active button color */
+    color: #000000; /* Text color for better visibility */
+}

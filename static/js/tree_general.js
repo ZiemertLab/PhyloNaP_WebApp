@@ -449,10 +449,14 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         // If the button is not active, display the content and set the button to active
         renderMetadata(id);
         button.dataset.active = 'true';
+        button.classList.add('active-button');
+        button.classList.remove('non-active-button');
       } else {
         // If the button is active, hide the content and set the button to inactive
         hideMetadata(id);
         button.dataset.active = 'false';
+        button.classList.remove('active-button');
+        button.classList.add('non-active-button');
       }
     });
     buttonContainer.appendChild(button);
@@ -469,10 +473,16 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         // change the spacing of the tree!
         tree.display.spacing_x(50).update();
         button.dataset.active = 'true';
+        button.classList.add('active-button');
+        button.classList.remove('non-active-button');
+        console.log(`Button ${id} activated`);
       } else {
         // If the button is active, hide the content and set the button to inactive
         hideNP(id);
         button.dataset.active = 'false';
+        button.classList.remove('active-button');
+        button.classList.add('non-active-button');
+        console.log(`Button ${id} deactivated`);
       }
     });
   });

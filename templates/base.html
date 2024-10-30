@@ -17,16 +17,27 @@
             font-size:2em;
             /* color: #982B1C !important; */
             /* color: #CCDDE2 !important; */
-            color: #a51e36 !important;
+            color: #a61e37 !important;
             margin-right: 5px;
             margin-left: 10px;
         }
         .navbar {
         /* background-color: #ABAD9A !important; */
             /* background-color: #982B1C !important; */
-            background-color: #b69e6c !important;
+            /* background-color: #b69e6c !important; */
+            background-color: #E8E4D8 !important;
+            padding-top: 0.05rem; /* Adjust padding to make it more narrow */
+            padding-bottom: 0.05rem; /* Adjust padding to make it more narrow */
         }
-    </style>
+        .nav-link {
+            margin-right: 10px;
+            color: #000000;
+        }
+        .color-row {
+            background-color: #a61e37;
+            height: 5px; /* Adjust height as needed */
+        }
+    </style> 
     {% block css %}{% endblock %}
 </head>
 <body>
@@ -49,7 +60,8 @@
             </ul>
         </div>
     </nav>
-
+        <!-- Tiny row of color under the navbar -->
+        <div class="color-row"></div>
         <div class="container-fluid">
             <!-- Include the content of the child templates -->
             {% block content %}{% endblock %}

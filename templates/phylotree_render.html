@@ -17,7 +17,9 @@
         href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
         rel="stylesheet"
       />
-      <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
+      
+      <link href="/static/css/phylotree.css" rel="stylesheet" />
+      <link href="/static/js/overall.css" rel="stylesheet"/>
       {% endblock %}
   
       <!-- Optional theme -->
@@ -282,6 +284,8 @@
         <script>
           const color_buttons = "#982B1C";
           const color_old = "#a61e37";
+          const color_active_button = "#a61e37";
+          const color_nonactive_button = "#B69E6C";
         </script>
 
         <script>
@@ -297,9 +301,7 @@
           metadataListArray.forEach(function(item) {
             var button = document.createElement('button');
             button.id = item;
-            button.className = 'btn m-1';
-            button.style.backgroundColor = '#a61e37';
-            button.style.color = 'white';
+            button.className = 'btn m-1 non-active-button';
             button.textContent = item.replace('_', ' ');
 
             buttonContainer.appendChild(button);
@@ -314,8 +316,10 @@
         <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
         <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button> -->
         <h4>Structures</h4>
-        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
-        <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button>
+        <!-- <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
+        <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button> -->
+        <button id="BGC_product" class="btn m-1 non-active-button">BGC product</button>
+        <button id="Reaction" class="btn m-1 non-active-button">Reaction</button>
       </div>
       </div>
 
