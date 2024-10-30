@@ -58,13 +58,15 @@ window.createTree = function(nwk) {
 window.setupEventListeners = function(tree) {
   document.querySelectorAll("[data-direction]").forEach(function(element) {
     element.addEventListener("click", function(e) {
+      console.log("y spacing 1: ", tree.display.spacing_y());
+      console.log("x spacing 1: ", tree.display.spacing_x());
         var which_function =
             this.getAttribute("data-direction") == "vertical"
                 ? tree.display.spacing_x.bind(tree.display)
                 : tree.display.spacing_y.bind(tree.display);
+                console.log("y spacing 2 data-amount: ",  Number(this.getAttribute("data-amount")));
         which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
     });
-
   });
 
   document.querySelectorAll(".phylotree-layout-mode").forEach(function(element) {
@@ -194,12 +196,18 @@ window.renderTree = function(tree, height, width, customOptions) {
     'align-tips': true,
     'internal-names': false,
     //'left-right-spacing': 'fit-to-size', 
-    'top-bottom-spacing': 'fit-to-size',
+    // 'top-bottom-spacing': 'fit-to-size',
+    'top-bottom-spacing': 'fixed-step',
+    'minimum-per-level-spacing': 150,
+    'maximum-per-level-spacing': 400,
+    // 'minimum-per-node-spacing': 100,
+    // 'maximum-per-node-spacing': 200,
     // 'zoom': true,
     'zoom': false,
     // 'node-styler': colorNodesByName,
     "draw_scale_bar": true,
     // reroot: true,
+    'fixed_width': [25, 500],
   };
   const options = {...commonOptions, ...customOptions};
   console.log('options:', options);
@@ -310,21 +318,28 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
       let bgc = d.data.name.split("_")[0];
       let image = "static/images/"+bgc+"_1.png";
-      if (image) {
-        let img = d3.select(this).append("image")
-          .attr('xlink:href', image)
-          .attr('x', 200+activeColumns*200-translateValues[0])
-          .attr('y', -50)
-          .attr('width', 100)
-          .attr('height', 100)
-          .attr('class', "NP");
-          console.log('image:width', img.attr('width'));
 
-        img.on('click', function() {
-          d3.select('#enlarged-image').attr('src', image);
-        });
+    // Check if the image exists
+    fetch(image, { method: 'HEAD' })
+      .then(response => {
+        if (response.ok) {
+          let img = d3.select(this).append("image")
+            .attr('xlink:href', image)
+            .attr('x', 200+activeColumns*200-translateValues[0])
+            .attr('y', -50)
+            .attr('width', 100)
+            .attr('height', 100)
+            .attr('class', "NP");
+            console.log('image:width', img.attr('width'));
 
-      }
+          img.on('click', function() {
+            d3.select('#enlarged-image').attr('src', image);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error checking image existence:', error);
+      });
     });
   }
 
@@ -451,6 +466,8 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       if (button.dataset.active === 'false') {
         // If the button is not active, display the content and set the button to active
         renderNP();
+        // change the spacing of the tree!
+        tree.display.spacing_x(50).update();
         button.dataset.active = 'true';
       } else {
         // If the button is active, hide the content and set the button to inactive
@@ -460,6 +477,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     });
   });
 
+
   ["Reaction"].forEach(id => {
     let button = document.getElementById(id);
     button.dataset.active = 'false'; // Add data-active attribute
@@ -468,6 +486,8 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       if (button.dataset.active === 'false') {
         // If the button is not active, display the content and set the button to active
         renderReaction();
+        // change the spacing of the tree!
+        tree.display.spacing_x(50).update();
         button.dataset.active = 'true';
       } else {
         // If the button is active, hide the content and set the button to inactive
