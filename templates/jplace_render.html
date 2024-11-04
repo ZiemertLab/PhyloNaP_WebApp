@@ -18,6 +18,7 @@
         rel="stylesheet"
       />
       <link href="/static/js/phylotree.js/dist/phylotree.css" rel="stylesheet" />
+      <link href="/static/js/overall.css" rel="stylesheet"/>
       {% endblock %}
   
       <!-- Optional theme -->
@@ -84,6 +85,7 @@
       /* overflow: auto; */
       /* margin: 0;
       padding: 0; */
+      overflow: auto;
     }
 
     .details {
@@ -231,7 +233,14 @@
         >
           <i class="fa fa-align-right"></i>
         </button>
+        
       </div>
+      <button
+      class="btn btn-light btn-sm phylotree-align-toggler"
+      id="midpoint-root-btn"
+    >
+      Root at Midpoint
+    </button>
     </div>
   </div>
     
@@ -273,9 +282,9 @@
           metadataListArray.forEach(function(item) {
             var button = document.createElement('button');
             button.id = item;
-            button.className = 'btn m-1';
-            button.style.backgroundColor = '#a61e37';
-            button.style.color = 'white';
+            // button.style.backgroundColor = '#a61e37';
+            // button.style.color = 'white';
+            button.className = 'btn m-1 non-active-button';
             button.textContent = item.replace('_', ' ');
 
             buttonContainer.appendChild(button);
@@ -290,8 +299,8 @@
         <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
         <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button> -->
         <h4>Structures</h4>
-        <button id="BGC_product" class="btn m-1" style="background-color: #a61e37; color: white;">BGC product</button>
-        <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button>
+        <button id="BGC_product" class="btn m-1 non-active-button">BGC product</button>
+        <button id="Reaction" class="btn m-1 non-active-button">Reaction</button>
       </div>
       </div>
 

@@ -63,7 +63,8 @@ window.setupEventListeners = function(tree) {
         var which_function =
             this.getAttribute("data-direction") == "vertical"
                 ? tree.display.spacing_x.bind(tree.display)
-                : tree.display.spacing_y.bind(tree.display);
+                : tree.display.spacing_y.bind(tree.display)
+                console.log("non vertical spacing: ", tree.display.spacing_y());
                 console.log("y spacing 2 data-amount: ",  Number(this.getAttribute("data-amount")));
         which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
     });
@@ -91,18 +92,12 @@ window.setupEventListeners = function(tree) {
   //     }
   //   });
   // });
-}
-// document.querySelector("#toggle_animation").addEventListener("click", function(e) {
-//   var current_mode = this.classList.contains("active");
-//   this.classList.toggle("active");
-//   tree.options({ transitions: !current_mode });
-// });
-
-
-
-
   document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) {
     toggler.addEventListener('click', function(e) {
+      if (!tree || !tree.display || !tree.display.options) {
+        console.error('Tree display options are not defined');
+        return;
+      }
       var button_align = this.getAttribute('data-align');
       var tree_align = tree.display.options.alignTips;
 
@@ -115,6 +110,22 @@ window.setupEventListeners = function(tree) {
       }
     });
   });
+
+  document.getElementById('midpoint-root-btn').addEventListener('click', function() {
+    const result = phylotree.computeMidpoint(tree);
+    console.log('Midpoint result:', result);
+  });
+}
+// document.querySelector("#toggle_animation").addEventListener("click", function(e) {
+//   var current_mode = this.classList.contains("active");
+//   this.classList.toggle("active");
+//   tree.options({ transitions: !current_mode });
+// });
+
+
+
+
+
 
 
 // Compute the layout of the tree
@@ -193,13 +204,14 @@ window.renderTree = function(tree, height, width, customOptions) {
     height: height,
     width: width,
     "left-right-spacing": "fixed-step",
-    'align-tips': true,
+    'align-tips': false,
     'internal-names': false,
     //'left-right-spacing': 'fit-to-size', 
     // 'top-bottom-spacing': 'fit-to-size',
     'top-bottom-spacing': 'fixed-step',
-    'minimum-per-level-spacing': 150,
-    'maximum-per-level-spacing': 400,
+    // if spacing minimum is too unsuitable (too big), the button of changing the tree spacing will not work
+    // 'minimum-per-level-spacing': 150,
+    // 'maximum-per-level-spacing': 400,
     // 'minimum-per-node-spacing': 100,
     // 'maximum-per-node-spacing': 200,
     // 'zoom': true,
@@ -207,7 +219,7 @@ window.renderTree = function(tree, height, width, customOptions) {
     // 'node-styler': colorNodesByName,
     "draw_scale_bar": true,
     // reroot: true,
-    'fixed_width': [25, 500],
+    'fixed_width': [250, 500],
   };
   const options = {...commonOptions, ...customOptions};
   console.log('options:', options);
@@ -410,11 +422,17 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         if (text) { // Check if text is not null
           let leaveFontSize = d3.select(this).attr('font-size');
           let transformValue = d3.select(this).attr('transform');
-          let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-          
-          console.log('leaveFontSize:', leaveFontSize);
-          let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues[0]).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
-      
+          // let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
+          // let translateValues = transformValue.match(/translate\(([^,]+),([^)]+)\)/)[1];
+          // let translateValues = transformValue.match(/translate\(([^,]+),([^)]+)\)/).slice(1).map(Number);
+          let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
+          let translateValues = parseFloat(match[1]);
+          console.log('transformValue:', transformValue);
+          console.log('translateValues:', translateValues);
+          // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
+          // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
+          let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
+
           if (text.length > 80) {
             let firstLine = text.substring(0, 80);
             let secondLine = text.substring(80);
