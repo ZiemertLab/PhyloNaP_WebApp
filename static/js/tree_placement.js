@@ -81,8 +81,8 @@ async function main() {
 
     customTreeOptions={
         // add the placement annotation to the tree
-        'draw-size-bubbles' : true,
-        'node-span': bubbleSize,
+        // 'draw-size-bubbles' : true,
+        // 'node-span': bubbleSize,
     };
 
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
