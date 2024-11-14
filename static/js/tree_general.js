@@ -701,9 +701,88 @@ window.iterateOverJplaceNodes = function() {
   });
 }
 
-window.getEnzymesSummary = function(tree, node, metadata, metadataListArray) {
+//window.getEnzymesSummary = function(tree, node, metadata, metadataListArray) {
   // Get all the leaves that are included in the subtree
-  selectedNodes=tree.selectAllDescendants(node, true, false)
-  console.log("Print the selected nodes");
-  console.log(selectedNodes);
+  // selectedNodes=tree.selectAllDescendants(node, true, false)
+  // console.log("Print the selected nodes");
+  // console.log(selectedNodes);
+
+
+
+// window.getEnzymesSummary = function() {
+//   document.addEventListener('terminalNodesSelected', a => console.log('?', a.detail.data.name))
+
+// }
+// // Function to process terminal nodes
+// function processTerminalNodes(nodes) {
+//   console.log("Processing terminal nodes:", nodes);
+// }
+// Function to process terminal nodes
+window.processTerminalNodes = function(nodes) {
+  console.log("Processing terminal nodes:", nodes);
+}
+
+// Add event listener for the custom event
+window.addEventListener("terminalNodesSelected", function(event) {
+  const terminal_nodes = event.detail;
+  window.processTerminalNodes(terminal_nodes);
+});
+
+window.getTerminalNodesArray = function(metadata) {
+  let nodeNames = [];
+  document.addEventListener('terminalNodesSelected', event => {
+    const terminal_nodes = event.detail;
+    terminal_nodes.forEach(node => {
+      nodeNames.push(node.data.name);
+    });
+    console.log('Node names:', nodeNames);
+    filteredTable=metadataSummary(nodeNames, metadata);
+    metadataSummary=getMetadataSummary(filteredTable)
+    console.log('Metadata summary:', metadataSummary);
+    displayMetadataSummary(metadataSummary);
+  });
+  return nodeNames;
+}
+
+window.metadataSummary = function(nodeNames, metadata) {
+  const filteredTable = metadata.filter(row => nodeNames.includes(row.ID));
+  //console.log('Filtered metadata table:', filteredTable);
+  return filteredTable;
+}
+window.getMetadataSummary=function(filteredTable) {
+  const summary = {};
+  filteredTable.forEach(row => {
+      for (const [key, value] of Object.entries(row)) {
+          if (key === 'ID') continue; // Skip the 'ID' column
+          if (!summary[key]) {
+              summary[key] = {};
+          }
+          if (!summary[key][value]) {
+              summary[key][value] = 0;
+          }
+          summary[key][value]++;
+      }
+  });
+  return summary;
+}
+
+window.displayMetadataSummary = function(summary) {
+  const summaryContainer = document.getElementById('summary-container');
+  summaryContainer.innerHTML = ''; // Clear previous content
+
+  for (const [key, values] of Object.entries(summary)) {
+    const columnDiv = document.createElement('div');
+    columnDiv.classList.add('summary-column');
+    const columnTitle = document.createElement('h3');
+    columnTitle.textContent = key;
+    columnDiv.appendChild(columnTitle);
+
+    for (const [value, count] of Object.entries(values)) {
+      const valueDiv = document.createElement('div');
+      valueDiv.textContent = `${value}: ${count}`;
+      columnDiv.appendChild(valueDiv);
+    }
+
+    summaryContainer.appendChild(columnDiv);
+  }
 }

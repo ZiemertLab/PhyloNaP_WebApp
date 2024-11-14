@@ -18,7 +18,8 @@ async function main() {
     showTree(tree);
     // At the end of tree_rendering.js
 
-    getEnzymesSummary(tree, 52, metadata, metadataListArray2)
+    selectedLeavesArray=getTerminalNodesArray(metadata)
+    // metadataSummary(selectedLeavesArray, metadata)
 
     //make the tree panel apropiate size
     $(document).ready(function() {

@@ -2510,6 +2510,20 @@
               .text("Toggle selection");
           }
         }
+        // add the option for characterizing the node
+        if (options["collapsible"]) {
+          menu_object
+            .append("a")
+            .attr("class", "dropdown-item")
+            .attr("tabindex", "-1")
+            .text("1Get the summary of the clade")
+            .on("click", mouseEvent => {
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
+              const event = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
+              document.dispatchEvent(event);
+              console.log(event)
+            });
+        }
 
         if (options["selectable"]) {
           menu_object
