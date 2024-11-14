@@ -55,7 +55,6 @@
       padding: 0;
     }
     body, html {
-      height: 100%;
       /* background-color: #D8BFD8; */
     }
     .layout {
@@ -104,7 +103,6 @@
       margin: 0; /* Remove all margins */
       padding: 0; /* Remove all padding */
       box-sizing: border-box; /* Include padding in the element's total width and height */
-      height: 100%; /* Ensure the details section takes the full height */
     }
     .details > div {
       display: flex;
@@ -164,7 +162,7 @@
       height: 100%; /* Adjust this value as needed */
 
       
-      overflow: auto; /* Add scrollbars if the content is larger than the container */
+      /* overflow: auto; Add scrollbars if the content is larger than the container */
 
     } 
   </style>
@@ -331,10 +329,9 @@
         <button id="Reaction" class="btn m-1" style="background-color: #a61e37; color: white;">Reaction</button> -->
         <button id="BGC_product" class="btn m-1 non-active-button">BGC product</button>
         <button id="Reaction" class="btn m-1 non-active-button">Reaction</button>
-        <h4>Structures</h4>
         <h4>Metadata summary</h4>
-        <div id="summary-container"></div>
-        </div>
+        <!-- <div id="summary-container"></div> -->
+        <!-- </div> -->
       </div>
       
       </div>
@@ -345,7 +342,7 @@
       </div>
 </div>
 
-  </div>
+</div>
 
 
 <script>
