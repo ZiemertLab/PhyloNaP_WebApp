@@ -63,14 +63,14 @@ async function main() {
     const extractedNumbersObj = Object.fromEntries(extractedNumbers);
 
     bubbleSize = function (a) {
-        console.log("a.data.annotation: ", a.data.annotation);
         const num2 = extractedNumbersObj[a.data.annotation];
         if (num2 !== undefined) {
-            console.log("num2: ", 10);
-            // return num2;
-            return Math.sqrt(parseFloat(num2));
+            console.log("a.data.annotation: ", a.data.annotation);
+            console.log("num2: ", num2);
+            return parseFloat(num2)*10;
+            // return Math.sqrt(parseFloat(num2));
         }   else {
-            return 0; // return a default value
+            return 1; // return a default value
         }
         // else if (a.data.annotation == "0") {
         //     return 30;
@@ -81,28 +81,30 @@ async function main() {
 
     customTreeOptions={
         // add the placement annotation to the tree
-        // 'draw-size-bubbles' : true,
-        // 'node-span': bubbleSize,
+        'draw-size-bubbles' : true,
+        'node-span': bubbleSize,
     };
 
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
     console.log("renderedTree: ", renderedTree);
+    // debugger;
     addImagesAndMetadata(tree, metadata, metadataListArray2);
     // setupSaveImageButton();
     setTreeSize(width, height);
+    // setTreeSizeWH(width, height);
     showTree(tree);
     // // At the end of tree_rendering.js
 
 
     // //make the tree panel apropiate size
-    // $(document).ready(function() {
-    //     Split(['.tree-panel', '.details'], {
-    //     // Split(['.tree', '.details'], {
-    //     sizes: [75, 25],
-    //     minSize: 100,
-    //     gutterSize: 5,
-    //     cursor: 'col-resize'
-    //     });
-    // });
+    $(document).ready(function() {
+        Split(['.tree-panel', '.details'], {
+        // Split(['.tree', '.details'], {
+        sizes: [75, 25],
+        minSize: 100,
+        gutterSize: 5,
+        cursor: 'col-resize'
+        });
+    });
 }
 main();

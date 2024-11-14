@@ -666,6 +666,15 @@ window.setTreeSize = function(width, height) {
   }, 10000);
 }
 
+window.setTreeSizeWH = function(width, height) {
+  console.log('Tree rendered, set up the proper size');
+  setTimeout(function() {
+    d3.select('#tree svg')
+      .attr('width', width)
+      .attr('height', height);
+  }, 10000);
+}
+
 window.showTree = function(tree) {
   console.log('showing tree');
   $(tree.display.container).html(tree.display.show());
@@ -692,3 +701,9 @@ window.iterateOverJplaceNodes = function() {
   });
 }
 
+window.getEnzymesSummary = function(tree, node, metadata, metadataListArray) {
+  // Get all the leaves that are included in the subtree
+  selectedNodes=tree.selectAllDescendants(node, true, false)
+  console.log("Print the selected nodes");
+  console.log(selectedNodes);
+}

@@ -2,6 +2,16 @@
 {% extends "base.html" %}
 {% block content %}
 <form method="post" action="/phylotree_render">
+    <!-- Add Filter Dropdown -->
+    <div class="mb-3">
+        <label for="source-filter" class="form-label">Filter by Source</label>
+        <select id="source-filter" class="form-select">
+            <option value="">All</option>
+            {% for source in sources %}
+            <option value="{{ source }}">{{ source }}</option>
+            {% endfor %}
+        </select>
+    </div>
     <ul id="file-list">
         <div class="accordion" id="superfamily-accordion">
             {% for superfamily in superfamilies %}
