@@ -730,7 +730,7 @@ window.addEventListener("terminalNodesSelected", function(event) {
 
 
 
-const metadataSummary = function(nodeNames, metadata) {
+const getMetadataSubset = function(nodeNames, metadata) {
   const filteredTable = metadata.filter(row => nodeNames.includes(row.ID));
   //console.log('Filtered metadata table:', filteredTable);
   return filteredTable;
@@ -785,10 +785,10 @@ window.getTerminalNodesArray = function(metadata) {
       nodeNames.push(node.data.name);
     });
     console.log('Node names:', nodeNames);
-    filteredTable=metadataSummary(nodeNames, metadata);
-    metadataSummary=getMetadataSummary(filteredTable)
-    console.log('Metadata summary:', metadataSummary);
-    displayMetadataSummary(metadataSummary);
+    filteredTable=getMetadataSubset(nodeNames, metadata);
+    metadataSummaryResult=getMetadataSummary(filteredTable)
+    console.log('Metadata summary:', metadataSummaryResult);
+    displayMetadataSummary(metadataSummaryResult);
   });
   return nodeNames;
 }
