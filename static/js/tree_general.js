@@ -777,6 +777,20 @@ const displayMetadataSummary = function(summary) {
   }
 }
 
+window.checkForClusters = function(tree, node) {
+  // viewof diameter_threshold = slider({
+  //   min: 0.0,
+  //   max: 0.2,
+  //   precision: 3,
+  //   value: 0.045,
+  //   description: "Diameter Threshold"
+  // })
+
+  bootstrap_threshold = 70;
+  diameter_threshold = 0.06;
+  clusters = phylotree.phylopart(tree, bootstrap_threshold, diameter_threshold, node);
+  console.log('Clusters:', clusters);
+}
 window.getTerminalNodesArray = function(metadata) {
   let nodeNames = [];
   document.addEventListener('terminalNodesSelected', event => {

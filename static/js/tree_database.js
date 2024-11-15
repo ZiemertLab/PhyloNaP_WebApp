@@ -21,6 +21,9 @@ async function main() {
     selectedLeavesArray=getTerminalNodesArray(metadata)
     // metadataSummary(selectedLeavesArray, metadata)
 
+    //test the clusters
+    checkForClusters(tree);
+
     //make the tree panel apropiate size
     $(document).ready(function() {
         Split(['.tree-panel', '.details'], {
