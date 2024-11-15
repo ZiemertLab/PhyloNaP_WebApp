@@ -728,28 +728,14 @@ window.addEventListener("terminalNodesSelected", function(event) {
   window.processTerminalNodes(terminal_nodes);
 });
 
-window.getTerminalNodesArray = function(metadata) {
-  let nodeNames = [];
-  document.addEventListener('terminalNodesSelected', event => {
-    const terminal_nodes = event.detail;
-    terminal_nodes.forEach(node => {
-      nodeNames.push(node.data.name);
-    });
-    console.log('Node names:', nodeNames);
-    filteredTable=metadataSummary(nodeNames, metadata);
-    metadataSummary=getMetadataSummary(filteredTable)
-    console.log('Metadata summary:', metadataSummary);
-    displayMetadataSummary(metadataSummary);
-  });
-  return nodeNames;
-}
 
-window.metadataSummary = function(nodeNames, metadata) {
+
+const metadataSummary = function(nodeNames, metadata) {
   const filteredTable = metadata.filter(row => nodeNames.includes(row.ID));
   //console.log('Filtered metadata table:', filteredTable);
   return filteredTable;
 }
-window.getMetadataSummary=function(filteredTable) {
+const getMetadataSummary=function(filteredTable) {
   const summary = {};
   filteredTable.forEach(row => {
       for (const [key, value] of Object.entries(row)) {
@@ -766,23 +752,43 @@ window.getMetadataSummary=function(filteredTable) {
   return summary;
 }
 
-window.displayMetadataSummary = function(summary) {
+const displayMetadataSummary = function(summary) {
   const summaryContainer = document.getElementById('summary-container');
-  summaryContainer.innerHTML = ''; // Clear previous content
+  if (summaryContainer) {
+    summaryContainer.innerHTML = ''; // Clear previous content
 
-  for (const [key, values] of Object.entries(summary)) {
-    const columnDiv = document.createElement('div');
-    columnDiv.classList.add('summary-column');
-    const columnTitle = document.createElement('h3');
-    columnTitle.textContent = key;
-    columnDiv.appendChild(columnTitle);
+    for (const [key, values] of Object.entries(summary)) {
+      const columnDiv = document.createElement('div');
+      columnDiv.classList.add('summary-column');
+      const columnTitle = document.createElement('h3');
+      columnTitle.textContent = key;
+      columnDiv.appendChild(columnTitle);
 
-    for (const [value, count] of Object.entries(values)) {
-      const valueDiv = document.createElement('div');
-      valueDiv.textContent = `${value}: ${count}`;
-      columnDiv.appendChild(valueDiv);
+      for (const [value, count] of Object.entries(values)) {
+        const valueDiv = document.createElement('div');
+        valueDiv.textContent = `${value}: ${count}`;
+        columnDiv.appendChild(valueDiv);
+      }
+
+      summaryContainer.appendChild(columnDiv);
     }
-
-    summaryContainer.appendChild(columnDiv);
+  } else {
+    console.error('summaryContainer element not found');
   }
+}
+
+window.getTerminalNodesArray = function(metadata) {
+  let nodeNames = [];
+  document.addEventListener('terminalNodesSelected', event => {
+    const terminal_nodes = event.detail;
+    terminal_nodes.forEach(node => {
+      nodeNames.push(node.data.name);
+    });
+    console.log('Node names:', nodeNames);
+    filteredTable=metadataSummary(nodeNames, metadata);
+    metadataSummary=getMetadataSummary(filteredTable)
+    console.log('Metadata summary:', metadataSummary);
+    displayMetadataSummary(metadataSummary);
+  });
+  return nodeNames;
 }

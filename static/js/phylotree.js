@@ -2522,6 +2522,8 @@
               const event = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
               document.dispatchEvent(event);
               console.log(event)
+              menu_object.style("display", "none");
+              phylotree.modifySelection(terminal_nodes);
             });
         }
 
