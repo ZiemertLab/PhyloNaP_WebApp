@@ -154,6 +154,10 @@ def get_file():
 def tutorial():
     return render_template('tutorial.html')
 
+@app.route('/upload',methods=['POST','GET'])
+def upload_dataset():
+    return render_template('upload.html')
+
 # @app.route('/results')
 # def results():
 #     return render_template('results.html')
