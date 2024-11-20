@@ -17,13 +17,35 @@
 <form method="post" action="/phylotree_render">
     <!-- Add Filter Dropdown -->
     <div class="mb-3">
-        <label for="source-filter" class="form-label">Filter by Source</label>
+        <!-- <label for="source-filter">Filter by Source</label>
+        <select id="source-filter" multiple>
+            {% for superfamily in superfamilies %}
+                {% for dataset in superfamily.datasets %}
+                    <option value="{{ dataset.source }}">{{ dataset.source }}</option>
+                {% endfor %}
+            {% endfor %}
+        </select> -->
+        <label for="source-filter">Filter by Source</label>
+        <select id="source-filter" multiple class="form-select">
+            {% set unique_sources = [] %}
+            {% for superfamily in superfamilies %}
+                {% for dataset in superfamily.datasets %}
+                    {% if dataset.source not in unique_sources %}
+                        {% set unique_sources = unique_sources.append(dataset.source) %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+            {% for source in unique_sources %}
+            <option value="{{ source }}">{{ source }}</option>
+            {% endfor %}
+        </select>
+        <!-- <label for="source-filter" class="form-label">Filter by Source</label>
         <select id="source-filter" class="form-select" name="source-filter">
             <option value="">All</option>
             {% for source in sources %}
             <option value="{{ source }}">{{ source }}</option>
             {% endfor %}
-        </select>
+        </select> -->
     </div>
     <div class="mb-3">
         <label for="superfamily-filter" class="form-label">Filter by Superfamily</label>
@@ -116,6 +138,18 @@
             rows.forEach(function(row) {
                 var superfamily = row.getAttribute('data-superfamily').toLowerCase();
                 if (filterValue === "" || superfamily === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        document.getElementById('source-filter').addEventListener('change', function() {
+            var selectedSources = Array.from(this.selectedOptions).map(option => option.value.toLowerCase());
+            var rows = document.querySelectorAll('#all-datasets-table tbody tr');
+            rows.forEach(function(row) {
+                var source = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                if (selectedSources.length === 0 || selectedSources.includes(source)) {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
