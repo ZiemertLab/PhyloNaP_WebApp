@@ -752,6 +752,31 @@ const getMetadataSummary=function(filteredTable) {
   return summary;
 }
 
+// const displayMetadataSummary = function(summary) {
+//   const summaryContainer = document.getElementById('summary-container');
+//   if (summaryContainer) {
+//     summaryContainer.innerHTML = ''; // Clear previous content
+
+//     for (const [key, values] of Object.entries(summary)) {
+//       const columnDiv = document.createElement('div');
+//       columnDiv.classList.add('summary-column');
+//       const columnTitle = document.createElement('h3');
+//       columnTitle.textContent = key;
+//       columnDiv.appendChild(columnTitle);
+
+//       for (const [value, count] of Object.entries(values)) {
+//         const valueDiv = document.createElement('div');
+//         valueDiv.textContent = `${value}: ${count}`;
+//         columnDiv.appendChild(valueDiv);
+//       }
+
+//       summaryContainer.appendChild(columnDiv);
+//     }
+//   } else {
+//     console.error('summaryContainer element not found');
+//   }
+// }
+
 const displayMetadataSummary = function(summary) {
   const summaryContainer = document.getElementById('summary-container');
   if (summaryContainer) {
@@ -760,16 +785,35 @@ const displayMetadataSummary = function(summary) {
     for (const [key, values] of Object.entries(summary)) {
       const columnDiv = document.createElement('div');
       columnDiv.classList.add('summary-column');
+      
       const columnTitle = document.createElement('h3');
       columnTitle.textContent = key;
+
+      // Create a toggle button
+      const toggleButton = document.createElement('button');
+      toggleButton.textContent = 'Toggle';
+      toggleButton.onclick = () => {
+        const contentDiv = columnDiv.querySelector('.content');
+        if (contentDiv.style.display === 'none') {
+          contentDiv.style.display = 'block';
+        } else {
+          contentDiv.style.display = 'none';
+        }
+      };
+
       columnDiv.appendChild(columnTitle);
+      columnDiv.appendChild(toggleButton);
+
+      const contentDiv = document.createElement('div');
+      contentDiv.classList.add('content');
 
       for (const [value, count] of Object.entries(values)) {
         const valueDiv = document.createElement('div');
         valueDiv.textContent = `${value}: ${count}`;
-        columnDiv.appendChild(valueDiv);
+        contentDiv.appendChild(valueDiv);
       }
 
+      columnDiv.appendChild(contentDiv);
       summaryContainer.appendChild(columnDiv);
     }
   } else {

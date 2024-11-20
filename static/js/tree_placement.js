@@ -94,7 +94,8 @@ async function main() {
     // setTreeSizeWH(width, height);
     showTree(tree);
     // // At the end of tree_rendering.js
-
+    selectedLeavesArray=getTerminalNodesArray(metadata)
+    // metadataSummary(selectedLeavesArray, metadata)
 
     // //make the tree panel apropiate size
     $(document).ready(function() {

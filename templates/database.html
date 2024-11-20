@@ -1,6 +1,19 @@
 <!-- templates/database.html -->
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .selected-superfamily {
+        background-color: #B69E6C !important;
+        color: black !important;
+    }
+    .show-button {
+        outline: none !important;
+    }
+    .show-button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+</style>
 <form method="post" action="/phylotree_render">
     <!-- Add Filter Dropdown -->
     <div class="mb-3">
@@ -19,7 +32,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="heading-{{ superfamily.name }}">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ safe_name }}">
-                            {{ superfamily.name }}
+                            {{ superfamily.name }} ({{ superfamily.datasets|length }} datasets)
                         </button>
                     </h2>
                     <div id="collapse-{{ safe_name }}" class="accordion-collapse collapse">
@@ -28,7 +41,7 @@
                         <div class="accordion-body">
                             {% for dataset in superfamily.datasets %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ dataset.name }}
+                                    {{ dataset.name }} - Source: {{ dataset.source }}
                                     <input type="hidden" id="tree-file" value="{{ url_for('get_file', filename=dataset.tree) }}">
                                     <input type="hidden" id="metadata-file" value="{{ url_for('get_file', filename=dataset.metadata) }}">
                                     <input type="hidden" id="column_list" value="{{ dataset.metadata_columns }}">
@@ -46,7 +59,16 @@
 
 </form>
 <div id="tree"></div>
-
+<script>
+    document.querySelectorAll('.accordion-button').forEach(function(button) {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.accordion-button').forEach(function(btn) {
+                btn.classList.remove('selected-superfamily');
+            });
+            button.classList.add('selected-superfamily');
+        });
+    });
+</script>
 <script>
     document.querySelectorAll('.show-button').forEach(function(button) {
         button.addEventListener('click', function() {
