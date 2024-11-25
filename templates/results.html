@@ -1,4 +1,144 @@
 {% extends "base.html" %}
 {% block content %}
-    <p>Results: {{ results }}</p>
+<head>
+    <title>Waiting Room</title>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+    <style>
+        #updates {
+            height: 50vh; /* 50% of the viewport height */
+            overflow: auto;
+        }
+        #results {
+            height: 50vh;
+        }
+        table {
+        width: 100%;
+        border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+            /* Add a new style for the header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100; /* Make sure the header is always on top */
+        }
+
+        /* Add a top padding to the body equal to the height of the header to prevent it from overlapping the content */
+        body {
+            padding-top: 70px; /* Adjust this value based on the actual height of your header */
+        }
+        </style>
+</head>
+<body>
+    <h1>Job Submitted</h1>
+    <p>Your job has been submitted successfully. You can view the results <a href="{{ url_for('results', job_id=job_id) }}">here</a>.</p>
+    <h1 id="jobStatus"></h1>
+    <button id="toggleUpdatesButton" onclick="toggleUpdates()">Hide Updates</button>
+    <div id="updates"></div>
+    <!-- <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button> -->
+    <div id="results"></div>
+</body>
+<script>
+    var jobId = "{{ job_id }}";
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('update', function(msg) {
+        // Add the update to your page. This example just appends it to a div.
+        var message = msg.data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+        document.getElementById('updates').innerHTML += '<p>' + message + '</p>';
+        // Scroll to the bottom of the updates div
+        var updatesDiv = document.getElementById('updates');
+        updatesDiv.scrollTop = updatesDiv.scrollHeight;
+        if (msg.status === 'running') {
+            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is running';
+        }
+        // Check if the job is finished
+        if (msg.status === 'finished') {
+            document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' has finished';
+            // document.getElementById('phylogeneticTreeButton').style.display = 'block';
+            fetch('/results/{{ job_id }}')
+                .then(response => {
+                    if (response.status === 202) {
+                        // Results not ready yet, try again later
+                        return;
+                    }
+
+                    // Parse the JSON data and create a table
+                    response.json().then(rowDataList => {
+                        // Create a table
+                    var table = document.createElement('table');
+
+                    // Create a header row
+                    var headerRow = document.createElement('tr');
+                    ['Query', 'Superfamily', 'Family'].forEach(function(header) {
+                        var th = document.createElement('th');
+                        th.textContent = header;
+                        headerRow.appendChild(th);
+                    });
+                    table.appendChild(headerRow);
+
+                    // Create a row for each dictionary in rowDataList
+                    rowDataList.forEach(function(rowData) {
+                        var row = document.createElement('tr');
+                        ['query', 'superfamily', 'family'].forEach(function(key) {
+                            var td = document.createElement('td');
+                            td.textContent = rowData[key];
+                            row.appendChild(td);
+                        });
+                        table.appendChild(row);
+
+                        
+                            // Create a button
+                        var button = document.createElement('button');
+                        button.textContent = 'View .jplace file';
+                        button.onclick = function() {
+                            // Redirect to the jplace_render.html page
+                            window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
+                        };
+
+                        // Add the button to the row
+                        var td = document.createElement('td');
+                        td.appendChild(button);
+                        row.appendChild(td);
+
+                        table.appendChild(row);
+                    
+
+                        // Append the table to the results div
+                        document.getElementById('results').appendChild(table);
+                        });
+
+
+                    });
+                    });
+        }
+    });
+
+
+    function toggleUpdates() {
+        var updatesDiv = document.getElementById('updates');
+        var resultsDiv = document.getElementById('results');
+        var toggleButton = document.getElementById('toggleUpdatesButton');
+
+        if (updatesDiv.style.display !== 'none') {
+            // Hide the updates and give more space to the results
+            updatesDiv.style.display = 'none';
+            resultsDiv.style.height = '90vh'; // Adjust this value as needed
+            toggleButton.textContent = 'Show Updates';
+        } else {
+            // Show the updates and reduce the space for the results
+            updatesDiv.style.display = 'block';
+            resultsDiv.style.height = '50vh'; // Adjust this value as needed
+            toggleButton.textContent = 'Hide Updates';
+        }
+    }
+</script>
+
 {% endblock %}

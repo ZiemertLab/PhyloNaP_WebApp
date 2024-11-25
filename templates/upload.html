@@ -2,81 +2,62 @@
 {% extends "base.html" %}
 {% block content %}
 
-<form action="/upload" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-    <div class="mb-3">
-        <label for="dataset-name" class="form-label">Dataset Name:</label>
-        <input type="text" id="dataset-name" name="dataset_name" class="form-control" required>
-        <div class="invalid-feedback">Please provide a dataset name.</div>
-    </div>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <!-- Dataset Name -->
+        <label for="dataset-name">Dataset Name:</label>
+        <input type="text" id="dataset-name" name="dataset_name" required><br>
 
-            <div class="mb-3">
-                <label for="dataset-description" class="form-label">Dataset Description:</label>
-                <textarea id="dataset-description" name="dataset_description" class="form-control" required></textarea>
-                <div class="invalid-feedback">Please provide a dataset description.</div>
-            </div>
-        
-            <div class="mb-3">
-                <label for="tree-file" class="form-label">Upload Tree (Newick format):</label>
-                <input type="file" id="tree-file" name="tree_file" class="form-control" accept=".nwk,.newick" required>
-                <div class="invalid-feedback">Please upload a tree file in Newick format.</div>
-            </div>
-        
-            <div class="mb-3">
-                <label for="metadata-file" class="form-label">Upload Metadata Table (must contain ID column):</label>
-                <input type="file" id="metadata-file" name="metadata_file" class="form-control" accept=".csv,.tsv" required>
-                <div class="invalid-feedback">Please upload a metadata table.</div>
-            </div>
-        
-            <div class="mb-3">
-                <label for="alignment-file" class="form-label">Upload Alignment:</label>
-                <input type="file" id="alignment-file" name="alignment_file" class="form-control" accept=".fasta,.fa" required>
-                <div class="invalid-feedback">Please upload an alignment file.</div>
-            </div>
-        
-            <div class="mb-3">
-                <label for="superfamily" class="form-label">Enzyme's Superfamily:</label>
-                <select id="superfamily" name="superfamily" class="form-select">
-                    <option value="undefined">Undefined</option>
-                    {% for superfamily in superfamilies %}
-                    <option value="{{ superfamily.name }}">{{ superfamily.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        
-            <div class="mb-3">
-                <label for="data-source" class="form-label">Data Source:</label>
-                <select id="data-source" name="data_source" class="form-select" multiple>
-                    {% for source in data_sources %}
-                    <option value="{{ source }}">{{ source }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <!-- Dataset Description -->
+        <label for="dataset-description">Dataset Description:</label>
+        <textarea id="dataset-description" name="dataset_description" required></textarea><br>
 
+        <!-- Upload Tree (Newick format) -->
+        <label for="tree-file">Upload Tree (Newick format):</label>
+        <input type="file" id="tree-file" name="tree_file" accept=".nwk,.newick" required><br>
 
-            <div class="mb-3">
-                <label for="data-type" class="form-label">Data Type:</label>
-                <select id="data-type" name="data_type" class="form-select" multiple>
-                    {% for data_type in data_types %}
-                    <option value="{{ data_type }}">{{ data_type }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        
-            <div class="mb-3">
-                <label for="authors" class="form-label">Author(s):</label>
-                <input type="text" id="authors" name="authors" class="form-control" required>
-                <div class="invalid-feedback">Please provide author(s) name.</div>
-            </div>
-        
-            <div class="mb-3">
-                <label for="paper-link" class="form-label">Cite the Paper (add the link):</label>
-                <input type="url" id="paper-link" name="paper_link" class="form-control" required>
-                <div class="invalid-feedback">Please provide a valid URL.</div>
-            </div>
-        
-            <div class="mb-3">
-                <input type="submit" value="Submit" class="btn btn-primary">
-            </div>
+        <!-- Upload Metadata Table -->
+        <label for="metadata-file">Upload Metadata Table (must contain ID column):</label>
+        <input type="file" id="metadata-file" name="metadata_file" accept=".csv,.tsv" required><br>
+
+        <!-- Upload Alignment -->
+        <label for="alignment-file">Upload Alignment:</label>
+        <input type="file" id="alignment-file" name="alignment_file" accept=".fasta,.fa" required><br>
+
+        <!-- Enzyme's Superfamily -->
+        <label for="superfamily">Enzyme's Superfamily:</label>
+        <select id="superfamily" name="superfamily">
+            <option value="undefined">Undefined</option>
+            {% for superfamily in superfamilies %}
+            <option value="{{ superfamily.name }}">{{ superfamily.name }}</option>
+            {% endfor %}
+        </select><br>
+
+        <!-- Data Source -->
+        <label for="data-source">Data Source:</label>
+        <select id="data-source" name="data_source" multiple>
+            {% for source in data_sources %}
+            <option value="{{ source }}">{{ source }}</option>
+            {% endfor %}
+        </select><br>
+
+        <!-- Data Type -->
+        <label for="data-type">Data Type:</label>
+        <select id="data-type" name="data_type" multiple>
+            {% for data_type in data_types %}
+            <option value="{{ data_type }}">{{ data_type }}</option>
+            {% endfor %}
+        </select><br>
+
+        <!-- Author(s) -->
+        <label for="authors">Author(s):</label>
+        <input type="text" id="authors" name="authors" required><br>
+
+        <!-- Cite the Paper -->
+        <label for="paper-link">Cite the Paper (add the link):</label>
+        <input type="url" id="paper-link" name="paper_link" required><br>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Submit" class="btn btn-primary">    
     </form>
 
 {% endblock %}

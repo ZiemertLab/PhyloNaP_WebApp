@@ -190,7 +190,8 @@ def submit():
             f.write(sequence)
     threading.Thread(target=background_thread, args=(job_id, filename)).start()
 
-    return render_template('waiting_page.html', job_id=job_id)
+    #return render_template('results.html', job_id=job_id)
+    return redirect(url_for('results', job_id=job_id))
     #return redirect(url_for('results'))
 
 @app.route('/results/<job_id>', methods=['GET'])
@@ -198,16 +199,18 @@ def results(job_id):
     # Construct the path to the JSON file
     json_file_path = os.path.join(tmp_directory, job_id, 'summary.json')
 
-    # Check if the JSON file exists
-    if not os.path.exists(json_file_path):
-        return 'Results not ready', 202
+    # # Check if the JSON file exists
+    # if not os.path.exists(json_file_path):
+    #     return 'Results not ready', 202
 
-    # Read the JSON data from the file
-    with open(json_file_path, 'r') as f:
-        row_data_json = f.read()
+    # # Read the JSON data from the file
+    # with open(json_file_path, 'r') as f:
+    #     row_data_json = f.read()
 
     # Return the JSON data as a response
-    return row_data_json
+    #return row_data_json
+    #return render_template('results.html', job_id=job_id, row_data_json=row_data_json)
+    return render_template('results.html', job_id=job_id)
 
 @socketio.on('connect')
 def handle_connect():
