@@ -3,7 +3,7 @@ import sys
 import uuid
 import subprocess
 #print(sys.executable)
-from flask import Flask, render_template, request, redirect, url_for, Response, session
+from flask import Flask, render_template, request, redirect, url_for, Response, session, jsonify
 from flask import send_from_directory
 from urllib.parse import urlparse, unquote
 from werkzeug.utils import secure_filename
@@ -19,6 +19,7 @@ import pandas as pd
 import ast
 from flask_socketio import SocketIO, emit
 import threading
+import time
 
 # from docker import DockerClient
 # #from ete3 import TreeStyle
@@ -37,25 +38,93 @@ database_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_databa
 flask_app = Flask(__name__)
 flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
 app=flask_app
+
 #app = WSGIMiddleware(flask_app)
 socketio = SocketIO(app)
-
 def background_thread(job_id, filename):
+    
     print('Running background thread for job ', job_id)
     print("Before subprocess.Popen")
     process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     print("After subprocess.Popen")
-    for line in iter(process.stdout.readline, b''):
-        print("emitting update running")
-        socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
+    # for line in iter(process.stdout.readline, b''):
+    #     print("emitting update running")
+    #     line_decoded = line.decode('utf-8')
+    #     socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
+    #         # Save the update to a file
+    #     with open(os.path.join(tmp_directory, job_id, 'updates.txt'), 'a') as f:
+    #         f.write(line_decoded)
         # Wait for the process to finish
+        # Start a thread to read updates from the log file
+    # socketio.start_background_task(read_updates, job_id)
+
+    # Wait for the process to finish
     process.wait()
 
-    # Check if the process has finished
-    if process.poll() is not None:
-        # Emit an 'update' event with the job status
-        print("emitting update finished")
-        socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
+    # # Check if the process has finished
+    # if process.poll() is not None:
+    #     # Emit an 'update' event with the job status
+    #     print("emitting update finished")
+    #     socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
+    # # process.wait()
+
+    # # Check if the process has finished
+    # if process.poll() is not None:
+    #     # Emit an 'update' event with the job status
+    #     print("emitting update finished")
+    #     socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
+    #     with open(os.path.join(tmp_directory, job_id, 'status.txt'), 'w') as f:
+    #         f.write('finished')
+
+def read_updates(job_id):
+    output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
+    print("output_log_file_p",output_log_file_p)
+    print("\n\n\n\n\n\n\n\n\n\n")
+    last_position = 0
+
+    while True:
+        if not os.path.exists(output_log_file_p):
+            time.sleep(1)  # Wait for a short period before checking again
+            continue
+        # if os.path.getsize(output_log_file_p) == 0:
+        #     print(f"File {output_log_file_p} is empty. Retrying...")
+        #     time.sleep(1)  # Wait for a short period before checking again
+        #     continue
+        with open(output_log_file_p, 'r') as f:
+            f.seek(last_position)
+            print(f)
+            try:
+                #log_data = json.load(f)
+                new_data = f.read()
+                if not new_data:
+                    time.sleep(1)  # Wait for a short period before checking again
+                    continue
+                # Attempt to parse the new data as JSON
+                log_data = json.loads(new_data)
+                status = log_data.get('status')
+                updates = log_data.get('updates', [])
+
+                for update in updates:
+                    socketio.emit('update', {'status': status, 'data': update})
+                last_position = f.tell()
+            except json.JSONDecodeError as e:
+                print(f"JSONDecodeError: {e}. Retrying...")
+                time.sleep(1)  # Wait for a short period before checking again
+                continue
+
+            # status = log_data.get('status')
+            # updates = log_data.get('updates', [])
+
+            # for update in updates:
+            #     socketio.emit('update', {'status': status, 'data': update})
+
+            # last_position = f.tell()
+
+        if status == 'finished':
+            break
+
+        time.sleep(1)  # Wait for a short period before checking for updates again
+    return
 
 @app.route('/')
 def home():
@@ -196,6 +265,20 @@ def submit():
 
 @app.route('/results/<job_id>', methods=['GET'])
 def results(job_id):
+    # if request.args.get('status') == 'true':
+    #     job_folder = os.path.join(tmp_directory, job_id)
+
+    # read_updates(job_id)
+        # if not os.path.exists(status_file) or not os.path.exists(updates_file):
+        #     return jsonify({'status': 'pending', 'updates': ''}), 202
+
+        # with open(status_file, 'r') as f:
+        #     status = f.read().strip()
+
+        # with open(updates_file, 'r') as f:
+        #     updates = f.read()
+
+        # return jsonify({'status': status, 'updates': updates}), 200
     # Construct the path to the JSON file
     json_file_path = os.path.join(tmp_directory, job_id, 'summary.json')
 
@@ -208,13 +291,47 @@ def results(job_id):
     #     row_data_json = f.read()
 
     # Return the JSON data as a response
-    #return row_data_json
-    #return render_template('results.html', job_id=job_id, row_data_json=row_data_json)
-    return render_template('results.html', job_id=job_id)
 
+    output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
+        # Read the current updates from the log file
+    updates = []
+    status = 'pending'
+    if os.path.exists(output_log_file_p):
+        with open(output_log_file_p, 'r') as f:
+            try:
+                log_data = json.load(f)
+                status = log_data.get('status', 'pending')
+                print("status ======",status)
+                updates = log_data.get('updates', [])
+            except json.JSONDecodeError as e:
+                print(f"JSONDecodeError: {e}. Could not read updates.")
+
+    # if not os.path.exists(json_file_path):
+    #     return render_template('results.html', job_id=job_id, row_data_json='')
+
+    # with open(json_file_path, 'r') as f:
+    #     row_data_json = f.read()
+    # Read the summary JSON data if available
+    row_data_json = ''
+    if os.path.exists(json_file_path):
+        with open(json_file_path, 'r') as f:
+            row_data_json = f.read()
+    # print("row_data_json",row_data_json)
+    # return render_template('results.html', job_id=job_id, row_data_json=row_data_json)
+    # return render_template('results.html', job_id=job_id, row_data_json=row_data_json, updates=updates, status=status)
+    # return jsonify(row_data_json)
+    return render_template('results.html', job_id=job_id, row_data_json=row_data_json)
 @socketio.on('connect')
 def handle_connect():
-    emit('update', {'data': 'Connected'})
+    emit('status_update', {'status': 'Connected'})
+    
+@socketio.on('request_status')
+def handle_request_status(data):
+    job_id = data['job_id']
+    # Emit status updates and log messages
+    emit('status_update', {'status': 'in progress', 'updates': 'Job is processing'})
+    # Simulate job completion
+    emit('status_update', {'status': 'finished', 'updates': 'Job is finished'})
 
 @app.route('/jplace_render.html')
 def jplace_render():
