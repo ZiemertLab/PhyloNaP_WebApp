@@ -76,55 +76,55 @@ def background_thread(job_id, filename):
     #     with open(os.path.join(tmp_directory, job_id, 'status.txt'), 'w') as f:
     #         f.write('finished')
 
-def read_updates(job_id):
-    output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
-    print("output_log_file_p",output_log_file_p)
-    print("\n\n\n\n\n\n\n\n\n\n")
-    last_position = 0
+# def read_updates(job_id):
+#     output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
+#     print("output_log_file_p",output_log_file_p)
+#     print("\n\n\n\n\n\n\n\n\n\n")
+#     last_position = 0
 
-    while True:
-        if not os.path.exists(output_log_file_p):
-            time.sleep(1)  # Wait for a short period before checking again
-            continue
-        # if os.path.getsize(output_log_file_p) == 0:
-        #     print(f"File {output_log_file_p} is empty. Retrying...")
-        #     time.sleep(1)  # Wait for a short period before checking again
-        #     continue
-        with open(output_log_file_p, 'r') as f:
-            f.seek(last_position)
-            print(f)
-            try:
-                #log_data = json.load(f)
-                new_data = f.read()
-                if not new_data:
-                    time.sleep(1)  # Wait for a short period before checking again
-                    continue
-                # Attempt to parse the new data as JSON
-                log_data = json.loads(new_data)
-                status = log_data.get('status')
-                updates = log_data.get('updates', [])
+#     while True:
+#         if not os.path.exists(output_log_file_p):
+#             time.sleep(1)  # Wait for a short period before checking again
+#             continue
+#         # if os.path.getsize(output_log_file_p) == 0:
+#         #     print(f"File {output_log_file_p} is empty. Retrying...")
+#         #     time.sleep(1)  # Wait for a short period before checking again
+#         #     continue
+#         with open(output_log_file_p, 'r') as f:
+#             f.seek(last_position)
+#             print(f)
+#             try:
+#                 #log_data = json.load(f)
+#                 new_data = f.read()
+#                 if not new_data:
+#                     time.sleep(1)  # Wait for a short period before checking again
+#                     continue
+#                 # Attempt to parse the new data as JSON
+#                 log_data = json.loads(new_data)
+#                 status = log_data.get('status')
+#                 updates = log_data.get('updates', [])
 
-                for update in updates:
-                    socketio.emit('update', {'status': status, 'data': update})
-                last_position = f.tell()
-            except json.JSONDecodeError as e:
-                print(f"JSONDecodeError: {e}. Retrying...")
-                time.sleep(1)  # Wait for a short period before checking again
-                continue
+#                 for update in updates:
+#                     socketio.emit('update', {'status': status, 'data': update})
+#                 last_position = f.tell()
+#             except json.JSONDecodeError as e:
+#                 print(f"JSONDecodeError: {e}. Retrying...")
+#                 time.sleep(1)  # Wait for a short period before checking again
+#                 continue
 
-            # status = log_data.get('status')
-            # updates = log_data.get('updates', [])
+#             # status = log_data.get('status')
+#             # updates = log_data.get('updates', [])
 
-            # for update in updates:
-            #     socketio.emit('update', {'status': status, 'data': update})
+#             # for update in updates:
+#             #     socketio.emit('update', {'status': status, 'data': update})
 
-            # last_position = f.tell()
+#             # last_position = f.tell()
 
-        if status == 'finished':
-            break
+#         if status == 'finished':
+#             break
 
-        time.sleep(1)  # Wait for a short period before checking for updates again
-    return
+#         time.sleep(1)  # Wait for a short period before checking for updates again
+#     return
 
 @app.route('/')
 def home():
@@ -330,9 +330,9 @@ def handle_connect():
 def handle_request_status(data):
     job_id = data['job_id']
     # Emit status updates and log messages
-    emit('status_update', {'status': 'in progress', 'updates': 'Job is processing'})
+    #emit('status_update', {'status': 'in progress', 'updates': 'Job is processing'})
     # Simulate job completion
-    emit('status_update', {'status': 'finished', 'updates': 'Job is finished'})
+    #emit('status_update', {'status': 'finished', 'updates': 'Job is finished'})
     read_updates(job_id)
 
 def read_updates(job_id):

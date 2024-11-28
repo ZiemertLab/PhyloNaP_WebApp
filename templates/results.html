@@ -133,26 +133,37 @@
     //         .catch(error => console.error('Error fetching job status:', error));
     //             console.error('There was a problem with the fetch operation:', error);
     //         });
-    
-    socket.on('connect', () => {
-        console.log('Connected to server');
-        socket.emit('request_status', { job_id: jobId });
-        });
-    socket.on('status_update', (data) => {
-        document.getElementById('job-status').innerText = data.status;
-        document.getElementById('job-updates').innerText = data.updates;
+    let socketClosed = false;
 
-        if (data.status === 'finished') {
-            fetch('/results/' + jobId)
-                // .then(response => response.json())
-                .then(rowDataList => {
-                    const rowDataJson = JSON.parse('{{ row_data_json | safe }}');
-                    debugger;
-                    console.log('Row Data:', rowDataJson);
-                    createResultsTable(rowDataJson);
-                    socket.close();
-                })
-                .catch(error => console.error('Error fetching job results:', error));
+    socket.on('connect', () => {
+        if (!socketClosed) {
+            console.log('Connected to server');
+            socket.emit('request_status', { job_id: jobId });
+        }
+        });
+
+
+    socket.on('status_update', (data) => {
+    // socket.on('request_status', (data) => {
+        if (!socketClosed) {
+            document.getElementById('job-status').innerText = data.status;
+            document.getElementById('job-updates').innerText = data.updates;
+
+            if (data.status === 'finished') {
+                socketClosed = true;
+                fetch('/results/' + jobId)
+                    // .then(response => response.json())
+                    .then(rowDataList => {
+                        const rowDataJson = JSON.parse('{{ row_data_json | safe }}');
+                        // debugger;
+                        console.log('Row Data:', rowDataJson);
+                        createResultsTable(rowDataJson);
+                        
+                        socket.close();
+                        
+                    })
+                    .catch(error => console.error('Error fetching job results:', error));
+            }
         }
     });
     // socket.on('update', function(msg) {
