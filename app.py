@@ -324,6 +324,7 @@ def results(job_id):
 @socketio.on('connect')
 def handle_connect():
     emit('status_update', {'status': 'Connected'})
+
     
 @socketio.on('request_status')
 def handle_request_status(data):
@@ -332,6 +333,42 @@ def handle_request_status(data):
     emit('status_update', {'status': 'in progress', 'updates': 'Job is processing'})
     # Simulate job completion
     emit('status_update', {'status': 'finished', 'updates': 'Job is finished'})
+    read_updates(job_id)
+
+def read_updates(job_id):
+    output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
+    last_position = 0
+
+    while True:
+        if not os.path.exists(output_log_file_p):
+            time.sleep(1)
+            continue
+
+        with open(output_log_file_p, 'r') as f:
+            f.seek(last_position)
+            try:
+                new_data = f.read()
+                if not new_data:
+                    time.sleep(1)
+                    continue
+
+                log_data = json.loads(new_data)
+                status = log_data.get('status')
+                updates = log_data.get('updates', [])
+
+                for update in updates:
+                    socketio.emit('status_update', {'status': status, 'updates': update})
+                last_position = f.tell()
+            except json.JSONDecodeError as e:
+                print(f"JSONDecodeError: {e}. Retrying...")
+                time.sleep(1)
+                continue
+
+        if status == 'finished':
+            break
+
+        time.sleep(1)
+    return
 
 @app.route('/jplace_render.html')
 def jplace_render():
