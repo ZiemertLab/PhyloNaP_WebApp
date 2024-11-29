@@ -113,27 +113,9 @@
     //         document.body.appendChild(jobUpdates);
     //     }
     // });
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     debugger;
-    //     fetch('/results/' + jobId)
-    //         .then(response => {
-    //             if (response.status === 202) {
-    //                 // Results not ready yet, show processing message
-    //                 document.getElementById('job-status').innerHTML = 'Job ' + jobId + ' is processing';
-    //                 return;
-    //             }
-    //             console.log('Response:', response);
-    //             console.log(" Responce content type ", response.headers.get('Content-Type'))
-    //             // Parse the JSON data and create a table
-    //             response.json().then(rowDataList => {
-    //                 document.getElementById('job-status').innerHTML = 'Job ' + jobId + ' has finished';
-    //                 createResultsTable(rowDataList);
-    //             });
-    //         })
-    //         .catch(error => console.error('Error fetching job status:', error));
-    //             console.error('There was a problem with the fetch operation:', error);
-    //         });
+
     let socketClosed = false;
+    let finished = false;
 
     socket.on('connect', () => {
         if (!socketClosed) {
@@ -141,75 +123,29 @@
             socket.emit('request_status', { job_id: jobId });
         }
         });
-
+    async function fetchJobStatus() {
+        // fetch('/results/' + jobId + '?status=true')
+        }
 
     socket.on('status_update', (data) => {
-    // socket.on('request_status', (data) => {
+        let n = 0;
         if (!socketClosed) {
+
+
             document.getElementById('job-status').innerText = data.status;
-            document.getElementById('job-updates').innerText = data.updates;
-
-            if (data.status === 'finished') {
-                socketClosed = true;
-                fetch('/results/' + jobId)
-                    // .then(response => response.json())
-                    .then(rowDataList => {
-                        const rowDataJson = JSON.parse('{{ row_data_json | safe }}');
-                        // debugger;
-                        console.log('Row Data:', rowDataJson);
-                        createResultsTable(rowDataJson);
-                        
-                        socket.close();
-                        
-                    })
-                    .catch(error => console.error('Error fetching job results:', error));
-            }
-        }
+            const jobUpdatesElement = document.getElementById('job-updates');
+            jobUpdatesElement.innerText += data.updates + '\n';
+            n += 1;
+            console.log('Received socket update:', n);
+          
+            };
     });
-    // socket.on('update', function(msg) {
-    //     // Add the update to your page. This example just appends it to a div.
-    //     // var message = msg.data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
-    //     // document.getElementById('updates').innerHTML += '<p>' + message + '</p>';
-    //     // // Scroll to the bottom of the updates div
-    //     // var updatesDiv = document.getElementById('updates');
-    //     // updatesDiv.scrollTop = updatesDiv.scrollHeight;
-    //     // if (msg.status === 'running') {
-    //     //     document.getElementById('jobStatus').innerHTML = 'Job ' + jobId + ' is running';
-    //     // }
-    //     // // Check if the job is finished
-    //     // if (msg.status === 'finished') {
-    //     console.log('Received socket update:', msg);
-    //     var updatesDiv = document.getElementById('job-updates');
-    //     var newUpdate = document.createElement('p');
-    //     newUpdate.textContent = msg.data;
-    //     updatesDiv.appendChild(newUpdate);
+    socket.on('json_data', (table_data) => {
+                data_json=JSON.parse(table_data.row_data_json);
+                console.log('Row Data:', data_json);
+                createResultsTable(data_json);
+            });
 
-    //     if (msg.status === 'finished') {
-    //         document.getElementById('job-status').innerHTML = 'Job ' + jobId + ' has finished';
-    //         // document.getElementById('phylogeneticTreeButton').style.display = 'block';
-    //         fetch('/results/' + jobId)
-    //             .then(response => {
-    //                 // if (response.status === 202) {
-    //                 //     // Results not ready yet, try again later
-    //                 //     return;
-    //                 // }
-    //                 if (!response.ok) {
-    //                     throw new Error('Network response was not ok');
-    //                 }
-    //                 return response.json();
-    //             })
-    //             // Parse the JSON data and create a table
-    //             .then(response => response.json())
-    //             .then(rowDataList => {
-    //                 createResultsTable(rowDataList);
-    //                 socket.close();
-    //             })
-    //             .catch(error => {
-    //                 console.error('There was a problem with the fetch operation:', error);
-    //             });
-
-    //     }
-    // });
     function createResultsTable(rowDataList) {
         // Create a table
         var table = document.createElement('table');
