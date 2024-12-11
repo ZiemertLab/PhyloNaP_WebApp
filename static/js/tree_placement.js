@@ -62,6 +62,21 @@ async function main() {
     // Convert extractedNumbers into an object
     const extractedNumbersObj = Object.fromEntries(extractedNumbers);
 
+    if (placements && Array.isArray(placements[0].p)) {
+        placementNumbers = placements[0].p.map(subArray => [subArray[0], subArray[1], subArray[2], subArray[3], subArray[4]]);
+    }
+
+    // Select the "placement-container" element
+    const placementContainer = document.getElementById('placement-container');
+
+    // Print the extracted numbers in the "placement-container"
+    if (placementNumbers) {
+        placementContainer.innerHTML = placementNumbers.map(pair => `(${pair.join(', ')})`).join('<br>');
+    } else {
+        placementContainer.innerHTML = 'No placements found.';
+    }
+
+
     bubbleSize = function (a) {
         const num2 = extractedNumbersObj[a.data.annotation];
         if (num2 !== undefined) {
