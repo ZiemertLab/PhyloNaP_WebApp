@@ -89,6 +89,7 @@ async function main() {
     console.log("renderedTree: ", renderedTree);
     // debugger;
     addImagesAndMetadata(tree, metadata, metadataListArray2);
+    setupSaveImageButton();
     // setupSaveImageButton();
     setTreeSize(width, height);
     // setTreeSizeWH(width, height);
@@ -96,7 +97,8 @@ async function main() {
     // // At the end of tree_rendering.js
     selectedLeavesArray=getTerminalNodesArray(metadata)
     // metadataSummary(selectedLeavesArray, metadata)
-
+    //test the clusters
+    checkForClusters(tree);
     // //make the tree panel apropiate size
     $(document).ready(function() {
         Split(['.tree-panel', '.details'], {
