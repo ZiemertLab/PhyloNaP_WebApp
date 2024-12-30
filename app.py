@@ -33,7 +33,7 @@ import time
 tmp_directory = '/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp'
 tree_placement_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_enzPlace'
 database_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_database'
-
+cache={}
 
 flask_app = Flask(__name__)
 flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
@@ -281,6 +281,37 @@ def results(job_id):
                 print(f"JSONDecodeError: {e}. Could not read updates.")
 
     return render_template('results.html', job_id=job_id)
+
+@app.route('/epa_res/<job_id>/<query>/<tree_id>')
+def get_jplace_data(job_id, query, tree_id):
+    cache_key = f"{job_id}/{query}/{tree_id}"
+    # Check if the data is already in the cache
+    if cache_key in cache:
+        data = cache[cache_key]
+    else:
+        file_path = os.path.join(tmp_directory, job_id, query, tree_id, 'epa_result.jplace')
+        print("file_path",file_path)
+        try:
+            with open(file_path, 'r') as file:
+                data = json.load(file)
+                # Cache the data
+                cache[cache_key] = data
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+
+    placements = data['placements'][0]['p']
+    print("read the placements file\n",placements)
+
+        # Find the list with the highest 3rd value
+    max_placement = max(placements, key=lambda x: x[2])
+    
+    like_weight_ratio = max_placement[2]
+    pendant_length = max_placement[4]
+
+    return jsonify({
+        'like_weight_ratio': like_weight_ratio,
+        'pendant_length': pendant_length
+    })
 
 @socketio.on('connect')
 def handle_connect():

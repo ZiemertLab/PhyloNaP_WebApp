@@ -7,3 +7,6 @@
     background-color: #B69E6C; /* Non-active button color */
     color: #000000; /* Text color for better visibility */
 }
+.circle-color {
+    fill: #B69E6C; /* Set the desired color here */
+  }

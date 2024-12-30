@@ -152,7 +152,7 @@
 
         // Create a header row
         var headerRow = document.createElement('tr');
-        ['Query', 'Superfamily', 'Family'].forEach(function(header) {
+        ['Query', 'Superfamily', 'Family', 'Like Weight Ratio', 'Pendant Length','The Tree'].forEach(function(header) {
             var th = document.createElement('th');
             th.textContent = header;
             headerRow.appendChild(th);
@@ -167,20 +167,45 @@
                 td.textContent = rowData[key];
                 row.appendChild(td);
             });
-            table.appendChild(row);
+                    // Fetch and cache the data from the specified files
+            fetch(`/epa_res/${jobId}/${rowData['query']}/${rowData['tree_id']}`)
+                .then(response => response.json())
+                .then(data => {
+                    var likeWeightRatio = data.like_weight_ratio;
+                    var pendantLength = data.pendant_length;
+
+                    var tdLikeWeightRatio = document.createElement('td');
+                    tdLikeWeightRatio.textContent = likeWeightRatio;
+                    row.appendChild(tdLikeWeightRatio);
+
+                    var tdPendantLength = document.createElement('td');
+                    tdPendantLength.textContent = pendantLength;
+                    row.appendChild(tdPendantLength);
+
+                    var button = document.createElement('button');
+                    button.textContent = 'View .jplace file';
+                    button.onclick = function() {
+                        // Redirect to the jplace_render.html page
+                        window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
+                    };
+
+                    // Add the button to the "The Tree" column
+                    var tdButton = document.createElement('td');
+                    tdButton.appendChild(button);
+                    row.appendChild(tdButton);
+                })
+                .catch(error => console.error('Error fetching jplace data:', error));
+
+            // table.appendChild(row);
 
             // Create a button
-            var button = document.createElement('button');
-            button.textContent = 'View .jplace file';
-            button.onclick = function() {
-                // Redirect to the jplace_render.html page
-                window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
-            };
 
-            // Add the button to the row
-            var td = document.createElement('td');
-            td.appendChild(button);
-            row.appendChild(td);
+
+
+            // // Add the button to the row
+            // var td = document.createElement('td');
+            // td.appendChild(button);
+            // row.appendChild(td);
 
             table.appendChild(row);
         });

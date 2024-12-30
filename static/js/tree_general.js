@@ -328,7 +328,9 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     nodes.each(function(d) {
       let transformValue = d3.select(this).attr('transform');
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-      let bgc = d.data.name.split("_")[0];
+      //let bgc = d.data.name.split("_")[0];
+      //an update for a new naming convention
+      let bgc = d.data.name.split(".")[0];
       let image = "static/images/"+bgc+"_1.png";
 
     // Check if the image exists

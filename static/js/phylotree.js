@@ -1801,7 +1801,9 @@
 
         circles.attr("r", function(d) {
           return d;
-        });
+        })
+        // .classed("circle-color", true); // Apply the CSS class for color;
+        .attr("fill", "#B69E6C"); // Directly set the color
 
         if (this.shown_font_size >= 5) {
           labels = labels.attr("dx", d => {
