@@ -2,16 +2,11 @@
 import sys
 import uuid
 import subprocess
-#print(sys.executable)
+
 from flask import Flask, render_template, request, redirect, url_for, Response, session, jsonify
 from flask import send_from_directory
-from urllib.parse import urlparse, unquote
 from werkzeug.utils import secure_filename
 
-#from ete3 import Tree
-#from ete3 import Tree, WebTreeApplication, NodeStyle
-#from ete3 import TreeStyle
-#from WSGIMiddleware import WSGIMiddleware
 import os
 import logging
 import json
