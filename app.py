@@ -6,15 +6,14 @@ import subprocess
 from flask import Flask, render_template, request, redirect, url_for, Response, session, jsonify
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
-
 import os
-import logging
 import json
 import pandas as pd
 import ast
 from flask_socketio import SocketIO, emit
 import threading
 import time
+import logging
 
 # from docker import DockerClient
 # #from ete3 import TreeStyle
@@ -25,27 +24,73 @@ import time
 # # Start a new Docker container
 # container = docker_client.containers.run('phylo-place', detach=True)
 
-tmp_directory = '/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp'
-tree_placement_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_enzPlace'
-database_dir='/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/PhyloNaP_database'
 cache={}
 
-flask_app = Flask(__name__)
-flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
-app=flask_app
 
-#app = WSGIMiddleware(flask_app)
+flask_app = Flask(__name__)
+#flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
+app=flask_app
+print("FLASK APP STARTED")
+app.config.from_pyfile("config.py")
+flask_app.secret_key = app.config['SECRET_KEY']
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
+# tree_placement_dir = app.config['TREE_PLACEMENT_DIR']
+#tmp_directory = app.config['TMP_DIRECTORY']
+database_dir = app.config['DB_DIR']
+#tree_placement_dir=os.getenv('BACKEND_URL', 'http://localhost:8080')
+backend_container_name = os.getenv('BACKEND_CONTAINER_NAME', 'backend')
+
+database_dir = os.getenv("DATA_PATH", "./data")
+#tmp_directory = os.getenv("RESUTLS_DIR", "./results")
+#tmp_directory="/app/results"
+#print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
+print(f'the backend container name is {backend_container_name}, getenv is {os.getenv("BACKEND_CONTAINER_NAME")}')
+print(f"RESULTS_DIR environment variable: {os.getenv('RESULTS_DIR')}")
+tmp_directory = os.getenv("RESULTS_DIR", "./results")
+print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
+#tmp_directory='/app/results'
+
+
+
 socketio = SocketIO(app)
 def background_thread(job_id, filename):
     
-    print('Running background thread for job ', job_id)
-    print("Before subprocess.Popen")
-    process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    print("After subprocess.Popen")
-    for line in iter(process.stdout.readline, b''):
-        # print("emitting update running")
-        line_decoded = line.decode('utf-8')
-        print("process_log ====================", line_decoded)
+    print('Running background thread for job ', job_id, flush=True)
+    print("Before subprocess.Popen", flush=True)
+        # Call the script using the correct URL
+    # ['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)],
+
+    process = subprocess.Popen(
+        #['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', job_id, filename],
+        ['docker', 'run', '--name',job_id, 'backend', 'python', '/app/place_enz.py', job_id, filename],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True  # Ensure the output is in text mode
+    )
+        # Read and print the output line by line
+    for line in process.stdout:
+        print("process_log ====================", line.strip(), flush=True)
+
+    process.stdout.close()
+    return_code = process.wait()
+
+    if return_code != 0:
+        print("BACKEND SCRIPT ERROR: Process returned non-zero exit code", return_code, flush=True)
+    # stdout, stderr = process.communicate()  # Capture both stdout and stderr
+    # if stdout:
+    #     print("Backend script output:", stdout.decode())
+    #     for line in iter(process.stdout.readline, b''):
+    #         # print("emitting update running")
+    #         line_decoded = line.decode('utf-8')
+    #         print("process_log ====================", line_decoded)
+    # if stderr:
+    #     print("BACKEND SCRIPT ERROR:", stderr.decode())
+    #process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    print("After subprocess.Popen", flush=True)
+
     #     socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
     #         # Save the update to a file
     #     with open(os.path.join(tmp_directory, job_id, 'updates.txt'), 'a') as f:
@@ -243,12 +288,12 @@ def submit():
 
     # Generate a unique job ID
     job_id = str(uuid.uuid4())
-    print('Job ID:', job_id)
+    print('Job ID:', job_id, flush=True)
     os.makedirs(os.path.join(tmp_directory, job_id))
     if file and file.filename != '':
         filename = secure_filename(file.filename)
         file.save(os.path.join(tmp_directory, job_id, filename))
-        print('File uploaded:', filename)
+        print('File uploaded:', filename, flush=True)
     elif sequence != '':
         filename='sequence.fasta'
         with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
@@ -320,7 +365,7 @@ def handle_request_status(data):
     read_updates(job_id)
 def read_status(status_file):
     if not os.path.exists(status_file):
-        time.sleep(1)
+        time.sleep(10)
     with open(status_file, 'r') as f:
         return f.read().strip()
 def read_updates(job_id):
@@ -473,6 +518,8 @@ def page_not_found(error):
 # if __name__ == '__main__':
 #     # db.create_all()  # create tables
 #     app.run(debug=True)
-
-if __name__ == '__main__':
-    socketio.run(app, debug=True)
+print("app.config['HOST']",app.config['HOST'])
+print("app.config['PORT']",app.config['PORT'])
+#if __name__ == '__main__':
+#    app.run(debug=True)
+#    socketio.run(app, host=app.config['HOST'], port=app.config['PORT'], debug=True)

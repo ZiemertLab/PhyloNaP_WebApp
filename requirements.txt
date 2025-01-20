@@ -1,4 +1,4 @@
-Flask
-numpy
-flask_socketio
-gunicorn
+Flask==3.0.3
+pandas==2.2.3
+flask_socketio==5.5.0
+gunicorn==23.0.0
