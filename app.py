@@ -14,6 +14,8 @@ from flask_socketio import SocketIO, emit
 import threading
 import time
 import logging
+import string
+import random
 
 # from docker import DockerClient
 # #from ete3 import TreeStyle
@@ -43,7 +45,8 @@ database_dir = app.config['DB_DIR']
 #tree_placement_dir=os.getenv('BACKEND_URL', 'http://localhost:8080')
 backend_container_name = os.getenv('BACKEND_CONTAINER_NAME', 'backend')
 
-database_dir = os.getenv("DATA_PATH", "./data")
+#database_dir = os.getenv("DATA_PATH", "./data")
+
 #tmp_directory = os.getenv("RESUTLS_DIR", "./results")
 #tmp_directory="/app/results"
 #print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
@@ -192,6 +195,69 @@ def help_page():
 
 #############################
 
+
+def generate_unique_folder_name(dataset_name):
+    # Remove symbols that are not allowed in folder names
+    allowed_chars = string.ascii_letters + string.digits + "_-"
+    folder_name = ''.join(c for c in dataset_name if c in allowed_chars)
+    
+    # Generate a random string to make the folder name unique
+    random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    
+    return f"{folder_name}_{random_string}"
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if request.method == 'POST':
+        dataset_name = request.form['dataset_name']
+        dataset_description = request.form['dataset_description']
+        superfamily = request.form['superfamily']
+        #data_source = request.form.getlist('data_source')
+        data_type = request.form.getlist('data_type')
+        authors = request.form['authors']
+        paper_link = request.form['paper_link']
+        email = request.form['email']
+
+        # Save files
+        tree_file = request.files['tree_file']
+        metadata_file = request.files['metadata_file']
+        alignment_file = request.files['alignment_file']
+        hmm_file = request.files['hmm_file']
+
+        # Generate a unique folder name
+        folder_name = generate_unique_folder_name(dataset_name)
+        folder_path = os.path.join(app.config['UPLOAD_FOLDER'], folder_name)
+        os.makedirs(folder_path)
+
+        if tree_file:
+            tree_file.save(os.path.join(folder_path, tree_file.filename))
+        if metadata_file:
+            metadata_file.save(os.path.join(folder_path, metadata_file.filename))
+        if alignment_file:
+            alignment_file.save(os.path.join(folder_path, alignment_file.filename))
+        if hmm_file:
+            hmm_file.save(os.path.join(folder_path, hmm_file.filename))
+
+        # Save data to JSON file
+        data = {
+            'superfamily': superfamily,
+            'name': dataset_name,
+            'description': dataset_description,
+            'data_type': data_type,
+            'authors': authors,
+            'paper_link': paper_link,
+            'folder_path': folder_path,
+            'email': email,
+            'tree':os.path.join(folder_path, tree_file.filename),
+            'metadata':os.path.join(folder_path, metadata_file.filename),
+            'alignment':os.path.join(folder_path, alignment_file.filename),
+        }
+        json_file_path = os.path.join(folder_path, 'data.json')
+        with open(json_file_path, 'w') as f:
+            json.dump(data, f)
+
+        return render_template('dataset_uploaded.html', email=email, dataset_name=dataset_name)
+
 @app.route('/database')
 def database_page():
     # Get a dictionary of the files in each folder
@@ -266,7 +332,11 @@ def tutorial():
 
 @app.route('/upload',methods=['POST','GET'])
 def upload_dataset():
-    return render_template('upload.html')
+    with open(os.path.join(database_dir, 'db_structure.json')) as f:
+        data = json.load(f)
+    superfamilies = data['superfamilies']
+    superfamilies.append({'name': 'other'})  # Add "other" category
+    return render_template('upload.html', superfamilies=superfamilies)
 
 # @app.route('/results')
 # def results():

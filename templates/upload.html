@@ -1,7 +1,41 @@
 <!-- templates/index.html -->
 {% extends "base.html" %}
 {% block content %}
-
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+    }
+    .form-container label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    .form-container input, .form-container textarea, .form-container select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    .form-container input[type="submit"] {
+        width: auto;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        padding: 10px 20px;
+        border-radius: 5px;
+    }
+    .form-container input[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+</style>
+<div class="form-container">
     <form action="/upload" method="post" enctype="multipart/form-data">
         <!-- Dataset Name -->
         <label for="dataset-name">Dataset Name:</label>
@@ -14,17 +48,22 @@
         <!-- Upload Tree (Newick format) -->
         <label for="tree-file">Upload Tree (Newick format):</label>
         <input type="file" id="tree-file" name="tree_file" accept=".nwk,.newick" required><br>
-
-        <!-- Upload Metadata Table -->
-        <label for="metadata-file">Upload Metadata Table (must contain ID column):</label>
-        <input type="file" id="metadata-file" name="metadata_file" accept=".csv,.tsv" required><br>
+        <small></small><br>
 
         <!-- Upload Alignment -->
-        <label for="alignment-file">Upload Alignment:</label>
+        <label for="alignment-file">Upload the alignment you used for the tree construction:</label>
         <input type="file" id="alignment-file" name="alignment_file" accept=".fasta,.fa" required><br>
 
+        <!-- Upload Metadata Table -->
+        <label for="metadata-file">Upload Metadata Table (must contain ID column with leaves names):</label>
+        <input type="file" id="metadata-file" name="metadata_file" accept=".csv,.tsv" required><br>
+
+        <!-- Upload HMM model (optional) -->
+        <label for="hmm-file">Upload HMM model (optional):</label>
+        <input type="file" id="hmm-file" name="hmm_file" accept=".hmm"><br>
+
         <!-- Enzyme's Superfamily -->
-        <label for="superfamily">Enzyme's Superfamily:</label>
+        <label for="superfamily">Enzyme's Superfamily (optional):</label>
         <select id="superfamily" name="superfamily">
             <option value="undefined">Undefined</option>
             {% for superfamily in superfamilies %}
@@ -32,32 +71,37 @@
             {% endfor %}
         </select><br>
 
-        <!-- Data Source -->
-        <label for="data-source">Data Source:</label>
-        <select id="data-source" name="data_source" multiple>
-            {% for source in data_sources %}
-            <option value="{{ source }}">{{ source }}</option>
-            {% endfor %}
-        </select><br>
-
         <!-- Data Type -->
-        <label for="data-type">Data Type:</label>
+        <label for="data-type">Alignment type</label>
         <select id="data-type" name="data_type" multiple>
             {% for data_type in data_types %}
             <option value="{{ data_type }}">{{ data_type }}</option>
             {% endfor %}
+            <option value="full-gene">Full Gene</option>
+            <option value="domains">Domain(s)</option>
         </select><br>
+
+        <!-- Images -->
+        <label for="image-files">Upload Images:</label>
+        <input type="file" id="image-files" name="image_files" accept=".png,.jpg" multiple><br>
+        <small>Image names should contain the ID from a phylogenetic tree leaf. You can have multiple images for one ID - enumerate them to order (for example, ADG27364.1_1.png, ADG27364.1_2.png, etc).</small><br>
+        <small>If there are more than 100 images, please upload them as a zip archive.</small><br>
+        
 
         <!-- Author(s) -->
         <label for="authors">Author(s):</label>
         <input type="text" id="authors" name="authors" required><br>
 
+        <!-- Email -->
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+
         <!-- Cite the Paper -->
-        <label for="paper-link">Cite the Paper (add the link):</label>
-        <input type="url" id="paper-link" name="paper_link" required><br>
+        <label for="paper-link">Cite the Paper (add the doi):</label>
+        <input type="url" id="paper-link" name="paper_link"><br>
 
         <!-- Submit Button -->
         <input type="submit" value="Submit" class="btn btn-primary">    
     </form>
-
+</div>
 {% endblock %}
