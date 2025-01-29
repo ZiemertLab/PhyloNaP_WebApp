@@ -174,6 +174,10 @@ def background_thread(job_id, filename):
 def home():
     return render_template('home.html')
 
+@app.route('/analyse')
+def analyse():
+    return render_template('home.html')
+
 @app.route('/help')
 def help_page():
     return render_template('help.html')

@@ -13,6 +13,12 @@
         outline: none !important;
         box-shadow: none !important;
     }
+    .fixed-table {
+        width: 100%;
+    }
+    .fixed-table th, .fixed-table td {
+        width: 20%; /* Set a fixed width for each column */
+    }
 </style>
 <form method="post" action="/phylotree_render">
     <!-- Add Filter Dropdown -->
@@ -57,8 +63,8 @@
     <!-- Add Show All Datasets Button -->
 
     <!-- Table to Show All Datasets -->
-    <div id="all-datasets-table" style="display: none;">
-        <table class="table">
+    <div id="all-datasets-table" class="table table-striped fixed-table">
+        <table class="table fixed-table">
             <thead>
                 <tr>
                     <th>Superfamily</th>
@@ -90,28 +96,7 @@
     </div>
 </form>
 
-<div id="tree"></div>
-
-<!-- <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('show-all-datasets').addEventListener('click', function() {
-            document.getElementById('all-datasets-table').style.display = 'block';
-        });
-
-        document.getElementById('superfamily-filter').addEventListener('change', function() {
-            var filterValue = this.value.toLowerCase();
-            var rows = document.querySelectorAll('#all-datasets-table tbody tr');
-            rows.forEach(function(row) {
-                var superfamily = row.getAttribute('data-superfamily').toLowerCase();
-                if (filterValue === "" || superfamily === filterValue) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-        });
-    });
-</script> -->
+<!-- <div id="tree"></div> -->
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -144,31 +129,14 @@
             });
         }
 
+        // Show all datasets by default
+        document.getElementById('show-all-datasets').click();
+
         document.getElementById('superfamily-filter').addEventListener('change', filterTable);
         document.getElementById('source-filter').addEventListener('change', filterTable);
     });
 </script>
 
-<!-- <script>
-    document.querySelectorAll('.accordion-button').forEach(function(button) {
-        button.addEventListener('click', function() {
-            document.querySelectorAll('.accordion-button').forEach(function(btn) {
-                btn.classList.remove('selected-superfamily');
-            });
-            button.classList.add('selected-superfamily');
-        });
-    });
-</script> -->
-<!-- <script>
-    document.querySelectorAll('.show-button').forEach(function(button) {
-        button.addEventListener('click', function() {
-            var superfamilyName = button.getAttribute('data-superfamily');
-            var datasetName = button.getAttribute('data-dataset');
-            window.location.href = '/phylotree_render?superfamily=' + encodeURIComponent(superfamilyName) 
-            + '&dataset=' + encodeURIComponent(datasetName);
-        });
-    });
-</script> -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 
 {% endblock %}
