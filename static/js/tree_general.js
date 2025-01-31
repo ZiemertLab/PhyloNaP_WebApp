@@ -64,6 +64,7 @@ window.setupEventListeners = function(tree) {
             this.getAttribute("data-direction") == "vertical"
                 ? tree.display.spacing_x.bind(tree.display)
                 : tree.display.spacing_y.bind(tree.display)
+                // window.setTreeSize(width, height)
                 console.log("non vertical spacing: ", tree.display.spacing_y());
                 console.log("y spacing 2 data-amount: ",  Number(this.getAttribute("data-amount")));
         which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
@@ -77,6 +78,7 @@ window.setupEventListeners = function(tree) {
                 btn.classList.toggle("active");
             });
             tree.display.radial(!tree.display.radial()).update();
+            // window.setTreeSize(width, height)
         }
     });
   });
@@ -108,6 +110,7 @@ window.setupEventListeners = function(tree) {
         });
         tree.display.update();
       }
+      // window.setTreeSize(width, height)
     });
   });
 
@@ -492,6 +495,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         renderNP();
         // change the spacing of the tree!
         tree.display.spacing_x(50).update();
+        // window.setTreeSize(width, height)
         button.dataset.active = 'true';
         button.classList.add('active-button');
         button.classList.remove('non-active-button');
@@ -518,6 +522,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         renderReaction();
         // change the spacing of the tree!
         tree.display.spacing_x(50).update();
+        // window.setTreeSize(width, height)
         button.dataset.active = 'true';
       } else {
         // If the button is active, hide the content and set the button to inactive
@@ -665,7 +670,7 @@ window.setTreeSize = function(width, height) {
     d3.select('#tree svg')
       .attr('width', width);
       // .attr('height', height);
-  }, 10000);
+  }, 1000);
 }
 
 window.setTreeSizeWH = function(width, height) {

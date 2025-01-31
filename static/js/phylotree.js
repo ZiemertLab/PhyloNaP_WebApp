@@ -2956,6 +2956,7 @@
       this.selectionCallback = null;
       this.scales = [1, 1];
       this.size = [1, 1];
+      // this.fixed_width = [14, 30]; // why is it fixed????? - it is spacing between rows
       this.fixed_width = [14, 30];
       this.scale_bar_font_size = 12;
 
@@ -3295,7 +3296,7 @@
         });
       }
 
-      this.resizeSvg(this.phylotree, this.svg, transitions);
+      // this.resizeSvg(this.phylotree, this.svg, transitions);
 
       if (this.options["brush"]) {
         var brush = enclosure
