@@ -16,7 +16,7 @@ import time
 import logging
 import string
 import random
-
+import re
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -345,6 +345,18 @@ def upload_dataset():
 # @app.route('/results')
 # def results():
 #     return render_template('results.html')
+def is_fasta(content):
+    """Check if the content is in FASTA format."""
+    entries = content.strip().split('>')
+    for entry in entries:
+        if entry:
+            lines = entry.split('\n')
+            if not lines[0].strip():
+                return False
+            for line in lines[1:]:
+                if not re.match(r'^[A-Za-z*.-]+$', line):
+                    return False
+    return True
 
 @app.route('/submit', methods=['POST'])
 # def submit():
@@ -366,10 +378,17 @@ def submit():
     os.makedirs(os.path.join(tmp_directory, job_id))
     if file and file.filename != '':
         filename = secure_filename(file.filename)
-        file.save(os.path.join(tmp_directory, job_id, filename))
+        file_path = os.path.join(tmp_directory, job_id, filename)
+        file.save(file_path)
         print('File uploaded:', filename, flush=True)
+        with open(file_path, 'r') as f:
+            content = f.read()
+        if not is_fasta(content):
+            return 'Uploaded file is not a valid FASTA protein file', 400
     elif sequence != '':
         filename='sequence.fasta'
+        if not is_fasta(sequence):
+            return 'Pasted sequence is not a valid FASTA protein sequence', 400
         with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
             f.write(sequence)
     threading.Thread(target=background_thread, args=(job_id, filename)).start()
