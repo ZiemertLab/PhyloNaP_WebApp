@@ -3,8 +3,10 @@
 {% block content %}
 <style>
     .form-container {
+        margin-top: 20px; /* Add space between the header and the form */
         max-width: 600px;
-        margin: 0 auto;
+        /* margin: 0 auto; */
+        margin: 20px auto; /* Center the form and add top margin */
         padding: 20px;
         border: 1px solid #ccc;
         border-radius: 10px;
@@ -22,7 +24,7 @@
         border: 1px solid #ccc;
         border-radius: 5px;
     }
-    .form-container input[type="submit"] {
+    /* .form-container input[type="submit"] {
         width: auto;
         background-color: #007bff;
         color: white;
@@ -30,11 +32,13 @@
         cursor: pointer;
         padding: 10px 20px;
         border-radius: 5px;
-    }
-    .form-container input[type="submit"]:hover {
+    } */
+    /* .form-container input[type="submit"]:hover {
         background-color: #0056b3;
-    }
+    } */
 </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
+
 <div class="form-container">
     <form action="/upload" method="post" enctype="multipart/form-data">
         <!-- Dataset Name -->
@@ -101,7 +105,7 @@
         <input type="url" id="paper-link" name="paper_link"><br>
 
         <!-- Submit Button -->
-        <input type="submit" value="Submit" class="btn btn-primary">    
+        <input type="submit" value="Submit" class="active-button">    
     </form>
 </div>
 {% endblock %}
