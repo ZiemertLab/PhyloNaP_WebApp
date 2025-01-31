@@ -2316,6 +2316,7 @@
     return this;
   }
 
+  // commented the modification of horizontal size to keep the proper size of the tree
   function resizeSvg(tree, svg, tr) {
 
     let sizes = this.size;
@@ -2351,10 +2352,11 @@
           (this.options["top-bottom-spacing"] != "fit-to-size"
             ? this.pad_height()
             : 0),
-        sizes[1] +
-          (this.options["left-right-spacing"] != "fit-to-size"
-            ? this.pad_width()
-            : 0)
+        sizes[1] 
+        // +
+          // (this.options["left-right-spacing"] != "fit-to-size"
+          //   ? this.pad_width()
+          //   : 0)
       ];
 
     }
@@ -2364,8 +2366,8 @@
       if (tr) {
         svg = svg.transition(100);
       }
-
-      svg.attr("height", sizes[0]).attr("width", sizes[1]);
+      svg.attr("height", sizes[0])
+      // svg.attr("height", sizes[0]).attr("width", sizes[1]);
 
     }
 
@@ -2957,7 +2959,7 @@
       this.scales = [1, 1];
       this.size = [1, 1];
       // this.fixed_width = [14, 30]; // why is it fixed????? - it is spacing between rows
-      this.fixed_width = [14, 30];
+      this.fixed_width = [14, 14];
       this.scale_bar_font_size = 12;
 
       this.draw_branch = draw_line;
@@ -3296,7 +3298,7 @@
         });
       }
 
-      // this.resizeSvg(this.phylotree, this.svg, transitions);
+      this.resizeSvg(this.phylotree, this.svg, transitions);
 
       if (this.options["brush"]) {
         var brush = enclosure
