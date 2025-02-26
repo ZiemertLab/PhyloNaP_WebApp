@@ -324,6 +324,60 @@ window.checkSVGSize = function() {
 window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
   let activeColumns = 0;
 
+  function colorSameCluster(columnName='Cluster'){
+    let annot = metadata.reduce((obj, item) => {
+      obj[item["ID"]] = item[columnName];
+      return obj;
+    }, {});
+    let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+
+    // Group nodes by their text content
+    let textGroups = {};
+    nodes.each(function(d) {
+        let text = annot[d.data.name];
+        if (!textGroups[text]) {
+            textGroups[text] = [];
+        }
+        textGroups[text].push(this);
+    });
+
+  function removeColors() {
+    d3.selectAll('rect').remove();
+  }
+    
+    // nodes.each(function(d) {
+    //   let text = annot[d.data.name];
+    //   //  d3.select(this).select('circle').style('fill', 'red'); // Change 'red' to your desired color
+    //   let textElement = d3.select(this).select('text');
+    //   // Get the bounding box of the text element
+    //   let bbox = textElement.node().getBBox();
+    //   // Add a rectangle behind the text element
+    //   d3.select(this)
+    //   .insert('rect', 'text')
+    //   .attr('x', bbox.x - 2) // Adjust as needed
+    //   .attr('y', bbox.y - 2) // Adjust as needed
+    //   .attr('width', bbox.width + 4) // Adjust as needed
+    //   .attr('height', bbox.height + 4) // Adjust as needed
+    //   .style('fill', 'red'); // Change 'red' to your desired color
+    // }
+    // Apply color to nodes with identical text
+    Object.keys(textGroups).forEach(text => {
+      if (textGroups[text].length > 1) { // Only color nodes with identical text
+          textGroups[text].forEach(node => {
+              let textElement = d3.select(node).select('text');
+              let bbox = textElement.node().getBBox();
+              d3.select(node)
+                  .insert('rect', 'text')
+                  .attr('x', bbox.x - 2) // Adjust as needed
+                  .attr('y', bbox.y - 2) // Adjust as needed
+                  .attr('width', bbox.width + 4) // Adjust as needed
+                  .attr('height', bbox.height + 4) // Adjust as needed
+                  .style('fill', 'red'); // Change 'red' to your desired color
+          });
+      }
+  });
+  }
+
   function renderNP(){
     activeColumns++;
 
@@ -331,10 +385,31 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     nodes.each(function(d) {
       let transformValue = d3.select(this).attr('transform');
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-      //let bgc = d.data.name.split("_")[0];
-      //an update for a new naming convention
-      let bgc = d.data.name.split(".")[0];
-      let image = "static/images/"+bgc+"_1.png";
+      let bgc = d.data.name.split("_")[0];
+      // an update for a new naming convention
+      let bgc1 = d.data.name.split(".")[0];
+      console.log(bgc, ': Image does not exist');
+      
+      let image1 = "static/images/" + bgc + "_1.png";
+      let image2 = "static/images/" + bgc1 + "_1.png";
+
+
+      // Function to check if an image exists
+      function imageExists(image_url) {
+          var http = new XMLHttpRequest();
+          http.open('HEAD', image_url, false);
+          http.send();
+          return http.status != 404;
+      }
+      
+      let image;
+      if (imageExists(image1)) {
+          image = image1;
+      } else if (imageExists(image2)) {
+          image = image2;
+      } else {
+          console.log('Image does not exist for both naming conventions');
+      }
 
     // Check if the image exists
     fetch(image, { method: 'HEAD' })
@@ -483,6 +558,30 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       }
     });
     buttonContainer.appendChild(button);
+  });
+
+  ["cluster"].forEach(id => {
+    let button = document.getElementById(id);
+    if (button) {
+      button.dataset.active = 'false'; // Add data-active attribute
+
+      button.addEventListener('click', function() {
+        if (button.dataset.active === 'false') {
+          // If the button is not active, display the content and set the button to active
+          colorSameCluster(id);
+          button.dataset.active = 'true';
+          button.classList.add('active-button');
+          button.classList.remove('non-active-button');
+        } else {
+          // If the button is active, hide the content and set the button to inactive
+          removeColors(id);
+          button.dataset.active = 'false';
+          button.classList.remove('active-button');
+          button.classList.add('non-active-button');
+        }
+      });
+      buttonContainer.appendChild(button);
+    }
   });
 
   ["BGC_product"].forEach(id => {
