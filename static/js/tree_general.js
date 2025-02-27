@@ -324,56 +324,56 @@ window.checkSVGSize = function() {
 window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
   let activeColumns = 0;
 
-  function colorSameCluster(columnName='Cluster'){
+  function colorSameCluster(){
+    let columnName = 'Cluster';
+    if (metadata.length > 0) {
+      let columnNames = Object.keys(metadata[0]);
+      console.log("Available columns:", columnNames);
+    } else {
+      console.log("No metadata available.");
+    }
+    console.log(columnName);
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
       return obj;
     }, {});
+    console.log('annot:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
 
     // Group nodes by their text content
     let textGroups = {};
     nodes.each(function(d) {
-        let text = annot[d.data.name];
+      let text = annot[d.data.name];
+      console.log('text:', text);
+      if (text !== null) {
         if (!textGroups[text]) {
-            textGroups[text] = [];
+          textGroups[text] = [];
         }
         textGroups[text].push(this);
-    });
-
-
-    
-    // nodes.each(function(d) {
-    //   let text = annot[d.data.name];
-    //   //  d3.select(this).select('circle').style('fill', 'red'); // Change 'red' to your desired color
-    //   let textElement = d3.select(this).select('text');
-    //   // Get the bounding box of the text element
-    //   let bbox = textElement.node().getBBox();
-    //   // Add a rectangle behind the text element
-    //   d3.select(this)
-    //   .insert('rect', 'text')
-    //   .attr('x', bbox.x - 2) // Adjust as needed
-    //   .attr('y', bbox.y - 2) // Adjust as needed
-    //   .attr('width', bbox.width + 4) // Adjust as needed
-    //   .attr('height', bbox.height + 4) // Adjust as needed
-    //   .style('fill', 'red'); // Change 'red' to your desired color
-    // }
-    // Apply color to nodes with identical text
-    Object.keys(textGroups).forEach(text => {
-      if (textGroups[text].length > 1) { // Only color nodes with identical text
-          textGroups[text].forEach(node => {
-              let textElement = d3.select(node).select('text');
-              let bbox = textElement.node().getBBox();
-              d3.select(node)
-                  .insert('rect', 'text')
-                  .attr('x', bbox.x - 2) // Adjust as needed
-                  .attr('y', bbox.y - 2) // Adjust as needed
-                  .attr('width', bbox.width + 4) // Adjust as needed
-                  .attr('height', bbox.height + 4) // Adjust as needed
-                  .style('fill', 'red'); // Change 'red' to your desired color
-          });
       }
-  });
+    });
+    // Filter out text groups with only one element
+    textGroups = Object.keys(textGroups).filter(text => textGroups[text].length > 1).reduce((obj, key) => {
+      obj[key] = textGroups[key];
+      return obj;
+    }, {});
+    console.log('textGroups with more than one:', textGroups);
+
+
+    var clusters_colors = palette('tol-rainbow', Object.keys(textGroups).length);
+    Object.keys(textGroups).forEach((text, index) => {
+      textGroups[text].forEach(node => {
+        let textElement = d3.select(node).select('text');
+        let bbox = textElement.node().getBBox();
+        d3.select(node)
+          .insert('rect', 'text')
+          .attr('x', bbox.x - 2) // Adjust as needed
+          .attr('y', bbox.y - 2) // Adjust as needed
+          .attr('width', bbox.width + 4) // Adjust as needed
+          .attr('height', bbox.height + 4) // Adjust as needed
+          .style('fill', clusters_colors[index]); // Use different color from clusters_colors
+      });
+    });
   }
   function removeColors() {
     d3.selectAll('rect').remove();
