@@ -341,9 +341,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         textGroups[text].push(this);
     });
 
-  function removeColors() {
-    d3.selectAll('rect').remove();
-  }
+
     
     // nodes.each(function(d) {
     //   let text = annot[d.data.name];
@@ -376,6 +374,9 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
           });
       }
   });
+  }
+  function removeColors() {
+    d3.selectAll('rect').remove();
   }
 
   function renderNP(){

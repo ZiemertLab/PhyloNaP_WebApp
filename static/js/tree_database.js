@@ -34,47 +34,6 @@ async function main() {
         gutterSize: 5,
         cursor: 'col-resize'
         });
-    });
-    // tree.nodes.forEach(node => {
-    //     console.log(" PRINTING THE PROPERTIES OF THE NODES");
-    //     // Expose the node to the global scope for inspection
-    //     window.currentNode = node;
-
-    //     // Log the node to the console
-    //     console.log(node);
-    //     console.dir(node);
-
-    //     // List all properties of the node
-    //     for (let property in node) {
-    //         if (node.hasOwnProperty(property)) {
-    //             console.log(property + ": " + node[property]);
-    //         }
-    //     }
-    // });
-    // console.log("PRINTING THE PROPERTIES OF THE NODE");
-
-    // // Access the first node in the tree.nodes array
-    // let node = tree.nodes[0];
-
-    // // Expose the node to the global scope for inspection
-    // window.currentNode = node;
-
-    // // Log the node to the console
-    // console.log(node);
-    // console.dir(node);
-
-    // // List all properties of the node
-    // for (let property in node) {
-    //     if (node.hasOwnProperty(property)) {
-    //         console.log(property + ": " + node[property]);
-    //     }
-    // }
-    console.log("PRINTING THE PROPERTIES OF THE NODE");
-    let nodes = d3.selectAll('.node');
-    node=nodes[0];
-    console.log(node);
-    console.dir(node);
-
-    
+    });  
 }
 main();
