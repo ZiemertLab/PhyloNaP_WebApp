@@ -1,0 +1,6 @@
+Starting the pipeline
+query name: AkAan_2__29-location:52724...54197
+Running HMMER
+HMMER finished successfully in 0.01455545425415039 seconds
+********************************************************************
+The whole process has finished in 0.027756452560424805 seconds

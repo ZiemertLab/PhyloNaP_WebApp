@@ -382,59 +382,72 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
   function renderNP(){
     activeColumns++;
 
-    let nodes = d3.selectAll('.node').filter(d => d.data.name.startsWith("BGC"));
+    let columnName = 'Cluster';
+    if (metadata.length > 0) {
+      let columnNames = Object.keys(metadata[0]);
+      console.log("Available columns:", columnNames);
+    } else {
+      console.log("No metadata available.");
+    }
+    console.log(columnName);
+    let annot = metadata.reduce((obj, item) => {
+      obj[item["ID"]] = item[columnName];
+      return obj;
+    }, {});
+    console.log('annot:', annot);
+    let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
     nodes.each(function(d) {
       let transformValue = d3.select(this).attr('transform');
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-      let bgc = d.data.name.split("_")[0];
-      // an update for a new naming convention
-      let bgc1 = d.data.name.split(".")[0];
-      console.log(bgc, ': Image does not exist');
+    let bgc = annot[d.data.name];
+    if (bgc && bgc.startsWith("BGC")) {
+      let bgc1 = bgc.split('.')[0];
+      console.log(bgc, ': Checking images');
       
       let image1 = "static/images/" + bgc + "_1.png";
       let image2 = "static/images/" + bgc1 + "_1.png";
-
-
+      console.log('Checking image1:', image1);
+      console.log('Checking image2:', image2);
+      
       // Function to check if an image exists
-      function imageExists(image_url) {
-          var http = new XMLHttpRequest();
-          http.open('HEAD', image_url, false);
-          http.send();
-          return http.status != 404;
+      async function imageExists(image_url) {
+        try {
+          const response = await fetch(image_url, { method: 'HEAD' });
+          return response.ok;
+        } catch {
+          return false;
+        }
       }
       
-      let image;
-      if (imageExists(image1)) {
+      // Check if the image exists
+      Promise.all([imageExists(image1), imageExists(image2)]).then(([exists1, exists2]) => {
+        let image;
+        if (exists1) {
           image = image1;
-      } else if (imageExists(image2)) {
+        } else if (exists2) {
           image = image2;
-      } else {
+        } else {
           console.log('Image does not exist for both naming conventions');
-      }
-
-    // Check if the image exists
-    fetch(image, { method: 'HEAD' })
-      .then(response => {
-        if (response.ok) {
-          let img = d3.select(this).append("image")
-            .attr('xlink:href', image)
-            .attr('x', 200+activeColumns*200-translateValues[0])
-            .attr('y', -50)
-            .attr('width', 100)
-            .attr('height', 100)
-            .attr('class', "NP");
-            console.log('image:width', img.attr('width'));
-
-          img.on('click', function() {
-            d3.select('#enlarged-image').attr('src', image);
-          });
+          return;
         }
-      })
-      .catch(error => {
-        console.error('Error checking image existence:', error);
+
+        let img = d3.select(this).append("image")
+          .attr('xlink:href', image)
+          .attr('x', 200 + activeColumns * 200 - translateValues[0])
+          .attr('y', -50)
+          .attr('width', 100)
+          .attr('height', 100)
+          .attr('class', "NP");
+        console.log('image:width', img.attr('width'));
+
+        img.on('click', function() {
+          d3.select('#enlarged-image').attr('src', image);
+        });
       });
-    });
-  }
+    }
+  });
+}
+
 
   function hideNP(){
     activeColumns--;

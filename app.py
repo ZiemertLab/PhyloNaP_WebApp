@@ -52,7 +52,8 @@ backend_container_name = os.getenv('BACKEND_CONTAINER_NAME', 'backend')
 #print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
 print(f'the backend container name is {backend_container_name}, getenv is {os.getenv("BACKEND_CONTAINER_NAME")}')
 print(f"RESULTS_DIR environment variable: {os.getenv('RESULTS_DIR')}")
-tmp_directory = os.getenv("RESULTS_DIR", "./results")
+#tmp_directory = os.getenv("RESULTS_DIR", "./results")
+tmp_directory="/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp"
 print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
 #tmp_directory='/app/results'
 
@@ -65,10 +66,11 @@ def background_thread(job_id, filename):
     print("Before subprocess.Popen", flush=True)
         # Call the script using the correct URL
     # ['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)],
-
+    print("database_dir",database_dir)
+    print("tmp_directory",tmp_directory)
     process = subprocess.Popen(
         #['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', job_id, filename],
-        ['docker', 'run', '--name',job_id, 'backend', 'python', '/app/place_enz.py', job_id, filename],
+        ['docker', 'run', '--name',job_id, '-v' f'{os.path.abspath(database_dir)}:/app/data', '-v', f"{os.path.abspath(tmp_directory)}:/app/results",'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True  # Ensure the output is in text mode
