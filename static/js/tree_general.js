@@ -908,27 +908,37 @@ const displayMetadataSummary = function(summary) {
       
       const columnTitle = document.createElement('h3');
       columnTitle.textContent = key;
+      columnTitle.style.fontSize = '18px'; // Make the title smaller
 
       // Create a toggle button
       const toggleButton = document.createElement('button');
-      toggleButton.textContent = 'Toggle';
+      toggleButton.innerHTML = '&#9654;'; // Right arrow
+      toggleButton.classList.add('toggle-button');
+      toggleButton.style.marginLeft = '5px'; // Add space between title and arrow
+      toggleButton.style.fontSize = '10px'; // Make the arrow smaller
       toggleButton.onclick = () => {
         const contentDiv = columnDiv.querySelector('.content');
         if (contentDiv.style.display === 'none') {
           contentDiv.style.display = 'block';
+          toggleButton.innerHTML = '&#9660;'; // Down arrow
         } else {
           contentDiv.style.display = 'none';
+          toggleButton.innerHTML = '&#9654;'; // Right arrow
         }
       };
 
+      // Append the toggle button to the column title
+      columnTitle.appendChild(toggleButton);
+
       columnDiv.appendChild(columnTitle);
-      columnDiv.appendChild(toggleButton);
 
       const contentDiv = document.createElement('div');
       contentDiv.classList.add('content');
+      contentDiv.style.display = 'none'; // Initially hide the content
 
       for (const [value, count] of Object.entries(values)) {
         const valueDiv = document.createElement('div');
+        valueDiv.classList.add('value-entry');
         valueDiv.textContent = `${value}: ${count}`;
         contentDiv.appendChild(valueDiv);
       }
@@ -941,6 +951,49 @@ const displayMetadataSummary = function(summary) {
   }
 }
 
+// const displayMetadataSummary = function(summary) {
+//   const summaryContainer = document.getElementById('summary-container');
+//   if (summaryContainer) {
+//     summaryContainer.innerHTML = ''; // Clear previous content
+
+//     for (const [key, values] of Object.entries(summary)) {
+//       const columnDiv = document.createElement('div');
+//       columnDiv.classList.add('summary-column');
+      
+//       const columnTitle = document.createElement('h3');
+//       columnTitle.textContent = key;
+
+//       // Create a toggle button
+//       const toggleButton = document.createElement('button');
+//       toggleButton.textContent = 'Toggle';
+//       toggleButton.onclick = () => {
+//         const contentDiv = columnDiv.querySelector('.content');
+//         if (contentDiv.style.display === 'none') {
+//           contentDiv.style.display = 'block';
+//         } else {
+//           contentDiv.style.display = 'none';
+//         }
+//       };
+
+//       columnDiv.appendChild(columnTitle);
+//       columnDiv.appendChild(toggleButton);
+
+//       const contentDiv = document.createElement('div');
+//       contentDiv.classList.add('content');
+
+//       for (const [value, count] of Object.entries(values)) {
+//         const valueDiv = document.createElement('div');
+//         valueDiv.textContent = `${value}: ${count}`;
+//         contentDiv.appendChild(valueDiv);
+//       }
+
+//       columnDiv.appendChild(contentDiv);
+//       summaryContainer.appendChild(columnDiv);
+//     }
+//   } else {
+//     console.error('summaryContainer element not found');
+//   }
+// }
 window.checkForClusters = function(tree, node) {
   // viewof diameter_threshold = slider({
   //   min: 0.0,
