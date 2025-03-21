@@ -859,7 +859,7 @@ const getMetadataSummary=function(filteredTable) {
   const summary = {};
   filteredTable.forEach(row => {
       for (const [key, value] of Object.entries(row)) {
-          if (key === 'ID') continue; // Skip the 'ID' column
+          if (key === 'ID'|| value === null) continue; // Skip the 'ID' column
           if (!summary[key]) {
               summary[key] = {};
           }

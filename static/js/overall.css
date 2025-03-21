@@ -1,11 +1,12 @@
 /* Styles for active button */
 .active-button {
-    background-color: #a61e37; /* Active button color */
-    color: #ffffff; /* Text color for better visibility */
+    /* background-color: #a61e37; Active button color */
+    background-color: #7B1B38;
+    color: #E0E0E0; /* Text color for better visibility */
 }
 .non-active-button {
-    background-color: #B69E6C; /* Non-active button color */
-    color: #000000; /* Text color for better visibility */
+    background-color: #3D3D3D; /* Non-active button color */
+    color: #E0E0E0; /* Text color for better visibility */
 }
 .circle-color {
     fill: #B69E6C; /* Set the desired color here */

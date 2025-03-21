@@ -2520,7 +2520,7 @@
             .append("a")
             .attr("class", "dropdown-item")
             .attr("tabindex", "-1")
-            .text("1Get the summary of the clade")
+            .text("Get the summary of the clade")
             .on("click", mouseEvent => {
               const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
               const event = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
