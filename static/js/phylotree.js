@@ -316,6 +316,10 @@
    * @returns {Array} An array of selected nodes.
    */
   function selectAllDescendants$1(node, terminal, internal) {
+    // Clear the selection for all nodes
+    // this.nodes.descendants().forEach(d => {
+    //   d.selected = false; // Reset the selection state
+    // });
 
     let selection = [];
 
@@ -333,6 +337,12 @@
     }
 
     sel(node);
+
+    // Mark the selected nodes
+    // selection.forEach(d => {
+    //   d.selected = true;
+    // });
+
     return selection;
   }
 
@@ -2522,52 +2532,69 @@
             .attr("tabindex", "-1")
             .text("Get the summary of the clade")
             .on("click", mouseEvent => {
-              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
-              const event = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
-              document.dispatchEvent(event);
-              console.log(event)
+              
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
+              const summaryEvent = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
+              document.dispatchEvent(summaryEvent);
+              console.log(summaryEvent)
               menu_object.style("display", "none");
               phylotree.modifySelection(terminal_nodes);
             });
         }
 
-        if (options["selectable"]) {
+        // add the option for characterizing the node
+        if (options["collapsible"]) {
           menu_object
             .append("a")
             .attr("class", "dropdown-item")
             .attr("tabindex", "-1")
-            .text("All descendant branches")
-            .on("click", function(d) {
-              menu_object.style("display", "none");
-              phylotree.modifySelection(
-                phylotree.selectAllDescendants(node, true, true)
-              );
-            });
-
-          menu_object
-            .append("a")
-            .attr("class", "dropdown-item")
-            .attr("tabindex", "-1")
-            .text("All terminal branches")
-            .on("click", function(d) {
-              menu_object.style("display", "none");
-              phylotree.modifySelection(
-                phylotree.selectAllDescendants(node, true, false)
-              );
-            });
-
-          menu_object
-            .append("a")
-            .attr("class", "dropdown-item")
-            .attr("tabindex", "-1")
-            .text("All internal branches")
-            .on("click", function(d) {
-              menu_object.style("display", "none");
-              phylotree.modifySelection(
-                phylotree.selectAllDescendants(node, false, true)
-              );
+            .text("Download the sequences of the clade")
+            .on("click", mouseEvent => {
+              // TO DO: implement the download of the sequences
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
+              const seqDownloadEvent = new CustomEvent("nodesForDownloadSelected", { detail: terminal_nodes });
+              document.dispatchEvent(seqDownloadEvent);
+              console.log(seqDownloadEvent)
             });
         }
+
+        // if (options["selectable"]) {
+        //   menu_object
+        //     .append("a")
+        //     .attr("class", "dropdown-item")
+        //     .attr("tabindex", "-1")
+        //     .text("All descendant branches")
+        //     .on("click", function(d) {
+        //       menu_object.style("display", "none");
+        //       phylotree.modifySelection(
+        //         phylotree.selectAllDescendants(node, true, true)
+        //       );
+        //     });
+
+        //   menu_object
+        //     .append("a")
+        //     .attr("class", "dropdown-item")
+        //     .attr("tabindex", "-1")
+        //     .text("All terminal branches")
+        //     .on("click", function(d) {
+        //       menu_object.style("display", "none");
+        //       phylotree.modifySelection(
+        //         phylotree.selectAllDescendants(node, true, false)
+        //       );
+        //     });
+
+        //   menu_object
+        //     .append("a")
+        //     .attr("class", "dropdown-item")
+        //     .attr("tabindex", "-1")
+        //     .text("All internal branches")
+        //     .on("click", function(d) {
+        //       menu_object.style("display", "none");
+        //       phylotree.modifySelection(
+        //         phylotree.selectAllDescendants(node, false, true)
+        //       );
+        //     });
+        // }
       }
 
       if (node.parent) {
@@ -2733,6 +2760,10 @@
     attr = attr || this.selection_attribute_name;
     mode = mode || "toggle";
 
+    //   // Clear all previous selections
+    // this.nodes.descendants().forEach(d => {
+    //   d[attr] = false; // Reset the selection state
+    // });
     // check if node_selecter is a value of pre-defined selecters
 
     if (this.options["restricted-selectable"].length) {
@@ -2893,7 +2924,6 @@
    * @returns {Array} An array of selected nodes.
    */
   function selectAllDescendants(node, terminal, internal) {
-
     let selection = [];
 
     function sel(d) {
@@ -2911,6 +2941,29 @@
 
     sel(node);
     return selection;
+  }
+
+  /**
+   * Clear all selections in the tree, except for the nodes to preserve.
+   *
+   * @param {Phylotree} phylotree The phylotree instance.
+   * @param {Array} preserveNodes An array of nodes to preserve.
+   * @returns {Phylotree} The current `phylotree`.
+   */
+  function clearAllSelections(phylotree, preserveNodes = []) {
+    // Iterate over all nodes in the tree
+    phylotree.nodes.descendants().forEach(node => {
+      // Clear the selection state unless the node is in the preserveNodes array
+      if (!preserveNodes.includes(node)) {
+        node.selected = false;
+      }
+    });
+
+    // Refresh the tree to update the UI
+    // phylotree.refresh();
+    // phylotree.update();
+
+    return phylotree;
   }
 
   /**
@@ -2934,7 +2987,8 @@
     modifySelection: modifySelection,
     getSelection: getSelection,
     selectAllDescendants: selectAllDescendants,
-    selectionCallback: selectionCallback
+    selectionCallback: selectionCallback,
+    clearAllSelections: clearAllSelections // Export the function here
   });
 
   // replacement for d3.functor
@@ -5728,6 +5782,7 @@
   exports.preOrder = preOrder;
   exports.rootToTip = rootToTip;
   exports.sackin = sackin;
+  exports.clearAllSelections = clearAllSelections;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 

@@ -1,3 +1,5 @@
+// import { clearAllSelections } from './phylotree.js';
+
 // import { select as d3select, drag as d3drag } from "//d3js.org/d3.v6.js";
 
 // const d3 = {
@@ -856,7 +858,7 @@ const getMetadataSubset = function(nodeNames, metadata) {
   return filteredTable;
 }
 const getMetadataSummary=function(filteredTable) {
-  const summary = {};
+  let summary = {};
   filteredTable.forEach(row => {
       for (const [key, value] of Object.entries(row)) {
           if (key === 'ID'|| value === null) continue; // Skip the 'ID' column
@@ -1008,10 +1010,15 @@ window.checkForClusters = function(tree, node) {
   clusters = phylotree.phylopart(tree, bootstrap_threshold, diameter_threshold, node);
   console.log('Clusters:', clusters);
 }
-window.getTerminalNodesArray = function(metadata) {
+window.getTerminalNodesArray = function(tree,metadata) {
   let nodeNames = [];
   document.addEventListener('terminalNodesSelected', event => {
+    nodeNames = [];
+    // Clear all previous selections
+    
     const terminal_nodes = event.detail;
+    // Clear all previous selections except the new selection
+    phylotree.clearAllSelections(tree,terminal_nodes);
     terminal_nodes.forEach(node => {
       nodeNames.push(node.data.name);
     });
@@ -1020,6 +1027,81 @@ window.getTerminalNodesArray = function(metadata) {
     metadataSummaryResult=getMetadataSummary(filteredTable)
     console.log('Metadata summary:', metadataSummaryResult);
     displayMetadataSummary(metadataSummaryResult);
+  });
+  return nodeNames;
+}
+
+window.downloadSequences = function(tree,metadata) {
+  let nodeNames = [];
+  document.addEventListener('terminalNodesSelected', summaryEvent => {
+    nodeNames = [];
+    // Clear all previous selections
+    
+    const terminal_nodes = summaryEvent.detail;
+    // Clear all previous selections except the new selection
+    phylotree.clearAllSelections(tree,terminal_nodes);
+    terminal_nodes.forEach(node => {
+      nodeNames.push(node.data.name);
+    });
+    console.log('Node names:', nodeNames);
+    filteredTable=getMetadataSubset(nodeNames, metadata);
+    metadataSummaryResult=getMetadataSummary(filteredTable)
+    console.log('Metadata summary:', metadataSummaryResult);
+    displayMetadataSummary(metadataSummaryResult);
+  });
+  return nodeNames;
+}
+
+window.downloadSequences = function(tree,metadata) {
+  let nodeNames = [];
+  document.addEventListener('nodesForDownloadSelected', seqDownloadEvent => {
+    nodeNames = [];
+    // Clear all previous selections
+    
+    const terminal_nodes = seqDownloadEvent.detail;
+    // Clear all previous selections except the new selection
+    phylotree.clearAllSelections(tree,terminal_nodes);
+    terminal_nodes.forEach(node => {
+      nodeNames.push(node.data.name);
+    });
+    console.log('Node names:', nodeNames);
+    // Send the node names to the backend to retrieve sequences
+
+    try {
+      // Prompt the user to enter a file name
+      const fileName = prompt('Enter a name for the file (default: nodeSequences.fasta):', 'nodeSequences.fasta') || 'nodeSequences.fasta';
+
+      (async function() {
+        const response = await fetch('/api/download_sequences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nodeNames }),
+        });
+      })();
+
+      if (!response.ok) {
+      throw new Error(`Failed to fetch sequences: ${response.statusText}`);
+      }
+
+      // Get the file blob from the response
+      const blob = await (async () => await response.blob())();
+
+      // Create a download link for the file
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName; // Use the user-provided file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      console.log('File downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading sequences:', error);
+    }
   });
   return nodeNames;
 }

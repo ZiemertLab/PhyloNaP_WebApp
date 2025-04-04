@@ -18,7 +18,7 @@ async function main() {
     showTree(tree);
     // At the end of tree_rendering.js
 
-    selectedLeavesArray=getTerminalNodesArray(metadata)
+    selectedLeavesArray=getTerminalNodesArray(tree,metadata)
     console.log("selectedLeavesArray: ", selectedLeavesArray);
     // metadataSummary(selectedLeavesArray, metadata)
 

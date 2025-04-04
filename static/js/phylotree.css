@@ -1,7 +1,22 @@
+:root {
+  /* --color-node: steelblue; */
+  --color-node: #7B1B38;
+  --color-internal-node: #CCC;
+  --color-node-selected: #7B1B38;
+  --color-node-collapsed: black;
+  --color-node-tagged: #00f;
+  --color-branch: #999;
+  --color-branch-selected: #7B1B38;;
+  --color-branch-tagged: #00f;
+  --color-branch-tracer: #bbb;
+  --color-clade: lightgrey;
+  --color-clade-stroke: #222;
+}
+
 .tree-selection-brush .extent {
-    fill-opacity: .05;
-    stroke: #fff;
-    shape-rendering: crispEdges;
+  fill-opacity: .05;
+  stroke: #fff;
+  shape-rendering: crispEdges;
 }
 
 .tree-scale-bar text {
@@ -16,76 +31,75 @@
 }
 
 .node circle, .node ellipse, .node rect {
-fill: steelblue;
-stroke: black;
-stroke-width: 0.5px;
+  fill: var(--color-node);
+  stroke: black;
+  stroke-width: 0.5px;
 }
 
-.internal-node circle, .internal-node ellipse, .internal-node rect{
-fill: #CCC;
-stroke: black;
-stroke-width: 0.5px;
+.internal-node circle, .internal-node ellipse, .internal-node rect {
+  fill: var(--color-internal-node);
+  stroke: black;
+  stroke-width: 0.5px;
 }
 
 .node {
-font: 10px sans-serif;
+  font: 10px sans-serif;
 }
 
 .node-selected {
-fill: #f00 !important;     
+  fill: var(--color-node-selected) !important;
 }
 
-.node-collapsed circle, .node-collapsed ellipse, .node-collapsed rect{
-fill: black !important;     
+.node-collapsed circle, .node-collapsed ellipse, .node-collapsed rect {
+  fill: var(--color-node-collapsed) !important;
 }
 
 .node-tagged {
-fill: #00f; 
+  fill: var(--color-node-tagged);
 }
 
 .branch {
-fill: none;
-stroke: #999;
-stroke-width: 2px;
+  fill: none;
+  stroke: var(--color-branch);
+  stroke-width: 2px;
 }
 
 .clade {
-fill: lightgrey;
-stroke: #222;
-stroke-width: 2px;
-opacity: 0.5;
+  fill: var(--color-clade);
+  stroke: var(--color-clade-stroke);
+  stroke-width: 2px;
+  opacity: 0.5;
 }
 
 .branch-selected {
-stroke: #f00 !important; 
-stroke-width: 3px;
+  stroke: var(--color-branch-selected) !important;
+  stroke-width: 3px;
 }
 
 .branch-tagged {
-stroke: #00f;
-stroke-dasharray: 10,5;
-stroke-width: 2px;
+  stroke: var(--color-branch-tagged);
+  stroke-dasharray: 10, 5;
+  stroke-width: 2px;
 }
 
 .branch-tracer {
-stroke: #bbb;
-stroke-dasharray: 3,4;
-stroke-width: 1px;
+  stroke: var(--color-branch-tracer);
+  stroke-dasharray: 3, 4;
+  stroke-width: 1px;
 }
 
-
 .branch-multiple {
-stroke-dasharray: 5, 5, 1, 5;
-stroke-width: 3px;
+  stroke-dasharray: 5, 5, 1, 5;
+  stroke-width: 3px;
 }
 
 .branch:hover {
-stroke-width: 10px;
+  stroke-width: 10px;
 }
 
 .internal-node circle:hover, .internal-node ellipse:hover, .internal-node rect:hover {
-fill: black;
-stroke: #CCC;
+  fill: black;
+  stroke: var(--color-internal-node);
 }
 
 .tree-widget {
