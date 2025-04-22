@@ -1,7 +1,7 @@
 async function main() {
 
     const { container, width, height } = getContainerDimensions();
-
+    
     const {nwk: jplace_content, metadata, metadataListArray:metadataListArray2, datasetDescr } = getTreeData();
     console.log("jplace_content: ", jplace_content);
     console.log("metadata: ", metadata);
@@ -33,6 +33,7 @@ async function main() {
     // console.log("metadataListArray2: ", metadataListArray2);
     // console.log("datasetDescr: ", datasetDescr);
     const tree = createTree(nwk);
+    // displayNodeAnnotations(tree);
     setupEventListeners(tree);
     console.log("tree: ", tree);
     customTreeOptions={};
@@ -77,29 +78,44 @@ async function main() {
     }
 
 
-    bubbleSize = function (a) {
-        const num2 = extractedNumbersObj[a.data.annotation];
+    // bubbleSize = function (a) {
+    //     // console.log("Node type: ", isLeafNode(a) ? "Leaf" : "Inner Node");
+    //     const num2 = extractedNumbersObj[a.data.annotation];
+    //     if (num2 !== undefined) {
+    //         console.log("a.data.annotation: ", a.data.annotation);
+    //         console.log("num2: ", num2);
+    //         return parseFloat(num2)*10;
+    //         // return Math.sqrt(parseFloat(num2));
+    //     }   else {
+    //         console.log("No matching annotation for node: ", a.data.annotation);
+    //         return 1; // return a default value
+    //     }
+    //     // else if (a.data.annotation == "0") {
+    //     //     return 30;
+    //     // } else {
+    //     //     return null;
+    //     // }
+    // };
+    bubbleSize = function (node) {
+        const annotation = node.data?.annotation; // Safely access annotation
+        const num2 = extractedNumbersObj[annotation]; // Lookup annotation in extractedNumbersObj
+    
         if (num2 !== undefined) {
-            console.log("a.data.annotation: ", a.data.annotation);
-            console.log("num2: ", num2);
-            return parseFloat(num2)*10;
-            // return Math.sqrt(parseFloat(num2));
-        }   else {
-            return 1; // return a default value
+            console.log(`Node annotation: ${annotation}, Bubble size: ${num2 * 10}`);
+            return parseFloat(num2) * 10; // Scale the bubble size
+        } else {
+            console.log(`No matching annotation for node: ${annotation}`);
+            return 1; // Default sizes: larger for leaves, smaller for internal nodes
         }
-        // else if (a.data.annotation == "0") {
-        //     return 30;
-        // } else {
-        //     return null;
-        // }
     };
-
-    customTreeOptions={
-        // add the placement annotation to the tree
-        'draw-size-bubbles' : true,
+    customTreeOptions = {
+        'draw-size-bubbles': true,
         'node-span': bubbleSize,
+        'node-styler': function (container, node) {
+            const isAnnotated = extractedNumbersObj[node.data.annotation] !== undefined;
+            container.classed("alternate", !isAnnotated); // Apply "alternate" class for unannotated nodes
+        }
     };
-
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
     console.log("renderedTree: ", renderedTree);
     // debugger;
@@ -124,5 +140,7 @@ async function main() {
         cursor: 'col-resize'
         });
     });
+
+    
 }
 main();

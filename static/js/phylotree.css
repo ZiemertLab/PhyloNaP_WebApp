@@ -36,6 +36,12 @@
   stroke-width: 0.5px;
 }
 
+.node.alternate circle, .node.alternate ellipse, .node.alternate rect {
+  fill: var(--color-node-alternate, #CCC); /* Default to lightblue if --color-node-alternate is not defined */
+  stroke: black;
+  stroke-width: 0.5px;
+}
+
 .internal-node circle, .internal-node ellipse, .internal-node rect {
   fill: var(--color-internal-node);
   stroke: black;

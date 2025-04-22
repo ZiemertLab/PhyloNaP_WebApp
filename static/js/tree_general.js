@@ -1051,7 +1051,36 @@ window.downloadSequences = function(tree,metadata) {
   });
   return nodeNames;
 }
+window.displayNodeAnnotations = function(tree) {
+  console.log("Displaying annotations for all nodes:");
 
+  // Check if the tree has a `getNodes` method (phylotree-specific)
+  const nodes = tree.getNodes ? tree.getNodes() : tree.nodes || [];
+
+  // Traverse all nodes
+  nodes.forEach(node => {
+      const annotation = node.data?.annotation || "No annotation"; // Get annotation or fallback
+      const isLeaf = !node.children || node.children.length === 0; // Check if the node is a leaf
+      const nodeType = isLeaf ? "Leaf" : "Internal Node";
+
+      // Log the node's annotation and type
+      console.log(`Node: ${node.data?.name || "Unnamed"}, Type: ${nodeType}, Annotation: ${annotation}`);
+  });
+
+  console.log("Finished displaying annotations.");
+};
+// window.displayNodeAnnotations=function(tree) {
+//   console.log("Displaying annotations for all nodes:");
+//   let nodes = d3.selectAll('.node');
+//   nodes.each(node => {
+//       const annotation = node.data.annotation || "No annotation"; // Get annotation or fallback
+
+//       // Log the node's annotation and status
+//       console.log(`Node: ${node.data.name || "Unnamed"}, Annotation: ${annotation}`);
+//   });
+
+//   console.log("Finished displaying annotations.");
+// }
 window.downloadSequences = function(tree,metadata) {
   let nodeNames = [];
   document.addEventListener('nodesForDownloadSelected', seqDownloadEvent => {

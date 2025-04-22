@@ -1813,7 +1813,7 @@
           return d;
         })
         // .classed("circle-color", true); // Apply the CSS class for color;
-        .attr("fill", "#B69E6C"); // Directly set the color
+
 
         if (this.shown_font_size >= 5) {
           labels = labels.attr("dx", d => {
@@ -1837,9 +1837,9 @@
           .selectAll("circle")
           .data([node])
           .enter()
-          .append("circle"),
-        radius = this.node_circle_size()(node);
-
+          .append("circle");
+      // radius = this.node_circle_size()(node);
+      let radius = this.nodeBubbleSize(node); // Use nodeBubbleSize for non-leaf nodes
       if (radius > 0) {
         circles
           .merge(circles)
@@ -3077,8 +3077,8 @@
         zoom: false,
         "show-menu": true,
         "show-labels": true,
-        "node-styler": null,
         "edge-styler": null,
+        'node-styler': null,
         "node-span": null
       };
 
@@ -3095,7 +3095,10 @@
       this.width = this.options.width || 800;
       this.height = this.options.height || 600;
 
-      this.node_styler = this.options['node-styler'];
+      // this.node_styler = this.options['node-styler'];
+      this.node_styler = this.options['node-styler'] || function (container, node) {
+        // Default behavior: no additional styling
+      };
       this.edge_styler = this.options['edge-styler'];
 
       this.nodeSpan = this.options['node-span'];
@@ -5783,8 +5786,12 @@
   exports.rootToTip = rootToTip;
   exports.sackin = sackin;
   exports.clearAllSelections = clearAllSelections;
+  exports.isLeafNode = isLeafNode;
+
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
 })));
 //# sourceMappingURL=phylotree.js.map
+// Export it later
+// export { isLeafNode };

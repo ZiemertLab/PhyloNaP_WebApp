@@ -17,6 +17,8 @@ import logging
 import string
 import random
 import re
+from Bio import SeqIO
+from io import StringIO
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -348,17 +350,13 @@ def upload_dataset():
 # def results():
 #     return render_template('results.html')
 def is_fasta(content):
-    """Check if the content is in FASTA format."""
-    entries = content.strip().split('>')
-    for entry in entries:
-        if entry:
-            lines = entry.split('\n')
-            if not lines[0].strip():
-                return False
-            for line in lines[1:]:
-                if not re.match(r'^[A-Za-z*.-]+$', line):
-                    return False
-    return True
+    """Check if the content is in FASTA format using Biopython."""
+    try:
+        fasta_io = StringIO(content)
+        records = list(SeqIO.parse(fasta_io, "fasta"))
+        return len(records) > 0
+    except Exception:
+        return False
 
 @app.route('/submit', methods=['POST'])
 # def submit():
@@ -447,6 +445,26 @@ def get_jplace_data(job_id, query, tree_id):
         'like_weight_ratio': like_weight_ratio,
         'pendant_length': pendant_length
     })
+@app.route('/api/download_sequences', methods=['POST'])
+def download_sequences():
+    data = request.json
+    node_names = data.get('nodeNames', [])
+
+    # Generate a FASTA file based on the node names
+    fasta_content = ""
+    for node in node_names:
+        fasta_content += f">{node}\nSEQUENCE_FOR_{node}\n"
+
+    # Create a file-like object for the FASTA content
+    fasta_file = io.BytesIO(fasta_content.encode('utf-8'))
+
+    # Send the file as a response
+    return send_file(
+        fasta_file,
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name='sequences.fasta'
+    )
 
 @socketio.on('connect')
 def handle_connect():
