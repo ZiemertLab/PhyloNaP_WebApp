@@ -108,12 +108,32 @@ async function main() {
             return 1; // Default sizes: larger for leaves, smaller for internal nodes
         }
     };
+
+    // customTreeOptions = {
+    //     'draw-size-bubbles': true,
+    //     'node-span': bubbleSize,
+    //     'node-styler': function (container, node) {
+    //         const isAnnotated = extractedNumbersObj[node.data.annotation] !== undefined;
+    //         container.classed("alternate", !isAnnotated); // Apply "alternate" class for unannotated nodes
+    //     }
+    // };
     customTreeOptions = {
         'draw-size-bubbles': true,
         'node-span': bubbleSize,
         'node-styler': function (container, node) {
-            const isAnnotated = extractedNumbersObj[node.data.annotation] !== undefined;
-            container.classed("alternate", !isAnnotated); // Apply "alternate" class for unannotated nodes
+            // Use the same logic as bubbleSize to determine if the node is annotated
+            const annotation = node.data?.annotation; // Safely access annotation
+            const num2 = extractedNumbersObj[annotation]; // Lookup annotation in extractedNumbersObj
+    
+            if (num2 !== undefined) {
+                // Annotated nodes
+                container.classed("alternate", false); // Ensure "alternate" class is removed
+                container.classed("circle", true); // Add "circle" class for normal nodes
+            } else {
+                // Non-annotated nodes
+                container.classed("alternate", true); // Add "alternate" class
+                container.classed("circle", false); // Ensure "circle" class is removed
+            }
         }
     };
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);

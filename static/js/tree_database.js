@@ -9,7 +9,14 @@ async function main() {
     const tree = createTree(nwk);
     setupEventListeners(tree);
     console.log("tree: ", tree);
-    customTreeOptions={};
+    customTreeOptions={
+        'draw-size-bubbles': true,
+        'node-styler': function (container, node) {
+        // Non-annotated nodes
+        container.classed("alternate", true); // Add "alternate" class
+        container.classed("circle", false); // Ensure "circle" class is removed
+        }
+    };
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
     console.log("renderedTree: ", renderedTree);
     addImagesAndMetadata(tree, metadata, metadataListArray2);
