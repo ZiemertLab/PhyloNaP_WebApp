@@ -35,7 +35,7 @@ flask_app = Flask(__name__)
 #flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
 app=flask_app
 print("FLASK APP STARTED")
-app.config.from_pyfile("config.py")
+app.config.from_pyfile("config_update.py")
 flask_app.secret_key = app.config['SECRET_KEY']
 
 # Configure logging
@@ -44,18 +44,21 @@ logging.basicConfig(level=logging.DEBUG)
 # tree_placement_dir = app.config['TREE_PLACEMENT_DIR']
 #tmp_directory = app.config['TMP_DIRECTORY']
 database_dir = app.config['DB_DIR']
+if not os.path.exists(database_dir):
+    raise Exception(f"Database directory does not exist: {database_dir}")
 #tree_placement_dir=os.getenv('BACKEND_URL', 'http://localhost:8080')
-backend_container_name = os.getenv('BACKEND_CONTAINER_NAME', 'backend')
+#backend_container_name = os.getenv('BACKEND_CONTAINER_NAME', 'backend')
 
 #database_dir = os.getenv("DATA_PATH", "./data")
 
-#tmp_directory = os.getenv("RESUTLS_DIR", "./results")
+tmp_directory = app.config["TMP_DIRECTORY"]
+if not os.path.exists(tmp_directory):
+    raise Exception(f"Temporary directory does not exist: {tmp_directory}")
 #tmp_directory="/app/results"
 #print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
-print(f'the backend container name is {backend_container_name}, getenv is {os.getenv("BACKEND_CONTAINER_NAME")}')
-print(f"RESULTS_DIR environment variable: {os.getenv('RESULTS_DIR')}")
+
 #tmp_directory = os.getenv("RESULTS_DIR", "./results")
-tmp_directory="/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp"
+#tmp_directory="/Users/sasha/Desktop/tubingen/thePhyloNaP/PhyloNaP/tmp"
 print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
 #tmp_directory='/app/results'
 
@@ -66,13 +69,14 @@ def background_thread(job_id, filename):
     
     print('Running background thread for job ', job_id, flush=True)
     print("Before subprocess.Popen", flush=True)
-        # Call the script using the correct URL
+    # Call the script using the correct URL
     # ['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)],
     print("database_dir",database_dir)
     print("tmp_directory",tmp_directory)
     process = subprocess.Popen(
         #['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', job_id, filename],
-        ['docker', 'run', '--name',job_id, '-v' f'{os.path.abspath(database_dir)}:/app/data', '-v', f"{os.path.abspath(tmp_directory)}:/app/results",'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+        ['docker', 'run',  '--rm', '--user', f"{os.getuid()}:{os.getgid()}",  # Run as current user
+        '--name',job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True  # Ensure the output is in text mode
