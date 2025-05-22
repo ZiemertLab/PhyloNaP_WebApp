@@ -583,7 +583,51 @@ def jplace_render():
     #columns = df.columns.tolist()
 
     return render_template('jplace_render.html', nwk_data=jplace_content, metadata=metadata_json, metadata_list=metadata_columns, datasetDescr=datasetDescr)
-
+# Add this new route to app.py
+@app.route('/job_status/<job_id>', methods=['GET'])
+def job_status(job_id):
+    """Return the current job status and progress without using sockets"""
+    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+    log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+    summary_file = os.path.join(tmp_directory, job_id, 'summary.json')
+    
+    # Default response
+    response = {
+        'status': 'pending',
+        'progress': 0,
+        'log_lines': [],
+        'summary': None
+    }
+    
+    # Check status
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status = f.read().strip()
+            response['status'] = status
+            # Set progress based on status
+            if status == 'running':
+                response['progress'] = 50
+            elif status == 'finished':
+                response['progress'] = 100
+    
+    # Get log lines (last 10 lines)
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            log_lines = f.readlines()
+            # Extract main stages for progress bar
+            main_stages = [line.strip() for line in log_lines 
+                          if "Running" in line or "finished" in line]
+            response['log_lines'] = main_stages[-5:] if main_stages else []
+    
+    # Get summary data if finished
+    if response['status'] == 'finished' and os.path.exists(summary_file):
+        try:
+            with open(summary_file, 'r') as f:
+                response['summary'] = json.load(f)
+        except json.JSONDecodeError:
+            response['summary'] = None
+    
+    return jsonify(response)
 # @app.route('/tree')
 # def tree_page():
 #     # Parse the tree file

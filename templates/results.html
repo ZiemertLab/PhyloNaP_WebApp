@@ -2,6 +2,8 @@
 {% block content %}
 <head>
     <title>Waiting Room</title>
+    <!-- Add jQuery before socket.io -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
     <style>
         #updates {
@@ -35,278 +37,153 @@
         body {
             padding-top: 70px; /* Adjust this value based on the actual height of your header */
         }
+        .tooltip-header {
+    cursor: help;
+    text-decoration: underline dotted;
+}
         </style>
 </head>
 <body>
-    <h1>Job Submitted</h1>
-    <p>Your job has been submitted successfully. You can view the results <a href="{{ url_for('results', job_id=job_id) }}">here</a>.</p>
-    <h1 id="job-status"></h1>
-    <button id="toggleUpdatesButton" onclick="toggleUpdates()">Hide Updates</button>
-    <div id="job-updates"></div>
-    <!-- <button id="phylogeneticTreeButton" style="display: none;">Phylogenetic Tree</button> -->
-    <div id="results"></div>
+    <div class="container mt-4">
+      <h2>Processing Job: {{ job_id }}</h2>
+      
+      <div class="card mb-4">
+        <div class="card-header">
+          Status: <span id="status-text">Pending</span>
+        </div>
+        <div class="card-body">
+          <div class="progress mb-3">
+            <div id="progress-bar" class="progress-bar" role="progressbar" 
+                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" 
+                 aria-valuemax="100">0%</div>
+          </div>
+          
+          <h5>Processing Log:</h5>
+          <div id="log-container" class="p-2 bg-light">
+            <p>Waiting for processing to begin...</p>
+          </div>
+        </div>
+      </div>
+      
+      <div id="results-section" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <h3>Results</h3>
+          </div>
+          <div class="card-body">
+            <table id="results-table" class="table table-striped">
+              <thead>
+                <tr>
+                  <th>Tree ID</th>
+                  <th>Family</th>
+                  <th>Superfamily</th>
+                  <th>Query</th>
+                  <th class="tooltip-header" title="Confidence level of placement (1.0 = maximum confidence)">Confidence</th>
+                  <th class="tooltip-header" title="Branch length connecting query to the reference tree">Branch Length</th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Results will be populated here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
 <script>
-    let jobId = "{{ job_id }}";
-    // let socket = io.connect('http://' + document.domain + ':' + location.port);
-    const socket = io();
-    let fetchInterval;
+  $(document).ready(function() {
+    const jobId = "{{ job_id }}";
+    let polling;
     
-
-    // function fetchJobStatus() {
-    //     // fetch('/results/' + jobId + '?status=true')
-    //     fetch('/results/' + jobId)
-    //         .then(response => response.json())
-    //         .then(data => {
-    //             // Update the page with the job status and updates
-    //             document.getElementById('job-status').innerText = data.status;
-    //             document.getElementById('job-updates').innerText = data.updates;
-
-    //             // Stop fetching if the job is finished
-    //             if (data.status === 'finished') {
-    //                 clearInterval(fetchInterval);
-    //             }
-    //         })
-    //         .catch(error => console.error('Error fetching job status:', error));
-    // }
-    function fetchJobStatus() {
-        fetch('/results/' + jobId)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text(); // Get response as text
-            })
-            .then(text => {
-                console.log('Response text:', text); // Log the response text
-                let data;
-                try {
-                    data = JSON.parse(text); // Parse the text as JSON
-                } catch (error) {
-                    throw new Error('Error parsing JSON: ' + error.message);
-                }
-
-                // Update the page with the job status and updates
-                document.getElementById('job-status').innerText = data.status;
-                document.getElementById('job-updates').innerText = data.updates;
-
-                // Stop fetching if the job is finished
-                if (data.status === 'finished') {
-                    clearInterval(fetchInterval);
-                }
-            })
-            .catch(error => console.error('Error fetching job status:', error));
+    function updateProgress(progress) {
+      $("#progress-bar")
+        .css("width", progress + "%")
+        .attr("aria-valuenow", progress)
+        .text(progress + "%");
     }
-    // Fetch job status and updates periodically
-    // fetchInterval = setInterval(fetchJobStatus, 5000); // Fetch every 5 seconds
-
-    // Ensure HTML elements exist
-    // document.addEventListener('DOMContentLoaded', function() {
-    //     if (!document.getElementById('job-status')) {
-    //         let jobStatus = document.createElement('h1');
-    //         jobStatus.id = 'job-status';
-    //         document.body.appendChild(jobStatus);
-    //     }
-    //     if (!document.getElementById('job-updates')) {
-    //         let jobUpdates = document.createElement('div');
-    //         jobUpdates.id = 'job-updates';
-    //         document.body.appendChild(jobUpdates);
-    //     }
-    // });
-
-    let socketClosed = false;
-    let finished = false;
-
-    socket.on('connect', () => {
-        if (!socketClosed) {
-            console.log('Connected to server');
-            socket.emit('request_status', { job_id: jobId });
+    
+    function updateStatus(statusData) {
+      // Update progress bar
+      updateProgress(statusData.progress);
+      
+      // Update status text
+      $("#status-text").text(statusData.status);
+      
+      // Update log lines
+      if (statusData.log_lines && statusData.log_lines.length > 0) {
+        const logHtml = statusData.log_lines.map(line => `<p>${line}</p>`).join('');
+        $("#log-container").html(logHtml);
+      }
+      
+      // Show results if finished
+      if (statusData.status === 'finished') {
+        // Stop polling
+        clearInterval(polling);
+        
+        // Show results section
+        $("#results-section").show();
+        
+        // Populate results table if summary exists
+        if (statusData.summary) {
+          populateResultsTable(statusData.summary);
         }
-        });
-    async function fetchJobStatus() {
-        // fetch('/results/' + jobId + '?status=true')
-        }
-
-    socket.on('status_update', (data) => {
-        let n = 0;
-        if (!socketClosed) {
-
-
-            document.getElementById('job-status').innerText = data.status;
-            const jobUpdatesElement = document.getElementById('job-updates');
-            jobUpdatesElement.innerText += data.updates + '\n';
-            n += 1;
-            console.log('Received socket update:', n);
+      }
+    }
+    
+    function populateResultsTable(summary) {
+      console.log("Populating table with:", summary);
+      
+      // Clear existing table
+      $("#results-table tbody").empty();
+      
+      // Check if summary is an array (your actual structure)
+      if (Array.isArray(summary)) {
+        // Array of results
+        summary.forEach(item => {
+          // Get query name
+          const query = item.query;
           
-            };
-    });
-    socket.on('json_data', (table_data) => {
-                data_json=JSON.parse(table_data.row_data_json);
-                console.log('Row Data:', data_json);
-                createResultsTable(data_json);
-            });
-
-    // function createResultsTable(rowDataList) {
-    //     // without a sort, display even 0 results
-    //     // Create a table
-    //     var table = document.createElement('table');
-
-    //     // Create a header row
-    //     var headerRow = document.createElement('tr');
-    //     ['Query', 'Superfamily', 'Family', 'Like Weight Ratio', 'Pendant Length','The Tree'].forEach(function(header) {
-    //         var th = document.createElement('th');
-    //         th.textContent = header;
-    //         headerRow.appendChild(th);
-    //     });
-    //     table.appendChild(headerRow);
-
-    //     // Create a row for each dictionary in rowDataList
-    //     rowDataList.forEach(function(rowData) {
-    //         var row = document.createElement('tr');
-    //         ['query', 'superfamily', 'family'].forEach(function(key) {
-    //             var td = document.createElement('td');
-    //             td.textContent = rowData[key];
-    //             row.appendChild(td);
-    //         });
-    //                 // Fetch and cache the data from the specified files
-    //         fetch(`/epa_res/${jobId}/${rowData['query']}/${rowData['tree_id']}`)
-    //             .then(response => response.json())
-    //             .then(data => {
-    //                 var likeWeightRatio = data.like_weight_ratio;
-    //                 var pendantLength = data.pendant_length;
-
-    //                 var tdLikeWeightRatio = document.createElement('td');
-    //                 tdLikeWeightRatio.textContent = likeWeightRatio;
-    //                 row.appendChild(tdLikeWeightRatio);
-
-    //                 var tdPendantLength = document.createElement('td');
-    //                 tdPendantLength.textContent = pendantLength;
-    //                 row.appendChild(tdPendantLength);
-
-    //                 var button = document.createElement('button');
-    //                 button.textContent = 'View .jplace file';
-    //                 button.onclick = function() {
-    //                     // Redirect to the jplace_render.html page
-    //                     window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
-    //                 };
-
-    //                 // Add the button to the "The Tree" column
-    //                 var tdButton = document.createElement('td');
-    //                 tdButton.appendChild(button);
-    //                 row.appendChild(tdButton);
-    //             })
-    //             .catch(error => console.error('Error fetching jplace data:', error));
-
-    //         // table.appendChild(row);
-
-    //         // Create a button
-
-
-
-    //         // // Add the button to the row
-    //         // var td = document.createElement('td');
-    //         // td.appendChild(button);
-    //         // row.appendChild(td);
-
-    //         table.appendChild(row);
-    //     });
-
-    //     // Append the table to the results div
-    //     document.getElementById('results').appendChild(table);
-    // }
-
-    function createResultsTable(rowDataList) {
-        var table = document.createElement('table');
-
-        var headerRow = document.createElement('tr');
-        ['Query', 'Superfamily', 'Family', 'Like Weight Ratio', 'Pendant Length', 'The Tree'].forEach(function(header) {
-            var th = document.createElement('th');
-            th.textContent = header;
-            headerRow.appendChild(th);
+          // Create row with new fields
+          const row = `
+            <tr>
+              <td>${item.tree_id || "Unknown"}</td>
+              <td>${item.family || "Unknown"}</td>
+              <td>${item.superfamily || "Unknown"}</td>
+              <td>${query}</td>
+              <td>${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}</td>
+              <td>${item.pendant_length ? item.pendant_length.toFixed(6) : 'N/A'}</td>
+              <td>${item.description || 'No description'}</td>
+              <td>
+                <a href="/jplace_render.html?jobId=${jobId}&query=${query}&treeId=${item.tree_id}" 
+                   class="btn btn-primary btn-sm">View</a>
+              </td>
+            </tr>
+          `;
+          $("#results-table tbody").append(row);
         });
-        table.appendChild(headerRow);
-
-        // Fetch and process all data first
-        var promises = rowDataList.map(function(rowData) {
-            return fetch(`/epa_res/${jobId}/${rowData['query']}/${rowData['tree_id']}`)
-                .then(response => response.json())
-                .then(data => {
-                    return {
-                        ...rowData,
-                        like_weight_ratio: data.like_weight_ratio,
-                        pendant_length: data.pendant_length
-                    };
-                })
-                .catch(error => {
-                    console.error('Error fetching jplace data:', error);
-                    return null;
-                });
-        });
-
-        Promise.all(promises).then(function(results) {
-            // Filter out any null results due to errors
-            results = results.filter(result => result !== null);
-
-            // Sort by descending Pendant Length value
-            //results.sort((a, b) => b.pendant_length - a.pendant_length);
-
-            // Sort by ascending Pendant Length value
-            results.sort((a, b) => a.pendant_length - b.pendant_length);
-
-            // Create table rows based on sorted data
-            results.forEach(function(rowData) {
-                var row = document.createElement('tr');
-                ['query', 'superfamily', 'family'].forEach(function(key) {
-                    var td = document.createElement('td');
-                    td.textContent = rowData[key];
-                    row.appendChild(td);
-                });
-
-                var tdLikeWeightRatio = document.createElement('td');
-                tdLikeWeightRatio.textContent = rowData.like_weight_ratio;
-                row.appendChild(tdLikeWeightRatio);
-
-                var tdPendantLength = document.createElement('td');
-                tdPendantLength.textContent = rowData.pendant_length;
-                row.appendChild(tdPendantLength);
-
-                var button = document.createElement('button');
-                button.textContent = 'View .jplace file';
-                button.onclick = function() {
-                    // Redirect to the jplace_render.html page
-                    window.location.href = '/jplace_render.html?jobId=' + jobId + '&query=' + rowData['query'] + '&treeId=' + rowData['tree_id'];
-                };
-
-                // Add the button to the "The Tree" column
-                var tdButton = document.createElement('td');
-                tdButton.appendChild(button);
-                row.appendChild(tdButton);
-
-                table.appendChild(row);
-            });
-
-            // Append the table to the results div
-            document.getElementById('results').appendChild(table);
-        });
+      } else {
+        // Handle any other format (fallback)
+        $("#results-table tbody").append('<tr><td colspan="8">Invalid data format</td></tr>');
+      }
     }
-
-    function toggleUpdates() {
-        var updatesDiv = document.getElementById('job-updates');
-        var resultsDiv = document.getElementById('results');
-        var toggleButton = document.getElementById('toggleUpdatesButton');
-
-        if (updatesDiv.style.display !== 'none') {
-            // Hide the updates and give more space to the results
-            updatesDiv.style.display = 'none';
-            resultsDiv.style.height = '90vh'; // Adjust this value as needed
-            toggleButton.textContent = 'Show Updates';
-        } else {
-            // Show the updates and reduce the space for the results
-            updatesDiv.style.display = 'block';
-            resultsDiv.style.height = '50vh'; // Adjust this value as needed
-            toggleButton.textContent = 'Hide Updates';
+    
+    // Start polling for updates
+    polling = setInterval(function() {
+      $.ajax({
+        url: `/job_status/${jobId}`,
+        type: 'GET',
+        success: function(data) {
+          updateStatus(data);
+        },
+        error: function(xhr, status, error) {
+          console.error("Error fetching job status:", error);
         }
-    }
+      });
+    }, 2000);  // Poll every 2 seconds
+  });
 </script>
 
 {% endblock %}
