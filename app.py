@@ -2,6 +2,10 @@
 import sys
 import uuid
 import subprocess
+import queue
+import threading
+from datetime import datetime
+import time
 
 from flask import Flask, render_template, request, redirect, url_for, Response, session, jsonify
 from flask import send_from_directory
@@ -11,8 +15,6 @@ import json
 import pandas as pd
 import ast
 from flask_socketio import SocketIO, emit
-import threading
-import time
 import logging
 import string
 import random
@@ -65,118 +67,250 @@ print("\n\n\nresutls dir = ",tmp_directory,'\n\n\n')
 
 
 socketio = SocketIO(app)
-def background_thread(job_id, filename):
+# Create a job queue and tracking variables
+job_queue = queue.Queue()
+active_jobs = {}  # Dictionary to track running jobs: {job_id: start_time}
+queued_jobs = []  # List to track queued jobs in order: [(job_id, filename, enqueue_time)]
+max_concurrent_jobs = 2  # Maximum number of jobs that can run simultaneously
+queue_lock = threading.Lock()  # Lock for thread-safe operations
+
+# Replace your current background_thread function with this job processor system
+def job_processor():
+    """Process jobs from the queue when slots are available."""
+    global active_jobs, queued_jobs
     
-    print('Running background thread for job ', job_id, flush=True)
-    print("Before subprocess.Popen", flush=True)
-    # Call the script using the correct URL
-    # ['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)],
-    print("database_dir",database_dir)
-    print("tmp_directory",tmp_directory)
-    process = subprocess.Popen(
-        #['docker', 'exec', backend_container_name, 'python', '/app/place_enz.py', job_id, filename],
-        ['docker', 'run',  '--rm', '--user', f"{os.getuid()}:{os.getgid()}",  # Run as current user
-        '--name',job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True  # Ensure the output is in text mode
-    )
-        # Read and print the output line by line
-    for line in process.stdout:
-        print("process_log ====================", line.strip(), flush=True)
+    while True:
+        # Check if we can process more jobs
+        with queue_lock:
+            can_process = len(active_jobs) < max_concurrent_jobs and queued_jobs
+            
+            if can_process:
+                # Get the next job from the queue
+                job_id, filename, _ = queued_jobs.pop(0)
+                
+                # Mark job as active
+                active_jobs[job_id] = datetime.now()
+                
+                # Update status file to show job is running
+                status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+                with open(status_file, 'w') as f:
+                    f.write('running')
+                
+                # Log the start of processing
+                log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+                with open(log_file, 'a') as f:
+                    f.write(f"Job moved from queue to processing at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    
+                # Start a thread for this job
+                thread = threading.Thread(
+                    target=process_job,
+                    args=(job_id, filename)
+                )
+                thread.daemon = True
+                thread.start()
+                
+                print(f"Started job {job_id}. Active jobs: {len(active_jobs)}", flush=True)
+        
+        # Wait a bit before checking again
+        time.sleep(1)
 
-    process.stdout.close()
-    return_code = process.wait()
+def process_job(job_id, filename):
+    """Process a job and mark it as complete when done."""
+    global active_jobs
+    
+    try:
+        # Run the original background thread logic
+        print('Running job ', job_id, flush=True)
+        print("Before subprocess.Popen", flush=True)
+        
+        process = subprocess.Popen(
+            ['docker', 'run', '--rm', '--user', f"{os.getuid()}:{os.getgid()}",  # Run as current user
+            '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
+            '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
+            'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        
+        # Save logs to file
+        log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+        with open(log_file, 'a') as log:
+            for line in process.stdout:
+                print("process_log ====================", line.strip(), flush=True)
+                log.write(line)
+                log.flush()  # Ensure logs are written immediately
 
-    if return_code != 0:
-        print("BACKEND SCRIPT ERROR: Process returned non-zero exit code", return_code, flush=True)
-    # stdout, stderr = process.communicate()  # Capture both stdout and stderr
-    # if stdout:
-    #     print("Backend script output:", stdout.decode())
-    #     for line in iter(process.stdout.readline, b''):
-    #         # print("emitting update running")
-    #         line_decoded = line.decode('utf-8')
-    #         print("process_log ====================", line_decoded)
-    # if stderr:
-    #     print("BACKEND SCRIPT ERROR:", stderr.decode())
-    #process = subprocess.Popen(['python', os.path.join(tree_placement_dir, 'place_enz.py'), os.path.join(tmp_directory, job_id, filename), os.path.join(tmp_directory, job_id)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    print("After subprocess.Popen", flush=True)
+        process.stdout.close()
+        return_code = process.wait()
 
-    #     socketio.emit('update', {'status': 'running', 'data': line.decode('utf-8')})
-    #         # Save the update to a file
-    #     with open(os.path.join(tmp_directory, job_id, 'updates.txt'), 'a') as f:
-    #         f.write(line_decoded)
-        # Wait for the process to finish
-        # Start a thread to read updates from the log file
-    # socketio.start_background_task(read_updates, job_id)
+        # Update status based on return code
+        status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+        with open(status_file, 'w') as f:
+            if return_code == 0:
+                f.write('finished')
+            else:
+                f.write('failed')
+                print(f"BACKEND SCRIPT ERROR: Process returned non-zero exit code {return_code}", flush=True)
+                
+    except Exception as e:
+        print(f"Error processing job {job_id}: {e}", flush=True)
+        # Update status to failed
+        status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+        with open(status_file, 'w') as f:
+            f.write('failed')
+        
+        # Log the error
+        log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+        with open(log_file, 'a') as f:
+            f.write(f"ERROR: {str(e)}\n")
+    
+    finally:
+        # Always remove from active jobs when complete
+        with queue_lock:
+            if job_id in active_jobs:
+                del active_jobs[job_id]
+                print(f"Completed job {job_id}. Active jobs: {len(active_jobs)}", flush=True)
 
-    # Wait for the process to finish
-    process.wait()
+# Update your submit route to use the queue
+@app.route('/submit', methods=['POST'])
+def submit():
+    # Check if a file was uploaded
+    sequence = request.form['sequence']
+    file = request.files.get('file')
 
-    # # Check if the process has finished
-    # if process.poll() is not None:
-    #     # Emit an 'update' event with the job status
-    #     print("emitting update finished")
-    #     socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
-    # # process.wait()
+    if sequence == '' and (file is None or file.filename == ''):
+        return 'No fasta sequence was uploaded', 400
 
-    # # Check if the process has finished
-    # if process.poll() is not None:
-    #     # Emit an 'update' event with the job status
-    #     print("emitting update finished")
-    #     socketio.emit('update', {'status': 'finished', 'data': f'Job {job_id} finished'})
-    #     with open(os.path.join(tmp_directory, job_id, 'status.txt'), 'w') as f:
-    #         f.write('finished')
+    # Generate a unique job ID
+    job_id = str(uuid.uuid4())
+    print('Job ID:', job_id, flush=True)
+    os.makedirs(os.path.join(tmp_directory, job_id))
+    
+    # Create status file showing job is queued
+    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+    with open(status_file, 'w') as f:
+        f.write('queued')
+    
+    # Process file or sequence
+    if file and file.filename != '':
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(tmp_directory, job_id, filename)
+        file.save(file_path)
+        print('File uploaded:', filename, flush=True)
+        with open(file_path, 'r') as f:
+            content = f.read()
+        if not is_fasta(content):
+            return 'Uploaded file is not a valid FASTA protein file', 400
+    elif sequence != '':
+        filename = 'sequence.fasta'
+        if not is_fasta(sequence):
+            return 'Pasted sequence is not a valid FASTA protein sequence', 400
+        with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
+            f.write(sequence)
+    
+    # Add job to queue and track it
+    with queue_lock:
+        queued_jobs.append((job_id, filename, datetime.now()))
+        queue_position = len(queued_jobs)
+        
+        # Create log file with queue information
+        log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+        with open(log_file, 'w') as f:
+            f.write(f"Job {job_id} added to queue at position {queue_position} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            f.write(f"Current active jobs: {len(active_jobs)}/{max_concurrent_jobs}\n")
+            f.write(f"Total jobs in queue: {len(queued_jobs)}\n")
+            
+            # Estimate wait time (rough estimate: 15 minutes per job ahead in queue)
+            if queue_position > 1:
+                estimated_wait_minutes = (queue_position - 1) * 15
+                f.write(f"Estimated wait time: ~{estimated_wait_minutes} minutes\n")
+            else:
+                f.write("Your job will start as soon as a processing slot is available.\n")
 
-# def read_updates(job_id):
-#     output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
-#     print("output_log_file_p",output_log_file_p)
-#     print("\n\n\n\n\n\n\n\n\n\n")
-#     last_position = 0
+    return redirect(url_for('results', job_id=job_id))
 
-#     while True:
-#         if not os.path.exists(output_log_file_p):
-#             time.sleep(1)  # Wait for a short period before checking again
-#             continue
-#         # if os.path.getsize(output_log_file_p) == 0:
-#         #     print(f"File {output_log_file_p} is empty. Retrying...")
-#         #     time.sleep(1)  # Wait for a short period before checking again
-#         #     continue
-#         with open(output_log_file_p, 'r') as f:
-#             f.seek(last_position)
-#             print(f)
-#             try:
-#                 #log_data = json.load(f)
-#                 new_data = f.read()
-#                 if not new_data:
-#                     time.sleep(1)  # Wait for a short period before checking again
-#                     continue
-#                 # Attempt to parse the new data as JSON
-#                 log_data = json.loads(new_data)
-#                 status = log_data.get('status')
-#                 updates = log_data.get('updates', [])
+# Update job_status endpoint to include queue information
+@app.route('/job_status/<job_id>', methods=['GET'])
+def job_status(job_id):
+    """Return the current job status and progress without using sockets"""
+    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+    log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+    summary_file = os.path.join(tmp_directory, job_id, 'summary.json')
+    
+    # Default response
+    response = {
+        'status': 'pending',
+        'progress': 0,
+        'log_lines': [],
+        'summary': None,
+        'queue_position': None,
+        'estimated_start': None,
+        'active_since': None,
+        'total_queue': None
+    }
+    
+    # Check status
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status = f.read().strip()
+            response['status'] = status
+            
+            # Set progress based on status
+            if status == 'queued':
+                response['progress'] = 0
+                
+                # Get queue information
+                with queue_lock:
+                    # Find position in queue
+                    for i, (queued_job_id, _, enqueue_time) in enumerate(queued_jobs):
+                        if queued_job_id == job_id:
+                            response['queue_position'] = i + 1
+                            # Estimate start time (15 min per job ahead)
+                            wait_minutes = i * 15
+                            est_start = datetime.now().timestamp() + (wait_minutes * 60)
+                            response['estimated_start'] = est_start
+                            break
+                    
+                    # Total jobs in queue
+                    response['total_queue'] = len(queued_jobs)
+                
+            elif status == 'running':
+                response['progress'] = 50
+                # If job is currently running, get the start time
+                with queue_lock:
+                    if job_id in active_jobs:
+                        response['active_since'] = active_jobs[job_id].timestamp()
+                
+            elif status == 'finished':
+                response['progress'] = 100
+    
+    # Get log lines
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            log_lines = f.readlines()
+            response['log_lines'] = log_lines[-10:]  # Get last 10 lines
+    
+    # Get summary data if finished
+    if response['status'] == 'finished' and os.path.exists(summary_file):
+        try:
+            with open(summary_file, 'r') as f:
+                response['summary'] = json.load(f)
+        except json.JSONDecodeError:
+            response['summary'] = None
+    
+    return jsonify(response)
 
-#                 for update in updates:
-#                     socketio.emit('update', {'status': status, 'data': update})
-#                 last_position = f.tell()
-#             except json.JSONDecodeError as e:
-#                 print(f"JSONDecodeError: {e}. Retrying...")
-#                 time.sleep(1)  # Wait for a short period before checking again
-#                 continue
+# Start worker threads when application starts
+def start_job_processing():
+    """Start the job processor thread."""
+    processor_thread = threading.Thread(target=job_processor)
+    processor_thread.daemon = True
+    processor_thread.start()
+    print("Job processor started", flush=True)
 
-#             # status = log_data.get('status')
-#             # updates = log_data.get('updates', [])
-
-#             # for update in updates:
-#             #     socketio.emit('update', {'status': status, 'data': update})
-
-#             # last_position = f.tell()
-
-#         if status == 'finished':
-#             break
-
-#         time.sleep(1)  # Wait for a short period before checking for updates again
-#     return
+# Call this function at application startup
+start_job_processing()
 
 @app.route('/')
 def home():
@@ -362,44 +496,7 @@ def is_fasta(content):
     except Exception:
         return False
 
-@app.route('/submit', methods=['POST'])
-# def submit():
-#     sequence = request.form['sequence']
-#     # handle the POST request here
-#     # redirect the user to the "Results" page
-#     return redirect(url_for('results'))
-def submit():
-    # Check if a file was uploaded
-    sequence = request.form['sequence']
-    file = request.files.get('file')
 
-    if sequence == '' and (file is None or file.filename == ''):
-        return 'No fasta sequence was uploaded', 400
-
-    # Generate a unique job ID
-    job_id = str(uuid.uuid4())
-    print('Job ID:', job_id, flush=True)
-    os.makedirs(os.path.join(tmp_directory, job_id))
-    if file and file.filename != '':
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(tmp_directory, job_id, filename)
-        file.save(file_path)
-        print('File uploaded:', filename, flush=True)
-        with open(file_path, 'r') as f:
-            content = f.read()
-        if not is_fasta(content):
-            return 'Uploaded file is not a valid FASTA protein file', 400
-    elif sequence != '':
-        filename='sequence.fasta'
-        if not is_fasta(sequence):
-            return 'Pasted sequence is not a valid FASTA protein sequence', 400
-        with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
-            f.write(sequence)
-    threading.Thread(target=background_thread, args=(job_id, filename)).start()
-
-    #return render_template('results.html', job_id=job_id)
-    return redirect(url_for('results', job_id=job_id))
-    #return redirect(url_for('results'))
 
 @app.route('/results/<job_id>', methods=['GET'])
 def results(job_id):
@@ -584,50 +681,50 @@ def jplace_render():
 
     return render_template('jplace_render.html', nwk_data=jplace_content, metadata=metadata_json, metadata_list=metadata_columns, datasetDescr=datasetDescr)
 # Add this new route to app.py
-@app.route('/job_status/<job_id>', methods=['GET'])
-def job_status(job_id):
-    """Return the current job status and progress without using sockets"""
-    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
-    log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
-    summary_file = os.path.join(tmp_directory, job_id, 'summary.json')
+# @app.route('/job_status/<job_id>', methods=['GET'])
+# def job_status(job_id):
+#     """Return the current job status and progress without using sockets"""
+#     status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+#     log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+#     summary_file = os.path.join(tmp_directory, job_id, 'summary.json')
     
-    # Default response
-    response = {
-        'status': 'pending',
-        'progress': 0,
-        'log_lines': [],
-        'summary': None
-    }
+#     # Default response
+#     response = {
+#         'status': 'pending',
+#         'progress': 0,
+#         'log_lines': [],
+#         'summary': None
+#     }
     
-    # Check status
-    if os.path.exists(status_file):
-        with open(status_file, 'r') as f:
-            status = f.read().strip()
-            response['status'] = status
-            # Set progress based on status
-            if status == 'running':
-                response['progress'] = 50
-            elif status == 'finished':
-                response['progress'] = 100
+#     # Check status
+#     if os.path.exists(status_file):
+#         with open(status_file, 'r') as f:
+#             status = f.read().strip()
+#             response['status'] = status
+#             # Set progress based on status
+#             if status == 'running':
+#                 response['progress'] = 50
+#             elif status == 'finished':
+#                 response['progress'] = 100
     
-    # Get log lines (last 10 lines)
-    if os.path.exists(log_file):
-        with open(log_file, 'r') as f:
-            log_lines = f.readlines()
-            # Extract main stages for progress bar
-            main_stages = [line.strip() for line in log_lines 
-                          if "Running" in line or "finished" in line]
-            response['log_lines'] = main_stages[-5:] if main_stages else []
+#     # Get log lines (last 10 lines)
+#     if os.path.exists(log_file):
+#         with open(log_file, 'r') as f:
+#             log_lines = f.readlines()
+#             # Extract main stages for progress bar
+#             main_stages = [line.strip() for line in log_lines 
+#                           if "Running" in line or "finished" in line]
+#             response['log_lines'] = main_stages[-5:] if main_stages else []
     
-    # Get summary data if finished
-    if response['status'] == 'finished' and os.path.exists(summary_file):
-        try:
-            with open(summary_file, 'r') as f:
-                response['summary'] = json.load(f)
-        except json.JSONDecodeError:
-            response['summary'] = None
+#     # Get summary data if finished
+#     if response['status'] == 'finished' and os.path.exists(summary_file):
+#         try:
+#             with open(summary_file, 'r') as f:
+#                 response['summary'] = json.load(f)
+#         except json.JSONDecodeError:
+#             response['summary'] = None
     
-    return jsonify(response)
+#     return jsonify(response)
 # @app.route('/tree')
 # def tree_page():
 #     # Parse the tree file

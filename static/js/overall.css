@@ -4,6 +4,9 @@
     background-color: #7B1B38;
     color: #E0E0E0; /* Text color for better visibility */
 }
+.bright_color {
+    fill:  #7B1B38; /* Set the desired color here */
+}
 .non-active-button {
     background-color: #3D3D3D; /* Non-active button color */
     color: #E0E0E0; /* Text color for better visibility */
