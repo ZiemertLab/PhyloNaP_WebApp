@@ -21,6 +21,7 @@ import random
 import re
 from Bio import SeqIO
 from io import StringIO
+import logging
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -308,7 +309,10 @@ def start_job_processing():
     processor_thread.daemon = True
     processor_thread.start()
     print("Job processor started", flush=True)
-
+    app_logger = logging.getLogger("phylonap")
+    
+    # Replace print statements with logging
+    app_logger.info("Job processor started")
 # Call this function at application startup
 start_job_processing()
 
@@ -626,6 +630,11 @@ def read_updates(job_id):
                     json_data_emitted = True
             break
     return
+# Add to PhyloNaP_WebApp/app.py
+
+@app.route('/healthcheck')
+def healthcheck():
+    return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()})
 
 @app.route('/jplace_render.html')
 def jplace_render():

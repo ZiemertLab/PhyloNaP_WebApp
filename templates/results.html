@@ -6,6 +6,21 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
     <style>
+        /* Progress bar styling using CSS variables */
+        .progress {
+            background-color: var(--background-light, #E0E0E0);
+        }
+        
+        .progress-bar {
+            background-color: var(--background-dark, #3D3D3D);
+            transition: background-color 0.5s ease;
+        }
+        
+        .progress-bar-complete {
+            background-color: var(--bright-color, #7B1B38);
+        }
+        
+        /* Existing styles */
         #updates {
             height: 50vh; /* 50% of the viewport height */
             overflow: auto;
@@ -14,8 +29,8 @@
             height: 50vh;
         }
         table {
-        width: 100%;
-        border-collapse: collapse;
+            width: 100%;
+            border-collapse: collapse;
         }
         th, td {
             border: 1px solid #ddd;
@@ -25,7 +40,7 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-            /* Add a new style for the header */
+        /* Add a new style for the header */
         header {
             position: fixed;
             top: 0;
@@ -38,10 +53,10 @@
             padding-top: 70px; /* Adjust this value based on the actual height of your header */
         }
         .tooltip-header {
-    cursor: help;
-    text-decoration: underline dotted;
-}
-        </style>
+            cursor: help;
+            text-decoration: underline dotted;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
@@ -99,10 +114,18 @@
     let polling;
     
     function updateProgress(progress) {
+      // Update the width and text
       $("#progress-bar")
         .css("width", progress + "%")
         .attr("aria-valuenow", progress)
         .text(progress + "%");
+      
+      // Add color change when complete
+      if (progress >= 100) {
+        $("#progress-bar").addClass("progress-bar-complete");
+      } else {
+        $("#progress-bar").removeClass("progress-bar-complete");
+      }
     }
     
     function updateStatus(statusData) {

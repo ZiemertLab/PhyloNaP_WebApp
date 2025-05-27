@@ -11,6 +11,8 @@
         href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
         rel="stylesheet"
       />
+        <!-- Load the overall.css file with CSS variables -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
     <style>
         .navbar-brand {
@@ -18,7 +20,7 @@
             /* color: #982B1C !important; */
             /* color: #CCDDE2 !important; */
             /* color: #a61e37 !important; */
-            color: #E0E0E0 !important;
+            color: var(--background-light, #E0E0E0) !important;
             /* color:#7B1B38 !important; */
             margin-right: 5px;
             margin-left: 10px;
@@ -28,18 +30,18 @@
         /* background-color: #982B1C !important; */
         /* background-color: #b69e6c !important; */
         /* background-color: #E8E4D8 !important; */
-        background-color: #7B1B38 !important;
+        background-color: var(--bright-color, #7B1B38) !important;
         padding-top: 0.05rem; /* Adjust padding to make it more narrow */
         padding-bottom: 0.05rem; /* Adjust padding to make it more narrow */
         }
         .nav-link {
             margin-right: 10px;
             /* color: #000000; */
-            color:#E0E0E0
+            color:var(--background-light, #E0E0E0)
             /* color:#7B1B38; */
         }
         .color-row {
-            background-color: #7B1B38;
+            background-color: var(--bright-color, #7B1B38);
             height: 5px; /* Adjust height as needed */
         }
     </style> 

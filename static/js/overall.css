@@ -1,4 +1,9 @@
 /* Styles for active button */
+:root {
+    --bright-color: #7B1B38;
+    --background-dark: #3D3D3D;
+    --background-light: #E0E0E0;
+}
 .active-button {
     /* background-color: #a61e37; Active button color */
     background-color: #7B1B38;
@@ -6,6 +11,12 @@
 }
 .bright_color {
     fill:  #7B1B38; /* Set the desired color here */
+}
+.background_dark {
+    background-color: #3D3D3D; /* Dark background color *//* Text color for better visibility */
+}
+.background_light {
+    background-color: #E0E0E0; /* Light background color */
 }
 .non-active-button {
     background-color: #3D3D3D; /* Non-active button color */
