@@ -150,6 +150,55 @@ def process_job(job_id, filename):
         with open(status_file, 'w') as f:
             if return_code == 0:
                 f.write('finished')
+                
+                # Check for email in metadata and send notification if available
+                try:
+                    metadata_file = os.path.join(tmp_directory, job_id, 'metadata.json')
+                    if os.path.exists(metadata_file):
+                        with open(metadata_file, 'r') as meta_f:
+                            metadata = json.load(meta_f)
+                            email = metadata.get('email')
+                            
+                            # Only send email if one was provided
+                            if email:
+                                # Send email notification using the script
+                                email_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../send_email.sh')
+                                
+                                # Check if the email script exists before attempting to run it
+                                if os.path.exists(email_script) and os.path.isfile(email_script):
+                                    try:
+                                        subprocess.run(['/bin/bash', email_script, email, job_id], 
+                                                      check=False)  # Don't raise exception if email fails
+                                        
+                                        # Log the email notification
+                                        with open(log_file, 'a') as log:
+                                            log.write(f"Email notification sent to {email}\n")
+                                            log.flush()
+                                        
+                                        print(f"Email notification sent to {email} for job {job_id}", flush=True)
+                                    except Exception as e:
+                                        print(f"Failed to send email: {str(e)}", flush=True)
+                                        # Log the error but don't fail the job processing
+                                        with open(log_file, 'a') as log:
+                                            log.write(f"ERROR sending email: {str(e)}\n")
+                                            log.flush()
+                                else:
+                                    # Log that the email script wasn't found
+                                    app_logger = logging.getLogger("phylonap")
+                                    app_logger.error(f"Email script not found at {email_script}. Email notification for job {job_id} not sent.")
+                                    
+                                    # Also log to file without stopping job processing
+                                    with open(log_file, 'a') as log:
+                                        log.write(f"NOTE: Email notification not sent - email script not found\n")
+                                        log.flush()
+                                    
+                                    print(f"Email script not found at {email_script}. Email notification not sent.", flush=True)
+                except Exception as e:
+                    print(f"Failed to send email notification: {str(e)}", flush=True)
+                    # Log the error but don't fail the job processing
+                    with open(log_file, 'a') as log:
+                        log.write(f"ERROR sending email notification: {str(e)}\n")
+                        log.flush()
             else:
                 f.write('failed')
                 print(f"BACKEND SCRIPT ERROR: Process returned non-zero exit code {return_code}", flush=True)
@@ -179,9 +228,14 @@ def submit():
     # Check if a file was uploaded
     sequence = request.form['sequence']
     file = request.files.get('file')
+    email = request.form.get('email', '').strip()  # Get email from form (optional)
 
     if sequence == '' and (file is None or file.filename == ''):
         return 'No fasta sequence was uploaded', 400
+
+    # Validate email format if provided (but don't require it)
+    if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return 'Invalid email address format', 400
 
     # Generate a unique job ID
     job_id = str(uuid.uuid4())
@@ -210,6 +264,17 @@ def submit():
         with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
             f.write(sequence)
     
+    # Save metadata including email if provided
+    metadata = {
+        'filename': filename,
+        'submission_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'email': email if email else None  # Store email if provided
+    }
+    
+    metadata_file = os.path.join(tmp_directory, job_id, 'metadata.json')
+    with open(metadata_file, 'w') as f:
+        json.dump(metadata, f)
+    
     # Add job to queue and track it
     with queue_lock:
         queued_jobs.append((job_id, filename, datetime.now()))
@@ -228,6 +293,10 @@ def submit():
                 f.write(f"Estimated wait time: ~{estimated_wait_minutes} minutes\n")
             else:
                 f.write("Your job will start as soon as a processing slot is available.\n")
+            
+            # Acknowledge email notification if provided
+            if email:
+                f.write(f"Email notification will be sent to {email} when the job is completed.\n")
 
     return redirect(url_for('results', job_id=job_id))
 
