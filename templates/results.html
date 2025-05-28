@@ -6,7 +6,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
     <style>
-        /* Progress bar styling using CSS variables */
+        /* Your existing styles - unchanged */
         .progress {
             background-color: var(--background-light, #E0E0E0);
         }
@@ -22,7 +22,7 @@
         
         /* Existing styles */
         #updates {
-            height: 50vh; /* 50% of the viewport height */
+            height: 50vh;
             overflow: auto;
         }
         #results {
@@ -40,21 +40,36 @@
         tr:nth-child(even) {
             background-color: #f2f2f2;
         }
-        /* Add a new style for the header */
         header {
             position: fixed;
             top: 0;
             width: 100%;
-            z-index: 100; /* Make sure the header is always on top */
+            z-index: 100;
         }
 
-        /* Add a top padding to the body equal to the height of the header to prevent it from overlapping the content */
         body {
-            padding-top: 70px; /* Adjust this value based on the actual height of your header */
+            padding-top: 70px;
         }
         .tooltip-header {
             cursor: help;
             text-decoration: underline dotted;
+        }
+
+        /* Add this to your existing styles */
+        #log-container {
+            max-height: 300px;  /* Adjust this value to your preference */
+            overflow-y: auto;   /* Add scrollbar when content exceeds height */
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        #log-container p {
+            margin-bottom: 5px;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -64,7 +79,7 @@
       
       <div class="card mb-4">
         <div class="card-header">
-          Status: <span id="status-text">Pending</span>
+          Status: <span id="status-text">{{ status }}</span>
         </div>
         <div class="card-body">
           <div class="progress mb-3">
@@ -75,7 +90,9 @@
           
           <h5>Processing Log:</h5>
           <div id="log-container" class="p-2 bg-light">
-            <p>Waiting for processing to begin...</p>
+            {% for line in log_content %}
+              <p>{{ line }}</p>
+            {% endfor %}
           </div>
         </div>
       </div>
@@ -100,7 +117,7 @@
                 </tr>
               </thead>
               <tbody>
-                <!-- Results will be populated here -->
+                <!-- Results will be populated by JavaScript -->
               </tbody>
             </table>
           </div>
@@ -111,7 +128,33 @@
 <script>
   $(document).ready(function() {
     const jobId = "{{ job_id }}";
+    let currentStatus = "{{ status }}";
     let polling;
+    
+    // Set initial progress based on status
+    let initialProgress = 0;
+    if (currentStatus === "queued") initialProgress = 10;
+    else if (currentStatus === "running") initialProgress = 50;
+    else if (currentStatus === "finished") initialProgress = 100;
+    
+    if (initialProgress > 0) {
+      updateProgress(initialProgress);
+    }
+    
+    // Show results section if status is finished
+    if (currentStatus === "finished") {
+      $("#results-section").show();
+      
+      // Try to parse summary data if available
+      try {
+        const summaryData = JSON.parse('{{ summary|tojson|safe }}');
+        if (summaryData) {
+          populateResultsTable(summaryData);
+        }
+      } catch (e) {
+        console.error("Error parsing summary data:", e);
+      }
+    }
     
     function updateProgress(progress) {
       // Update the width and text
@@ -134,6 +177,7 @@
       
       // Update status text
       $("#status-text").text(statusData.status);
+      currentStatus = statusData.status;
       
       // Update log lines
       if (statusData.log_lines && statusData.log_lines.length > 0) {
@@ -180,7 +224,7 @@
               <td>${item.pendant_length ? item.pendant_length.toFixed(6) : 'N/A'}</td>
               <td>${item.description || 'No description'}</td>
               <td>
-                <a href="/jplace_render.html?jobId=${jobId}&query=${query}&treeId=${item.tree_id}" 
+                <a href="/jplace_render.html?jobId=${jobId}&query=${encodeURIComponent(query)}&treeId=${item.tree_id}" 
                    class="btn btn-primary btn-sm">View</a>
               </td>
             </tr>
@@ -193,11 +237,17 @@
       }
     }
     
-    // Start polling for updates
+    // Set up polling for updates - always start polling, but check status to stop it
     polling = setInterval(function() {
+      // If already finished, stop polling
+      if (currentStatus === 'finished') {
+        clearInterval(polling);
+        return;
+      }
+      
       $.ajax({
-        url: `/job_status/${jobId}`,
-        type: 'GET',
+        url: "/job_status/" + jobId,
+        type: "GET",
         success: function(data) {
           updateStatus(data);
         },

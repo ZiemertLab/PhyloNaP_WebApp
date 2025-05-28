@@ -573,21 +573,43 @@ def is_fasta(content):
 
 @app.route('/results/<job_id>', methods=['GET'])
 def results(job_id):
-    output_log_file_p = os.path.join(tmp_directory, job_id, 'output_log.json')
-        # Read the current updates from the log file
-    updates = []
+    # Get all data needed for initial page load
+    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+    log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+    summary_file = os.path.join(tmp_directory, job_id, 'summary.json')
+    
+    # Default values
     status = 'pending'
-    if os.path.exists(output_log_file_p):
-        with open(output_log_file_p, 'r') as f:
-            try:
-                log_data = json.load(f)
-                status = log_data.get('status', 'pending')
-                print("status ======",status)
-                updates = log_data.get('updates', [])
-            except json.JSONDecodeError as e:
-                print(f"JSONDecodeError: {e}. Could not read updates.")
-
-    return render_template('results.html', job_id=job_id)
+    log_content = []
+    summary_data = None
+    
+    # Get current status
+    if os.path.exists(status_file):
+        with open(status_file, 'r') as f:
+            status = f.read().strip()
+    
+    # Get log content
+    if os.path.exists(log_file):
+        with open(log_file, 'r') as f:
+            log_content = f.readlines()
+            log_content = [line.strip() for line in log_content]
+    
+    # Get summary data if job is finished
+    if status == 'finished' and os.path.exists(summary_file):
+        try:
+            with open(summary_file, 'r') as f:
+                summary_data = json.load(f)
+        except json.JSONDecodeError:
+            summary_data = None
+    
+    # Pass everything to the template
+    return render_template(
+        'results.html', 
+        job_id=job_id,
+        status=status,
+        log_content=log_content,
+        summary=summary_data
+    )
 
 @app.route('/epa_res/<job_id>/<query>/<tree_id>')
 def get_jplace_data(job_id, query, tree_id):
