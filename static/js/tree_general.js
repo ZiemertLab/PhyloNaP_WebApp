@@ -116,10 +116,11 @@ window.setupEventListeners = function(tree) {
     });
   });
 
-  document.getElementById('midpoint-root-btn').addEventListener('click', function() {
-    const result = phylotree.computeMidpoint(tree);
-    console.log('Midpoint result:', result);
-  });
+// remove this (non working) option for now  
+//   document.getElementById('midpoint-root-btn').addEventListener('click', function() {
+//     const result = phylotree.computeMidpoint(tree);
+//     console.log('Midpoint result:', result);
+//   });
 }
 // document.querySelector("#toggle_animation").addEventListener("click", function(e) {
 //   var current_mode = this.classList.contains("active");
