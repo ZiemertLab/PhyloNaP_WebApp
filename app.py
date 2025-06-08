@@ -22,6 +22,9 @@ import re
 from Bio import SeqIO
 from io import StringIO
 import logging
+# Near the top of app.py with other imports
+from .db import init_app, get_db_structure, refresh_db_structure
+
 # from docker import DockerClient
 # #from ete3 import TreeStyle
 
@@ -33,6 +36,58 @@ import logging
 
 cache={}
 
+from logging.handlers import RotatingFileHandler
+
+# Setup logging configuration
+def setup_app_logging():
+    # Create logs directory if it doesn't exist
+    log_dir = '/home/phylonapadm/PhyloNaP/logs'
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Configure root logger
+    root_logger = logging.getLogger()
+    
+    # Only configure if not already configured
+    if not root_logger.handlers:
+        # Set global log level
+        root_logger.setLevel(logging.INFO)
+        
+        # Create rotating file handler for app logs
+        file_handler = RotatingFileHandler(
+            os.path.join(log_dir, 'app.log'),
+            maxBytes=10*1024*1024,  # 10MB
+            backupCount=5
+        )
+        
+        # Log format
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        
+        # Add handler to root logger
+        root_logger.addHandler(file_handler)
+        
+        # Also add console handler for development
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        root_logger.addHandler(console_handler)
+        
+        # Setup specific loggers
+        db_logger = logging.getLogger('phylonap.db')
+        db_logger.setLevel(logging.DEBUG)
+        
+        # Add specific file for database operations
+        db_file_handler = RotatingFileHandler(
+            os.path.join(log_dir, 'database.log'),
+            maxBytes=5*1024*1024,  # 5MB
+            backupCount=3
+        )
+        db_file_handler.setFormatter(formatter)
+        db_logger.addHandler(db_file_handler)
+    
+    return root_logger
+
+
+
 
 flask_app = Flask(__name__)
 #flask_app.secret_key = 'MySecretKeyPhyloNaPsTest'
@@ -40,6 +95,11 @@ app=flask_app
 print("FLASK APP STARTED")
 app.config.from_pyfile("config_update.py")
 flask_app.secret_key = app.config['SECRET_KEY']
+
+# Setup logging
+setup_app_logging()
+logger = logging.getLogger('phylonap')
+logger.info("PhyloNaP application starting")
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -75,6 +135,23 @@ queued_jobs = []  # List to track queued jobs in order: [(job_id, filename, enqu
 max_concurrent_jobs = 2  # Maximum number of jobs that can run simultaneously
 queue_lock = threading.Lock()  # Lock for thread-safe operations
 
+# Global cache for the db_structure
+DB_STRUCTURE = None
+
+# @app.before_first_request
+# def load_database():
+#     global DB_STRUCTURE
+#     with open(os.path.join(database_dir, 'db_structure.json')) as f:
+#         DB_STRUCTURE = json.load(f)
+#     print(f"Database loaded with {len(DB_STRUCTURE['superfamilies'])} superfamilies")
+@app.before_first_request
+def load_database():
+    global DB_STRUCTURE
+    DB_STRUCTURE = get_db_structure()
+    print(f"Database loaded with {len(DB_STRUCTURE['superfamilies'])} superfamilies")
+
+
+init_app(app)
 # Replace your current background_thread function with this job processor system
 def job_processor():
     """Process jobs from the queue when slots are available."""
@@ -477,25 +554,33 @@ def upload_file():
 
         return render_template('dataset_uploaded.html', email=email, dataset_name=dataset_name)
 
+# @app.route('/database')
+# def database_page():
+#     # Get a dictionary of the files in each folder
+#     #folders = {folder: os.listdir('database/' + folder) for folder in os.listdir('database/') if os.path.isdir('database/' + folder)}
+#     #print('Printing folders:::')
+#     #print(folders)  # Debugging line
+#     with open(os.path.join(database_dir,'db_structure.json')) as f:
+#         data = json.load(f)
+#     #print(data)
+#     return render_template('database.html',superfamilies=data['superfamilies'])
+
+
+
 @app.route('/database')
 def database_page():
-    # Get a dictionary of the files in each folder
-    #folders = {folder: os.listdir('database/' + folder) for folder in os.listdir('database/') if os.path.isdir('database/' + folder)}
-    #print('Printing folders:::')
-    #print(folders)  # Debugging line
-    with open(os.path.join(database_dir,'db_structure.json')) as f:
-        data = json.load(f)
-    #print(data)
-    return render_template('database.html',superfamilies=data['superfamilies'])
-
-
+    global DB_STRUCTURE
+    return render_template('database.html', superfamilies=DB_STRUCTURE['superfamilies'])
 
 @app.route('/phylotree_render', methods=['POST','GET'])
 def tree_renderer():
+    global DB_STRUCTURE
+    # Use the global DB_STRUCTURE instead of reading file again
+    # ...rest of your function
 
     # Open and read JSON file
-    with open(os.path.join(database_dir,'db_structure.json')) as f:
-        data = json.load(f)
+    # with open(os.path.join(database_dir,'db_structure.json')) as f:
+    #     data = json.load(f)
 
     superfamilyName = request.args.get('superfamily')
     datasetName = request.args.get('dataset')
@@ -504,7 +589,7 @@ def tree_renderer():
     # Extract necessary data
     # Find the matching superfamily and dataset
     success = False
-    for superfamily in data['superfamilies']:
+    for superfamily in DB_STRUCTURE['superfamilies']:
         if superfamily['name'] == superfamilyName:
             for dataset in superfamily['datasets']:
                 if dataset['name'] == datasetName:
@@ -551,9 +636,10 @@ def tutorial():
 
 @app.route('/upload',methods=['POST','GET'])
 def upload_dataset():
-    with open(os.path.join(database_dir, 'db_structure.json')) as f:
-        data = json.load(f)
-    superfamilies = data['superfamilies']
+    # with open(os.path.join(database_dir, 'db_structure.json')) as f:
+    #     data = json.load(f)
+    global DB_STRUCTURE
+    superfamilies = DB_STRUCTURE['superfamilies']
     superfamilies.append({'name': 'other'})  # Add "other" category
     return render_template('upload.html', superfamilies=superfamilies)
 
@@ -641,26 +727,26 @@ def get_jplace_data(job_id, query, tree_id):
         'like_weight_ratio': like_weight_ratio,
         'pendant_length': pendant_length
     })
-@app.route('/api/download_sequences', methods=['POST'])
-def download_sequences():
-    data = request.json
-    node_names = data.get('nodeNames', [])
+# @app.route('/api/download_sequences', methods=['POST'])
+# def download_sequences():
+#     data = request.json
+#     node_names = data.get('nodeNames', [])
 
-    # Generate a FASTA file based on the node names
-    fasta_content = ""
-    for node in node_names:
-        fasta_content += f">{node}\nSEQUENCE_FOR_{node}\n"
+#     # Generate a FASTA file based on the node names
+#     fasta_content = ""
+#     for node in node_names:
+#         fasta_content += f">{node}\nSEQUENCE_FOR_{node}\n"
 
-    # Create a file-like object for the FASTA content
-    fasta_file = io.BytesIO(fasta_content.encode('utf-8'))
+#     # Create a file-like object for the FASTA content
+#     fasta_file = io.BytesIO(fasta_content.encode('utf-8'))
 
-    # Send the file as a response
-    return send_file(
-        fasta_file,
-        mimetype='text/plain',
-        as_attachment=True,
-        download_name='sequences.fasta'
-    )
+#     # Send the file as a response
+#     return send_file(
+#         fasta_file,
+#         mimetype='text/plain',
+#         as_attachment=True,
+#         download_name='sequences.fasta'
+#     )
 
 @socketio.on('connect')
 def handle_connect():
@@ -742,14 +828,13 @@ def jplace_render():
 
     # Render the jplace_render.html template with the .jplace file content
     # return render_template('jplace_render.html', jplaceFileContent=file_content)
-    with open(os.path.join(database_dir,'db_structure.json')) as f:
-        data = json.load(f)
+    global DB_STRUCTURE
 
 
     # Extract necessary data
     # Find the matching superfamily and dataset
     success = False
-    for superfamily in data['superfamilies']:
+    for superfamily in DB_STRUCTURE['superfamilies']:
         for dataset in superfamily['datasets']:
             if dataset['id'] == treeId:
                 tree_link = dataset['tree']
@@ -881,3 +966,6 @@ print("app.config['PORT']",app.config['PORT'])
 #if __name__ == '__main__':
 #    app.run(debug=True)
 #    socketio.run(app, host=app.config['HOST'], port=app.config['PORT'], debug=True)
+
+
+

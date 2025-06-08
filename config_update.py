@@ -17,6 +17,7 @@ FLASK_DEBUG = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
 # Directory paths - use environment variables if set, otherwise use relative paths
 TMP_DIRECTORY = os.environ.get("TMP_DIRECTORY", os.path.join(DATA_DIR, "tmp"))
 DB_DIR = os.environ.get("DB_DIR", os.path.join(DATA_DIR, "PhyloNaP_database"))
+SQLITE_DB= os.environ.get("SQLITE_DB", os.path.join(DB_DIR,"phylonap.db"))
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join(DATA_DIR,"PhyloNaP_uploads"))
 
 
@@ -24,11 +25,11 @@ TREE_PLACEMENT_DIR = os.environ.get("TREE_PLACEMENT_DIR", os.path.join(BASE_DIR,
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join(BASE_DIR, "PhyloNaP_uploads"))
 
 # SSL/TLS Certificate configuration                         
-CERT_DIR = os.environ.get("CERT_DIR", os.path.join(BASE_DIR, "certificates"))
+CERT_DIR = os.environ.get("CERT_DIR","/etc/letsencrypt/live/phylonap.cs.uni-tuebingen.de")
 SSL_ENABLED = os.environ.get("SSL_ENABLED", "True").lower() == "true"
-CERTFILE = os.environ.get("CERTFILE", os.path.join(CERT_DIR, "server-cert.pem"))
-KEYFILE = os.environ.get("KEYFILE", os.path.join(CERT_DIR, "server-key.pem"))
-CA_CERTS = os.environ.get("CA_CERTS", os.path.join(CERT_DIR, "ca-cert.pem"))
+CERTFILE = os.environ.get("CERTFILE", os.path.join(CERT_DIR, "fullchain.pem"))
+KEYFILE = os.environ.get("KEYFILE", os.path.join(CERT_DIR, "privkey.pem"))
+CA_CERTS = os.environ.get("CA_CERTS", os.path.join(CERT_DIR, "chain.pem"))
 
 
 # Logging Configuration

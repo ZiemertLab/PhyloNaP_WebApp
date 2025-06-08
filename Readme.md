@@ -17,3 +17,9 @@ This project includes third-party JavaScript libraries:
 - **Solarized** by Ethan Schoonover (MIT License)
 
 License files are available in the `licenses/` directory.
+
+
+Issues:
+
+https://phylonap.cs.uni-tuebingen.de/jplace_render.html?jobId=a6dfd9e4-e4cf-4c8a-a4cf-3b8bbf101fbe&query=ctg159_17&treeId=PT1279730
+the placement is shown for 2/3 cases
