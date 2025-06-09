@@ -1,102 +1,11 @@
 <!-- templates/database.html -->
 {% extends "base.html" %}
+
 {% block content %}
-<style>
-    .selected-superfamily {
-        background-color: #B69E6C !important;
-        color: black !important;
-    }
-    .show-button {
-        outline: none !important;
-    }
-    .show-button:focus {
-        outline: none !important;
-        box-shadow: none !important;
-    }
-    .fixed-table {
-        width: 100%;
-    }
-    .fixed-table th, .fixed-table td {
-        word-wrap: break-word;
-        max-width: 200px;
-    }
-    .filter-section {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-    .filter-row {
-        margin-bottom: 15px;
-    }
-    .stats-info {
-        font-size: 0.9em;
-        color: #6c757d;
-        margin-top: 5px;
-    }
-    .pagination-info {
-        margin: 10px 0;
-        font-size: 0.9em;
-        color: #6c757d;
-    }
-    .loading {
-        display: none;
-        text-align: center;
-        padding: 20px;
-    }
-    .collapse-toggle {
-        cursor: pointer;
-        user-select: none;
-    }
-    .range-input-group {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .range-input-group input {
-        width: 80px;
-    }
-    .sort-controls {
-        background-color: #f1f3f4;
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-    .table-container {
-        overflow-x: auto;
-    }
-    .sortable-header {
-        cursor: pointer;
-        user-select: none;
-    }
-    .sortable-header:hover {
-        background-color: #e9ecef;
-    }
-    .sort-icon {
-        margin-left: 5px;
-        font-size: 0.8em;
-    }
-    .active-sort {
-        background-color: #dee2e6;
-    }
-    .btn-group-sm .btn {
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
 <div class="container-fluid">
     <h1>PhyloNaP Database</h1>
-    
-    <!-- Results Summary -->
-    <div class="alert alert-info" id="results-summary">
-        {% if pagination %}
-            Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}-{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page < pagination.total_count else pagination.total_count }} 
-            of {{ pagination.total_count }} datasets
-        {% else %}
-            Loading datasets...
-        {% endif %}
-    </div>
     
     <!-- Advanced Filters Section -->
     <div class="filter-section">
@@ -109,7 +18,7 @@
             </h4>
             <div>
                 <button id="clear-filters" class="btn btn-outline-secondary btn-sm">Clear All</button>
-                <button id="apply-filters" class="btn btn-primary btn-sm">Apply Filters</button>
+                <button id="apply-filters" class="btn btn-bright btn-sm">Apply Filters</button>
             </div>
         </div>
         
@@ -117,7 +26,7 @@
             <form id="filter-form">
                 <!-- Basic Filters Row -->
                 <div class="row filter-row">
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="superfamily-filter" class="form-label">Superfamily</label>
                         <select id="superfamily-filter" name="superfamily" class="form-select">
                             <option value="">All Superfamilies</option>
@@ -132,7 +41,7 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="source-filter" class="form-label">Source</label>
                         <select id="source-filter" name="source" class="form-select">
                             <option value="">All Sources</option>
@@ -147,7 +56,7 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label for="data-type-filter" class="form-label">Data Type</label>
                         <select id="data-type-filter" name="data_type" class="form-select">
                             <option value="">All Types</option>
@@ -156,21 +65,6 @@
                                 <option value="{{ data_type }}"
                                     {% if current_filters and current_filters.data_type == data_type %}selected{% endif %}>
                                     {{ data_type|title }}
-                                </option>
-                                {% endfor %}
-                            {% endif %}
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-3">
-                        <label for="reviewed-filter" class="form-label">Reviewed</label>
-                        <select id="reviewed-filter" name="reviewed" class="form-select">
-                            <option value="">All</option>
-                            {% if filter_options and filter_options.reviewed_options %}
-                                {% for reviewed in filter_options.reviewed_options %}
-                                <option value="{{ reviewed }}"
-                                    {% if current_filters and current_filters.reviewed == reviewed %}selected{% endif %}>
-                                    {{ reviewed|title }}
                                 </option>
                                 {% endfor %}
                             {% endif %}
@@ -204,10 +98,10 @@
                     <div class="col-md-4">
                         <label class="form-label">Records per page</label>
                         <select id="per-page-filter" name="per_page" class="form-select">
-                            <option value="25" {% if pagination and pagination.per_page == 25 %}selected{% endif %}>25</option>
-                            <option value="50" {% if pagination and pagination.per_page == 50 %}selected{% endif %}>50</option>
-                            <option value="100" {% if pagination and pagination.per_page == 100 %}selected{% endif %}>100</option>
-                            <option value="200" {% if pagination and pagination.per_page == 200 %}selected{% endif %}>200</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
                         </select>
                     </div>
                 </div>
@@ -292,7 +186,6 @@
                     <option value="dataset_name" {% if current_sort and current_sort.sort_by == 'dataset_name' %}selected{% endif %}>Dataset Name</option>
                     <option value="source" {% if current_sort and current_sort.sort_by == 'source' %}selected{% endif %}>Source</option>
                     <option value="data_type" {% if current_sort and current_sort.sort_by == 'data_type' %}selected{% endif %}>Data Type</option>
-                    <option value="reviewed" {% if current_sort and current_sort.sort_by == 'reviewed' %}selected{% endif %}>Reviewed Status</option>
                     <option value="N_proteins" {% if current_sort and current_sort.sort_by == 'N_proteins' %}selected{% endif %}>Number of Proteins</option>
                     <option value="N_characterized" {% if current_sort and current_sort.sort_by == 'N_characterized' %}selected{% endif %}>Characterized Proteins</option>
                     <option value="N_np_val" {% if current_sort and current_sort.sort_by == 'N_np_val' %}selected{% endif %}>Validated NP</option>
@@ -310,7 +203,7 @@
             <div class="col-md-3">
                 <label class="form-label">&nbsp;</label>
                 <div>
-                    <button id="apply-sort" class="btn btn-primary btn-sm">Apply Sort</button>
+                    <button id="apply-sort" class="btn btn-dark btn-sm">Apply Sort</button>
                     <button id="reset-sort" class="btn btn-outline-secondary btn-sm">Reset</button>
                 </div>
             </div>
@@ -319,14 +212,6 @@
 
     <!-- Results Table -->
     <div class="table-container">
-        <!-- Loading indicator -->
-        <div class="loading-indicator text-center" id="loading-indicator" style="display: none;">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p>Loading datasets...</p>
-        </div>
-        
         <!-- Results summary -->
         <div class="alert alert-info" id="results-summary" style="display: none;">
             Showing <span id="showing-from">0</span>-<span id="showing-to">0</span> 
@@ -352,10 +237,6 @@
                     <th class="sortable-header" data-sort="data_type">
                         Data Type 
                         <i class="fas fa-sort sort-icon" id="sort-data_type"></i>
-                    </th>
-                    <th class="sortable-header" data-sort="reviewed">
-                        Reviewed 
-                        <i class="fas fa-sort sort-icon" id="sort-reviewed"></i>
                     </th>
                     <th class="sortable-header" data-sort="N_proteins">
                         Proteins 
@@ -393,53 +274,6 @@
             </div>
         </nav>
     </div>
-
-    <!-- Pagination -->
-    {% if pagination and pagination.total_pages > 1 %}
-    <nav aria-label="Dataset pagination">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="pagination-info">
-                Page {{ pagination.page }} of {{ pagination.total_pages }} 
-                ({{ pagination.total_count }} total datasets)
-            </div>
-            <ul class="pagination">
-                {% if pagination.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="1">First</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="{{ pagination.page - 1 }}">Previous</a>
-                </li>
-                {% endif %}
-                
-                {% for page_num in range(1, pagination.total_pages + 1) %}
-                    {% if page_num == pagination.page %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ page_num }}</span>
-                    </li>
-                    {% elif page_num <= 3 or page_num > pagination.total_pages - 3 or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
-                    <li class="page-item">
-                        <a class="page-link" href="#" data-page="{{ page_num }}">{{ page_num }}</a>
-                    </li>
-                    {% elif page_num == 4 or page_num == pagination.total_pages - 3 %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>
-                    {% endif %}
-                {% endfor %}
-                
-                {% if pagination.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="{{ pagination.page + 1 }}">Next</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="#" data-page="{{ pagination.total_pages }}">Last</a>
-                </li>
-                {% endif %}
-            </ul>
-        </div>
-    </nav>
-    {% endif %}
 </div>
 
 <script>
@@ -457,8 +291,6 @@ document.addEventListener('DOMContentLoaded', function() {
             page = 1;
             currentPage = 1;
         }
-        
-        showLoading(true);
         
         // Build query parameters
         const params = new URLSearchParams({
@@ -491,13 +323,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 updatePagination(data.pagination);
                 updateSummary(data.pagination);
                 currentPage = data.pagination.page;
-                
-                showLoading(false);
             })
             .catch(error => {
                 console.error('Error loading data:', error);
                 showError('Failed to load data: ' + error.message);
-                showLoading(false);
             });
     }
     
@@ -506,7 +335,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tbody.innerHTML = '';
         
         if (datasets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" class="text-center">No datasets found matching your criteria.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No datasets found matching your criteria.</td></tr>';
             return;
         }
         
@@ -517,29 +346,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${dataset.name || dataset.dataset_name || 'N/A'}</td>
                 <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
                 <td>${dataset.data_type ? dataset.data_type.charAt(0).toUpperCase() + dataset.data_type.slice(1) : 'N/A'}</td>
-                <td>
-                    <span class="badge ${dataset.reviewed === 'yes' ? 'bg-success' : 'bg-secondary'}">
-                        ${dataset.reviewed ? dataset.reviewed.charAt(0).toUpperCase() + dataset.reviewed.slice(1) : 'No'}
-                    </span>
-                </td>
                 <td>${dataset.N_proteins || 0}</td>
                 <td>${dataset.N_characterized || 0}</td>
                 <td>${dataset.N_np_val || 0}</td>
                 <td>${dataset.N_np_pred || 0}</td>
                 <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-primary show-tree-btn" 
-                                data-superfamily="${dataset.superfamily_name}" 
-                                data-dataset="${dataset.name || dataset.dataset_name}"
-                                title="View Phylogenetic Tree">
-                            <i class="fas fa-tree"></i> Tree
-                        </button>
-                        <button class="btn btn-info view-details-btn"
-                                data-dataset-id="${dataset.id || ''}"
-                                title="View Dataset Details">
-                            <i class="fas fa-info-circle"></i> Details
-                        </button>
-                    </div>
+                    <button class="btn btn-bright btn-sm show-tree-btn" 
+                            data-superfamily="${dataset.superfamily_name}" 
+                            data-dataset="${dataset.name || dataset.dataset_name}"
+                            title="View Phylogenetic Tree">
+                        <i class="fas fa-tree"></i> Tree
+                    </button>
                 </td>
             `;
             tbody.appendChild(row);
@@ -618,19 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('results-summary').style.display = 'block';
     }
     
-    function showLoading(show) {
-        const loading = document.getElementById('loading-indicator');
-        const table = document.getElementById('datasets-table');
-        
-        if (show) {
-            loading.style.display = 'block';
-            table.style.opacity = '0.5';
-        } else {
-            loading.style.display = 'none';
-            table.style.opacity = '1';
-        }
-    }
-    
     function showError(message) {
         // Create or update error message
         let errorDiv = document.getElementById('error-message');
@@ -652,12 +456,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function applyFilters() {
-        // Collect filter values
+        // Collect filter values (removed 'reviewed' filter)
         currentFilters = {
             superfamily: document.getElementById('superfamily-filter').value,
             source: document.getElementById('source-filter').value,
             data_type: document.getElementById('data-type-filter').value,
-            reviewed: document.getElementById('reviewed-filter').value,
             dataset_name: document.getElementById('dataset-name-filter').value,
             hmm_name: document.getElementById('hmm-name-filter').value,
             min_proteins: document.getElementById('min-proteins').value,
@@ -701,14 +504,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert('Dataset information is incomplete.');
                 }
-            });
-        });
-        
-        // Detail view buttons
-        document.querySelectorAll('.view-details-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const datasetId = this.getAttribute('data-dataset-id');
-                alert('Dataset details functionality to be implemented for ID: ' + datasetId);
             });
         });
     }
@@ -760,8 +555,307 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // Reset sort button
+    document.getElementById('reset-sort').addEventListener('click', function() {
+        currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
+        document.getElementById('sort-by').value = 'superfamily_name';
+        document.getElementById('sort-order').value = 'asc';
+        loadData(currentPage);
+    });
 });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+
+<style>
+    /* Use CSS variables from overall.css */
+    :root {
+        --bright-color: var(--bright-color, #7B1B38);
+        --background-dark: var(--background-dark, #3D3D3D);
+        --background-light: var(--background-light, #E0E0E0);
+    }
+    
+    /* Simple button overrides - no need for complex selectors */
+    .btn-bright, .show-tree-btn {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    .btn-bright:hover, .show-tree-btn:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+    }
+    
+    #apply-filters {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    #apply-filters:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+    }
+    
+    .selected-superfamily {
+        background-color: #B69E6C !important;
+        color: black !important;
+    }
+    
+    .show-button {
+        outline: none !important;
+    }
+    
+    .show-button:focus {
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    .fixed-table {
+        width: 100%;
+    }
+    
+    .fixed-table th, .fixed-table td {
+        word-wrap: break-word;
+        max-width: 200px;
+    }
+    
+    .filter-section {
+        background-color: var(--background-light);
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .filter-row {
+        margin-bottom: 15px;
+    }
+    
+    .stats-info {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .pagination-info {
+        margin: 10px 0;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    
+    .collapse-toggle {
+        cursor: pointer;
+        user-select: none;
+        color: var(--bright-color);
+    }
+    
+    .range-input-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .range-input-group input {
+        width: 80px;
+    }
+    
+    .sort-controls {
+        background-color: var(--background-light);
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* UPDATED: Fix table header visibility with dark background */
+    .table-dark {
+        --bs-table-bg: var(--background-dark) !important;
+        background-color: var(--background-dark) !important;
+    }
+    
+    .table-dark th {
+        background-color: var(--background-dark) !important;
+        border-color: var(--bright-color) !important;
+        color: var(--background-light) !important; /* Light text on dark background */
+        font-weight: bold;
+        border-bottom: 2px solid var(--bright-color) !important;
+    }
+    
+    .table-dark thead th {
+        background-color: var(--background-dark) !important;
+        color: var(--background-light) !important;
+        border-color: var(--bright-color) !important;
+    }
+    
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        background-color: var(--background-dark) !important;
+        color: var(--background-light) !important; /* Light text on dark background */
+        position: relative;
+    }
+    
+    .sortable-header:hover {
+        background-color: var(--bright-color) !important;
+        color: white !important; /* White text on bright background */
+    }
+    
+    .sort-icon {
+        margin-left: 5px;
+        font-size: 0.8em;
+        color: var(--background-light) !important; /* Light colored icons */
+    }
+    
+    .sortable-header:hover .sort-icon {
+        color: white !important;
+    }
+    
+    .active-sort {
+        background-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    .active-sort .sort-icon {
+        color: white !important;
+    }
+    
+    .btn-group-sm .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+    
+    /* UPDATED: Bright buttons for Tree and Apply Filters - maintain white text */
+    .btn-bright {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+        font-weight: 500;
+    }
+    
+    .btn-bright:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .btn-bright:focus {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+        box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25) !important;
+    }
+    
+    .btn-bright:active {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    /* Tree button specific styling */
+    .show-tree-btn {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+    
+    .show-tree-btn:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+        transform: scale(1.05);
+    }
+    
+    .show-tree-btn:focus,
+    .show-tree-btn:active {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    /* Dark buttons for all other actions */
+    .btn-dark {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+    }
+    
+    .btn-dark:hover {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+    
+    .btn-dark:focus {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+        box-shadow: 0 0 0 0.2rem rgba(61, 61, 61, 0.25) !important;
+    }
+    
+    /* Override default button styles */
+    .btn-outline-secondary {
+        color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        background-color: transparent !important;
+    }
+    
+    .btn-outline-secondary:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+    }
+    
+    .alert-info {
+        background-color: var(--background-light);
+        border-color: var(--bright-color);
+        color: var(--background-dark);
+    }
+    
+    h1 {
+        color: var(--bright-color);
+        margin-bottom: 30px;
+    }
+    
+    h4 {
+        color: var(--bright-color);
+    }
+    
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(224, 224, 224, 0.3);
+    }
+    
+    .pagination .page-link {
+        color: var(--bright-color);
+    }
+    
+    .pagination .page-item.active .page-link {
+        background-color: var(--bright-color);
+        border-color: var(--bright-color);
+        color: white;
+    }
+    
+    .pagination .page-link:hover {
+        color: white;
+        background-color: var(--background-dark);
+        border-color: var(--background-dark);
+    }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 {% endblock %}
