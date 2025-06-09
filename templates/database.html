@@ -17,126 +17,624 @@
         width: 100%;
     }
     .fixed-table th, .fixed-table td {
-        width: 20%; /* Set a fixed width for each column */
+        word-wrap: break-word;
+        max-width: 200px;
+    }
+    .filter-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    .filter-row {
+        margin-bottom: 15px;
+    }
+    .stats-info {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .pagination-info {
+        margin: 10px 0;
+        font-size: 0.9em;
+        color: #6c757d;
+    }
+    .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+    }
+    .collapse-toggle {
+        cursor: pointer;
+        user-select: none;
+    }
+    .range-input-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .range-input-group input {
+        width: 80px;
+    }
+    .sort-controls {
+        background-color: #f1f3f4;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .table-container {
+        overflow-x: auto;
+    }
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+    }
+    .sortable-header:hover {
+        background-color: #e9ecef;
+    }
+    .sort-icon {
+        margin-left: 5px;
+        font-size: 0.8em;
+    }
+    .active-sort {
+        background-color: #dee2e6;
+    }
+    .btn-group-sm .btn {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
     }
 </style>
-<form method="post" action="/phylotree_render">
-    <!-- Add Filter Dropdown -->
-    <div class="d-flex mb-3">
-    <div class="mb-3">
-        <div class="mb-3">
-            <label for="superfamily-filter" class="form-label">Filter by Superfamily</label>
-            <select id="superfamily-filter" class="form-select" name="superfamily-filter">
-                <option value="">All</option>
-                {% for superfamily in superfamilies %}
-                <option value="{{ superfamily.name }}">{{ superfamily.name }}</option>
-                {% endfor %}
-            </select>
+
+<div class="container-fluid">
+    <h1>PhyloNaP Database</h1>
+    
+    <!-- Results Summary -->
+    <div class="alert alert-info" id="results-summary">
+        {% if pagination %}
+            Showing {{ pagination.page * pagination.per_page - pagination.per_page + 1 }}-{{ pagination.page * pagination.per_page if pagination.page * pagination.per_page < pagination.total_count else pagination.total_count }} 
+            of {{ pagination.total_count }} datasets
+        {% else %}
+            Loading datasets...
+        {% endif %}
+    </div>
+    
+    <!-- Advanced Filters Section -->
+    <div class="filter-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">
+                <span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#advanced-filters">
+                    <i class="fas fa-filter"></i> Advanced Filters
+                    <i class="fas fa-chevron-down" id="filter-chevron"></i>
+                </span>
+            </h4>
+            <div>
+                <button id="clear-filters" class="btn btn-outline-secondary btn-sm">Clear All</button>
+                <button id="apply-filters" class="btn btn-primary btn-sm">Apply Filters</button>
+            </div>
         </div>
-        <!-- <label for="source-filter">Filter by Source</label>
-        <select id="source-filter" multiple>
-            {% for superfamily in superfamilies %}
-                {% for dataset in superfamily.datasets %}
-                    <option value="{{ dataset.source }}">{{ dataset.source }}</option>
-                {% endfor %}
-            {% endfor %}
-        </select> -->
-        <div>
-            <label for="source-filter">Filter by Source</label>
-            <select id="source-filter" multiple class="form-select">
-                {% set unique_sources = [] %}
-                {% for superfamily in superfamilies %}
-                    {% for dataset in superfamily.datasets %}
-                        {% if dataset.source not in unique_sources %}
-                            {% set unique_sources = unique_sources.append(dataset.source) %}
+        
+        <div class="collapse show" id="advanced-filters">
+            <form id="filter-form">
+                <!-- Basic Filters Row -->
+                <div class="row filter-row">
+                    <div class="col-md-3">
+                        <label for="superfamily-filter" class="form-label">Superfamily</label>
+                        <select id="superfamily-filter" name="superfamily" class="form-select">
+                            <option value="">All Superfamilies</option>
+                            {% if filter_options and filter_options.superfamilies %}
+                                {% for superfamily in filter_options.superfamilies %}
+                                <option value="{{ superfamily }}" 
+                                    {% if current_filters and current_filters.superfamily == superfamily %}selected{% endif %}>
+                                    {{ superfamily }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="source-filter" class="form-label">Source</label>
+                        <select id="source-filter" name="source" class="form-select">
+                            <option value="">All Sources</option>
+                            {% if filter_options and filter_options.sources %}
+                                {% for source in filter_options.sources %}
+                                <option value="{{ source }}"
+                                    {% if current_filters and current_filters.source == source %}selected{% endif %}>
+                                    {{ source|title }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="data-type-filter" class="form-label">Data Type</label>
+                        <select id="data-type-filter" name="data_type" class="form-select">
+                            <option value="">All Types</option>
+                            {% if filter_options and filter_options.data_types %}
+                                {% for data_type in filter_options.data_types %}
+                                <option value="{{ data_type }}"
+                                    {% if current_filters and current_filters.data_type == data_type %}selected{% endif %}>
+                                    {{ data_type|title }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="reviewed-filter" class="form-label">Reviewed</label>
+                        <select id="reviewed-filter" name="reviewed" class="form-select">
+                            <option value="">All</option>
+                            {% if filter_options and filter_options.reviewed_options %}
+                                {% for reviewed in filter_options.reviewed_options %}
+                                <option value="{{ reviewed }}"
+                                    {% if current_filters and current_filters.reviewed == reviewed %}selected{% endif %}>
+                                    {{ reviewed|title }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Search Filters Row -->
+                <div class="row filter-row">
+                    <div class="col-md-4">
+                        <label for="dataset-name-filter" class="form-label">Dataset Name</label>
+                        <input type="text" id="dataset-name-filter" name="dataset_name" class="form-control" 
+                               placeholder="Search dataset name..."
+                               value="{{ current_filters.dataset_name if current_filters and current_filters.dataset_name }}">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="hmm-name-filter" class="form-label">HMM Name</label>
+                        <input type="text" id="hmm-name-filter" name="hmm_name" class="form-control" 
+                               placeholder="Search HMM name..."
+                               value="{{ current_filters.hmm_name if current_filters and current_filters.hmm_name }}">
+                        {% if filter_options and filter_options.hmm_names %}
+                        <datalist id="hmm-names-list">
+                            {% for hmm in filter_options.hmm_names %}
+                            <option value="{{ hmm }}">
+                            {% endfor %}
+                        </datalist>
                         {% endif %}
-                    {% endfor %}
-                {% endfor %}
-                {% for source in unique_sources %}
-                <option value="{{ source }}">{{ source }}</option>
-                {% endfor %}
-            </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Records per page</label>
+                        <select id="per-page-filter" name="per_page" class="form-select">
+                            <option value="25" {% if pagination and pagination.per_page == 25 %}selected{% endif %}>25</option>
+                            <option value="50" {% if pagination and pagination.per_page == 50 %}selected{% endif %}>50</option>
+                            <option value="100" {% if pagination and pagination.per_page == 100 %}selected{% endif %}>100</option>
+                            <option value="200" {% if pagination and pagination.per_page == 200 %}selected{% endif %}>200</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Numeric Range Filters Row -->
+                <div class="row filter-row">
+                    <div class="col-md-3">
+                        <label class="form-label">Number of Proteins</label>
+                        {% if filter_options and filter_options.protein_stats %}
+                        <div class="stats-info">Range: {{ filter_options.protein_stats.min }} - {{ filter_options.protein_stats.max|int }}</div>
+                        {% endif %}
+                        <div class="range-input-group">
+                            <input type="number" id="min-proteins" name="min_proteins" class="form-control" 
+                                   placeholder="Min" min="0"
+                                   value="{{ current_filters.min_proteins if current_filters and current_filters.min_proteins > 0 }}">
+                            <span>to</span>
+                            <input type="number" id="max-proteins" name="max_proteins" class="form-control" 
+                                   placeholder="Max" min="0"
+                                   value="{{ current_filters.max_proteins if current_filters and current_filters.max_proteins }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Characterized Proteins</label>
+                        {% if filter_options and filter_options.characterized_stats %}
+                        <div class="stats-info">Range: {{ filter_options.characterized_stats.min }} - {{ filter_options.characterized_stats.max|int }}</div>
+                        {% endif %}
+                        <div class="range-input-group">
+                            <input type="number" id="min-characterized" name="min_characterized" class="form-control" 
+                                   placeholder="Min" min="0"
+                                   value="{{ current_filters.min_characterized if current_filters and current_filters.min_characterized > 0 }}">
+                            <span>to</span>
+                            <input type="number" id="max-characterized" name="max_characterized" class="form-control" 
+                                   placeholder="Max" min="0"
+                                   value="{{ current_filters.max_characterized if current_filters and current_filters.max_characterized }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Validated NP</label>
+                        {% if filter_options and filter_options.np_val_stats %}
+                        <div class="stats-info">Range: {{ filter_options.np_val_stats.min }} - {{ filter_options.np_val_stats.max|int }}</div>
+                        {% endif %}
+                        <div class="range-input-group">
+                            <input type="number" id="min-np-val" name="min_np_val" class="form-control" 
+                                   placeholder="Min" min="0"
+                                   value="{{ current_filters.min_np_val if current_filters and current_filters.min_np_val > 0 }}">
+                            <span>to</span>
+                            <input type="number" id="max-np-val" name="max_np_val" class="form-control" 
+                                   placeholder="Max" min="0"
+                                   value="{{ current_filters.max_np_val if current_filters and current_filters.max_np_val }}">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Predicted NP</label>
+                        {% if filter_options and filter_options.np_pred_stats %}
+                        <div class="stats-info">Range: {{ filter_options.np_pred_stats.min }} - {{ filter_options.np_pred_stats.max|int }}</div>
+                        {% endif %}
+                        <div class="range-input-group">
+                            <input type="number" id="min-np-pred" name="min_np_pred" class="form-control" 
+                                   placeholder="Min" min="0"
+                                   value="{{ current_filters.min_np_pred if current_filters and current_filters.min_np_pred > 0 }}">
+                            <span>to</span>
+                            <input type="number" id="max-np-pred" name="max_np_pred" class="form-control" 
+                                   placeholder="Max" min="0"
+                                   value="{{ current_filters.max_np_pred if current_filters and current_filters.max_np_pred }}">
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
-        <button id="show-all-datasets" class="btn btn-secondary mb-3" type="button">Show All Datasets</button>
     </div>
 
-    <!-- Add Show All Datasets Button -->
+    <!-- Sorting Controls -->
+    <div class="sort-controls">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <label for="sort-by" class="form-label">Sort by:</label>
+                <select id="sort-by" class="form-select">
+                    <option value="superfamily_name" {% if current_sort and current_sort.sort_by == 'superfamily_name' %}selected{% endif %}>Superfamily Name</option>
+                    <option value="dataset_name" {% if current_sort and current_sort.sort_by == 'dataset_name' %}selected{% endif %}>Dataset Name</option>
+                    <option value="source" {% if current_sort and current_sort.sort_by == 'source' %}selected{% endif %}>Source</option>
+                    <option value="data_type" {% if current_sort and current_sort.sort_by == 'data_type' %}selected{% endif %}>Data Type</option>
+                    <option value="reviewed" {% if current_sort and current_sort.sort_by == 'reviewed' %}selected{% endif %}>Reviewed Status</option>
+                    <option value="N_proteins" {% if current_sort and current_sort.sort_by == 'N_proteins' %}selected{% endif %}>Number of Proteins</option>
+                    <option value="N_characterized" {% if current_sort and current_sort.sort_by == 'N_characterized' %}selected{% endif %}>Characterized Proteins</option>
+                    <option value="N_np_val" {% if current_sort and current_sort.sort_by == 'N_np_val' %}selected{% endif %}>Validated NP</option>
+                    <option value="N_np_pred" {% if current_sort and current_sort.sort_by == 'N_np_pred' %}selected{% endif %}>Predicted NP</option>
+                    <option value="created_at" {% if current_sort and current_sort.sort_by == 'created_at' %}selected{% endif %}>Creation Date</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="sort-order" class="form-label">Order:</label>
+                <select id="sort-order" class="form-select">
+                    <option value="asc" {% if current_sort and current_sort.sort_order == 'asc' %}selected{% endif %}>Ascending</option>
+                    <option value="desc" {% if current_sort and current_sort.sort_order == 'desc' %}selected{% endif %}>Descending</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">&nbsp;</label>
+                <div>
+                    <button id="apply-sort" class="btn btn-primary btn-sm">Apply Sort</button>
+                    <button id="reset-sort" class="btn btn-outline-secondary btn-sm">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Table to Show All Datasets -->
-    <div id="all-datasets-table" class="table table-striped fixed-table">
-        <table class="table fixed-table">
-            <thead>
+    <!-- Loading Indicator -->
+    <div class="loading" id="loading-indicator">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading datasets...</p>
+    </div>
+
+    <!-- Results Table -->
+    <div class="table-container">
+        <table class="table table-striped table-hover fixed-table" id="datasets-table">
+            <thead class="table-dark">
                 <tr>
-                    <th>Superfamily</th>
-                    <th>Dataset Name</th>
-                    <th>Source</th>
+                    <th class="sortable-header" data-sort="superfamily_name">
+                        Superfamily 
+                        <i class="fas fa-sort sort-icon" id="sort-superfamily_name"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="dataset_name">
+                        Dataset Name 
+                        <i class="fas fa-sort sort-icon" id="sort-dataset_name"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="source">
+                        Source 
+                        <i class="fas fa-sort sort-icon" id="sort-source"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="data_type">
+                        Data Type 
+                        <i class="fas fa-sort sort-icon" id="sort-data_type"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="reviewed">
+                        Reviewed 
+                        <i class="fas fa-sort sort-icon" id="sort-reviewed"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="N_proteins">
+                        Proteins 
+                        <i class="fas fa-sort sort-icon" id="sort-N_proteins"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="N_characterized">
+                        Characterized 
+                        <i class="fas fa-sort sort-icon" id="sort-N_characterized"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="N_np_val">
+                        NP Val 
+                        <i class="fas fa-sort sort-icon" id="sort-N_np_val"></i>
+                    </th>
+                    <th class="sortable-header" data-sort="N_np_pred">
+                        NP Pred 
+                        <i class="fas fa-sort sort-icon" id="sort-N_np_pred"></i>
+                    </th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for superfamily in superfamilies %}
-                    {% for dataset in superfamily.datasets %}
-                    <tr data-superfamily="{{ superfamily.name }}">
-                        <td>{{ superfamily.name }}</td>
-                        <td>{{ dataset.name }}</td>
-                        <td>{{ dataset.source }}</td>
-                        <td>
-                            <input type="hidden" id="tree-file" value="{{ url_for('get_file', filename=dataset.tree) }}">
-                            <input type="hidden" id="metadata-file" value="{{ url_for('get_file', filename=dataset.metadata) }}">
-                            <input type="hidden" id="column_list" value="{{ dataset.metadata_columns }}">
-                            <button class="btn btn-primary show-button m-1" type="button"
-                            style="background-color: #a61e37; color: white;" 
-                            data-superfamily="{{ superfamily.name }}" data-dataset="{{ dataset.name }}">Show Tree</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% for dataset in datasets %}
+                <tr>
+                    <td>{{ dataset.superfamily_name or 'N/A' }}</td>
+                    <td>{{ dataset.name or dataset.dataset_name or 'N/A' }}</td>
+                    <td>{{ dataset.source|title if dataset.source else 'N/A' }}</td>
+                    <td>{{ dataset.data_type|title if dataset.data_type else 'N/A' }}</td>
+                    <td>
+                        <span class="badge {% if dataset.reviewed == 'yes' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ dataset.reviewed|title if dataset.reviewed else 'No' }}
+                        </span>
+                    </td>
+                    <td>{{ dataset.N_proteins or 0 }}</td>
+                    <td>{{ dataset.N_characterized or 0 }}</td>
+                    <td>{{ dataset.N_np_val or 0 }}</td>
+                    <td>{{ dataset.N_np_pred or 0 }}</td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-primary show-tree-btn" 
+                                    data-superfamily="{{ dataset.superfamily_name }}" 
+                                    data-dataset="{{ dataset.name or dataset.dataset_name }}"
+                                    title="View Phylogenetic Tree">
+                                <i class="fas fa-tree"></i> Tree
+                            </button>
+                            <button class="btn btn-info view-details-btn"
+                                    data-dataset-id="{{ dataset.id if dataset.id else loop.index }}"
+                                    title="View Dataset Details">
+                                <i class="fas fa-info-circle"></i> Details
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" class="text-center">No datasets found matching your criteria.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-</form>
 
-<!-- <div id="tree"></div> -->
+    <!-- Pagination -->
+    {% if pagination and pagination.total_pages > 1 %}
+    <nav aria-label="Dataset pagination">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="pagination-info">
+                Page {{ pagination.page }} of {{ pagination.total_pages }} 
+                ({{ pagination.total_count }} total datasets)
+            </div>
+            <ul class="pagination">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="1">First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="{{ pagination.page - 1 }}">Previous</a>
+                </li>
+                {% endif %}
+                
+                {% for page_num in range(1, pagination.total_pages + 1) %}
+                    {% if page_num == pagination.page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% elif page_num <= 3 or page_num > pagination.total_pages - 3 or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
+                    <li class="page-item">
+                        <a class="page-link" href="#" data-page="{{ page_num }}">{{ page_num }}</a>
+                    </li>
+                    {% elif page_num == 4 or page_num == pagination.total_pages - 3 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="{{ pagination.page + 1 }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="#" data-page="{{ pagination.total_pages }}">Last</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+    {% endif %}
+</div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.show-button').forEach(function(button) {
-            button.addEventListener('click', function() {
-                var superfamilyName = button.getAttribute('data-superfamily');
-                var datasetName = button.getAttribute('data-dataset');
-                window.location.href = '/phylotree_render?superfamily=' + encodeURIComponent(superfamilyName) 
-                + '&dataset=' + encodeURIComponent(datasetName);
-            });
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up autocomplete for HMM names
+    const hmmInput = document.getElementById('hmm-name-filter');
+    if (hmmInput && document.getElementById('hmm-names-list')) {
+        hmmInput.setAttribute('list', 'hmm-names-list');
+    }
 
-        document.getElementById('show-all-datasets').addEventListener('click', function() {
-            document.getElementById('superfamily-filter').value = "";
-            document.getElementById('source-filter').selectedIndex = -1;
-            document.getElementById('all-datasets-table').style.display = 'block';
-            filterTable();
-        });
-
-        function filterTable() {
-            var selectedSuperfamily = document.getElementById('superfamily-filter').value.toLowerCase();
-            var selectedSources = Array.from(document.getElementById('source-filter').selectedOptions).map(option => option.value.toLowerCase());
-            var rows = document.querySelectorAll('#all-datasets-table tbody tr');
-            rows.forEach(function(row) {
-                var superfamily = row.getAttribute('data-superfamily').toLowerCase();
-                var source = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-                var showRow = (selectedSuperfamily === "" || superfamily === selectedSuperfamily) &&
-                              (selectedSources.length === 0 || selectedSources.includes(source));
-                row.style.display = showRow ? '' : 'none';
-            });
+    // Handle filter form submission
+    function applyFilters() {
+        const formData = new FormData(document.getElementById('filter-form'));
+        const params = new URLSearchParams();
+        
+        // Add form data to URL parameters
+        for (let [key, value] of formData.entries()) {
+            if (value.trim() !== '') {
+                params.append(key, value);
+            }
         }
-
-        // Show all datasets by default
-        document.getElementById('show-all-datasets').click();
-
-        document.getElementById('superfamily-filter').addEventListener('change', filterTable);
-        document.getElementById('source-filter').addEventListener('change', filterTable);
+        
+        // Add sorting parameters
+        const sortBy = document.getElementById('sort-by').value;
+        const sortOrder = document.getElementById('sort-order').value;
+        if (sortBy) params.append('sort_by', sortBy);
+        if (sortOrder) params.append('sort_order', sortOrder);
+        
+        // Always start from page 1 when applying new filters
+        params.append('page', '1');
+        
+        // Show loading indicator
+        showLoading(true);
+        
+        // Navigate to filtered results
+        window.location.href = `${window.location.pathname}?${params.toString()}`;
+    }
+    
+    // Handle pagination clicks
+    document.querySelectorAll('.page-link[data-page]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.getAttribute('data-page');
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('page', page);
+            
+            showLoading(true);
+            window.location.href = currentUrl.toString();
+        });
     });
+    
+    // Handle sortable header clicks
+    document.querySelectorAll('.sortable-header').forEach(function(header) {
+        header.addEventListener('click', function() {
+            const sortField = this.getAttribute('data-sort');
+            const currentSort = document.getElementById('sort-by').value;
+            const currentOrder = document.getElementById('sort-order').value;
+            
+            // Toggle order if clicking the same field
+            if (currentSort === sortField) {
+                document.getElementById('sort-order').value = currentOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                document.getElementById('sort-by').value = sortField;
+                document.getElementById('sort-order').value = 'asc';
+            }
+            
+            updateSortIcons();
+            applyFilters();
+        });
+    });
+    
+    // Update sort icons based on current sort
+    function updateSortIcons() {
+        const currentSort = document.getElementById('sort-by').value;
+        const currentOrder = document.getElementById('sort-order').value;
+        
+        // Reset all icons
+        document.querySelectorAll('.sort-icon').forEach(function(icon) {
+            icon.className = 'fas fa-sort sort-icon';
+        });
+        
+        // Set active sort icon
+        const activeIcon = document.getElementById('sort-' + currentSort);
+        if (activeIcon) {
+            activeIcon.className = currentOrder === 'asc' ? 'fas fa-sort-up sort-icon' : 'fas fa-sort-down sort-icon';
+            activeIcon.closest('th').classList.add('active-sort');
+        }
+    }
+    
+    // Show/hide loading indicator
+    function showLoading(show) {
+        const loading = document.getElementById('loading-indicator');
+        const table = document.getElementById('datasets-table');
+        if (show) {
+            loading.style.display = 'block';
+            table.style.opacity = '0.5';
+        } else {
+            loading.style.display = 'none';
+            table.style.opacity = '1';
+        }
+    }
+    
+    // Event listeners
+    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    document.getElementById('apply-sort').addEventListener('click', applyFilters);
+    
+    // Clear all filters
+    document.getElementById('clear-filters').addEventListener('click', function() {
+        document.getElementById('filter-form').reset();
+        document.getElementById('sort-by').value = 'superfamily_name';
+        document.getElementById('sort-order').value = 'asc';
+        
+        // Navigate to clean URL
+        window.location.href = window.location.pathname;
+    });
+    
+    // Reset sort
+    document.getElementById('reset-sort').addEventListener('click', function() {
+        document.getElementById('sort-by').value = 'superfamily_name';
+        document.getElementById('sort-order').value = 'asc';
+        updateSortIcons();
+    });
+    
+    // Handle tree view buttons
+    document.querySelectorAll('.show-tree-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const superfamilyName = this.getAttribute('data-superfamily');
+            const datasetName = this.getAttribute('data-dataset');
+            
+            if (superfamilyName && datasetName) {
+                window.location.href = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
+            } else {
+                alert('Dataset information is incomplete.');
+            }
+        });
+    });
+    
+    // Handle detail view buttons
+    document.querySelectorAll('.view-details-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const datasetId = this.getAttribute('data-dataset-id');
+            // Implement dataset details modal or page
+            alert('Dataset details functionality to be implemented for ID: ' + datasetId);
+        });
+    });
+    
+    // Initialize sort icons on page load
+    updateSortIcons();
+    
+    // Auto-apply filters when Enter is pressed in text inputs
+    document.querySelectorAll('input[type="text"], input[type="number"]').forEach(function(input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+    });
+    
+    // Auto-apply filters when select values change (optional - can be removed if you prefer manual apply)
+    document.querySelectorAll('select').forEach(function(select) {
+        select.addEventListener('change', function() {
+            // Uncomment the line below if you want auto-apply on select change
+            // applyFilters();
+        });
+    });
+    
+    // Handle filter collapse toggle
+    document.querySelector('.collapse-toggle').addEventListener('click', function() {
+        const chevron = document.getElementById('filter-chevron');
+        const isCollapsed = document.getElementById('advanced-filters').classList.contains('show');
+        
+        if (isCollapsed) {
+            chevron.className = 'fas fa-chevron-right';
+        } else {
+            chevron.className = 'fas fa-chevron-down';
+        }
+    });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
-
 {% endblock %}

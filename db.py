@@ -1304,3 +1304,195 @@ def get_db():
             initialize_db_from_json(db)
             
     return db
+
+def get_filter_options():
+    """
+    Get all available filter options for the database interface
+    Returns a dictionary with available superfamilies, sources, data types, etc.
+    """
+    try:
+        conn = get_db()
+        
+        # Get unique superfamilies
+        superfamilies = query_db("""
+            SELECT DISTINCT superfamily_name 
+            FROM datasets 
+            WHERE superfamily_name IS NOT NULL 
+            ORDER BY superfamily_name
+        """)
+        superfamily_names = [sf['superfamily_name'] for sf in superfamilies]
+        
+        # Get unique sources
+        sources = query_db("""
+            SELECT DISTINCT source 
+            FROM datasets 
+            WHERE source IS NOT NULL 
+            ORDER BY source
+        """)
+        source_names = [src['source'] for src in sources]
+        
+        # Get unique data types
+        data_types = query_db("""
+            SELECT DISTINCT data_type 
+            FROM datasets 
+            WHERE data_type IS NOT NULL 
+            ORDER BY data_type
+        """)
+        data_type_names = [dt['data_type'] for dt in data_types]
+        
+        # Get unique HMM names from JSON field
+        hmm_datasets = query_db("""
+            SELECT DISTINCT superfamily_hmm_names 
+            FROM datasets 
+            WHERE superfamily_hmm_names IS NOT NULL 
+            AND superfamily_hmm_names != '[]'
+            AND superfamily_hmm_names != ''
+        """)
+        
+        hmm_names = set()
+        for hmm_dataset in hmm_datasets:
+            try:
+                hmm_list = json.loads(hmm_dataset['superfamily_hmm_names'])
+                if isinstance(hmm_list, list):
+                    hmm_names.update(hmm_list)
+            except (json.JSONDecodeError, TypeError):
+                continue
+        
+        hmm_names = sorted(list(hmm_names))
+        
+        # Get protein statistics
+        protein_stats = query_db("""
+            SELECT 
+                MIN(N_proteins) as min_proteins,
+                MAX(N_proteins) as max_proteins,
+                AVG(N_proteins) as avg_proteins
+            FROM datasets 
+            WHERE N_proteins IS NOT NULL
+        """, one=True)
+        
+        # Get characterized protein statistics
+        characterized_stats = query_db("""
+            SELECT 
+                MIN(N_characterized) as min_characterized,
+                MAX(N_characterized) as max_characterized,
+                AVG(N_characterized) as avg_characterized
+            FROM datasets 
+            WHERE N_characterized IS NOT NULL
+        """, one=True)
+        
+        # Get NP predicted statistics
+        np_pred_stats = query_db("""
+            SELECT 
+                MIN(N_np_pred) as min_np_pred,
+                MAX(N_np_pred) as max_np_pred,
+                AVG(N_np_pred) as avg_np_pred
+            FROM datasets 
+            WHERE N_np_pred IS NOT NULL
+        """, one=True)
+        
+        # Get NP validated statistics
+        np_val_stats = query_db("""
+            SELECT 
+                MIN(N_np_val) as min_np_val,
+                MAX(N_np_val) as max_np_val,
+                AVG(N_np_val) as avg_np_val
+            FROM datasets 
+            WHERE N_np_val IS NOT NULL
+        """, one=True)
+        
+        # Build the result dictionary
+        options = {
+            'superfamilies': superfamily_names,
+            'sources': source_names,
+            'data_types': data_type_names,
+            'hmm_names': hmm_names,
+            'reviewed_options': ['yes', 'no'],
+            'protein_stats': {
+                'min': protein_stats['min_proteins'] if protein_stats else 0,
+                'max': protein_stats['max_proteins'] if protein_stats else 0,
+                'avg': protein_stats['avg_proteins'] if protein_stats else 0
+            },
+            'characterized_stats': {
+                'min': characterized_stats['min_characterized'] if characterized_stats else 0,
+                'max': characterized_stats['max_characterized'] if characterized_stats else 0,
+                'avg': characterized_stats['avg_characterized'] if characterized_stats else 0
+            },
+            'np_pred_stats': {
+                'min': np_pred_stats['min_np_pred'] if np_pred_stats else 0,
+                'max': np_pred_stats['max_np_pred'] if np_pred_stats else 0,
+                'avg': np_pred_stats['avg_np_pred'] if np_pred_stats else 0
+            },
+            'np_val_stats': {
+                'min': np_val_stats['min_np_val'] if np_val_stats else 0,
+                'max': np_val_stats['max_np_val'] if np_val_stats else 0,
+                'avg': np_val_stats['avg_np_val'] if np_val_stats else 0
+            }
+        }
+        
+        logger.debug(f"Generated filter options with {len(superfamily_names)} superfamilies, "
+                    f"{len(source_names)} sources, {len(data_type_names)} data types, "
+                    f"{len(hmm_names)} HMM names")
+        
+        return options
+        
+    except Exception as e:
+        logger.error(f"Error getting filter options: {e}", exc_info=True)
+        return {
+            'superfamilies': [],
+            'sources': [],
+            'data_types': [],
+            'hmm_names': [],
+            'reviewed_options': ['yes', 'no'],
+            'protein_stats': {'min': 0, 'max': 0, 'avg': 0},
+            'characterized_stats': {'min': 0, 'max': 0, 'avg': 0},
+            'np_pred_stats': {'min': 0, 'max': 0, 'avg': 0},
+            'np_val_stats': {'min': 0, 'max': 0, 'avg': 0}
+        }
+
+def get_database_stats():
+    """
+    Get overall database statistics
+    Returns a dictionary with counts and totals
+    """
+    try:
+        conn = get_db()
+        
+        # Get basic counts
+        stats = query_db("""
+            SELECT 
+                COUNT(*) as total_datasets,
+                COUNT(DISTINCT superfamily_name) as total_superfamilies,
+                SUM(N_proteins) as total_proteins,
+                SUM(N_characterized) as total_characterized,
+                SUM(N_np_pred) as total_np_pred,
+                SUM(N_np_val) as total_np_val,
+                COUNT(CASE WHEN source = 'curated' THEN 1 END) as curated_datasets,
+                COUNT(CASE WHEN source = 'automatic' THEN 1 END) as automatic_datasets,
+                COUNT(CASE WHEN reviewed = 'yes' THEN 1 END) as reviewed_datasets
+            FROM datasets
+        """, one=True)
+        
+        if not stats:
+            return {}
+        
+        # Convert to regular dict and handle None values
+        result = {
+            'total_datasets': stats['total_datasets'] or 0,
+            'total_superfamilies': stats['total_superfamilies'] or 0,
+            'total_proteins': stats['total_proteins'] or 0,
+            'total_characterized': stats['total_characterized'] or 0,
+            'total_np_pred': stats['total_np_pred'] or 0,
+            'total_np_val': stats['total_np_val'] or 0,
+            'curated_datasets': stats['curated_datasets'] or 0,
+            'automatic_datasets': stats['automatic_datasets'] or 0,
+            'reviewed_datasets': stats['reviewed_datasets'] or 0
+        }
+        
+        logger.debug(f"Generated database stats: {result['total_datasets']} datasets, "
+                    f"{result['total_superfamilies']} superfamilies")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting database stats: {e}", exc_info=True)
+        return {}
