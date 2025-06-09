@@ -80,66 +80,105 @@ def create_app():
     flask_app = Flask(__name__)
     print("FLASK APP STARTED")
     
-    # Load configuration
-    flask_app.config.from_pyfile("config_update.py")
-    flask_app.secret_key = flask_app.config['SECRET_KEY']
-    
-    # Setup logging
+    # Setup logging first
     setup_app_logging()
     logger = logging.getLogger('phylonap')
     logger.info("PhyloNaP application starting")
     
-    # Configure logging
-    logging.basicConfig(level=logging.DEBUG)
-    
-    # Validate required directories
-    database_dir = flask_app.config['DB_DIR']
-    if not os.path.exists(database_dir):
-        raise Exception(f"Database directory does not exist: {database_dir}")
-    
-    tmp_directory = flask_app.config["TMP_DIRECTORY"]
-    if not os.path.exists(tmp_directory):
-        raise Exception(f"Temporary directory does not exist: {tmp_directory}")
-    
-    print(f"\n\n\nresults dir = {tmp_directory}\n\n\n")
-    
-    # Store directories in app config for access in routes
-    flask_app.config['DATABASE_DIR'] = database_dir
-    flask_app.config['TMP_DIR'] = tmp_directory
-    
-    # Initialize SocketIO
-    socketio = SocketIO(flask_app)
-    flask_app.socketio = socketio
-    
-    # Job queue variables
-    flask_app.job_queue = queue.Queue()
-    flask_app.active_jobs = {}
-    flask_app.queued_jobs = []
-    flask_app.max_concurrent_jobs = 2
-    flask_app.queue_lock = threading.Lock()
-    flask_app.cache = {}
-    
-    # Global cache for the db_structure
-    flask_app.DB_STRUCTURE = None
-    
-    # Import and register database functions
     try:
-        from .db import init_app, get_db_structure, refresh_db_structure, filter_datasets, get_filter_options
-        init_app(flask_app)
-        logger.info("Database initialized successfully")
-    except ImportError as e:
-        logger.error(f"Failed to import database functions: {e}")
-        # Provide fallback functions
-        def init_app(app): pass
-        def get_db_structure(): return {'superfamilies': []}
-        def filter_datasets(**kwargs): return {'datasets': [], 'total_count': 0, 'filters_applied': {}}
-        def get_filter_options(): return {}
-    
-    # Register routes
-    register_routes(flask_app)
-    register_socketio_events(flask_app.socketio, flask_app)
-    
-    return flask_app
+        # Load configuration - KEEP YOUR ORIGINAL METHOD
+        flask_app.config.from_pyfile("config_update.py")
+        flask_app.secret_key = flask_app.config['SECRET_KEY']
+        
+        # Validate required directories
+        database_dir = flask_app.config['DB_DIR']
+        if not os.path.exists(database_dir):
+            raise Exception(f"Database directory does not exist: {database_dir}")
+        
+        tmp_directory = flask_app.config["TMP_DIRECTORY"]
+        if not os.path.exists(tmp_directory):
+            raise Exception(f"Temporary directory does not exist: {tmp_directory}")
+        
+        print(f"\n\n\nresults dir = {tmp_directory}\n\n\n")
+        
+        # Store directories in app config for access in routes
+        flask_app.config['DATABASE_DIR'] = database_dir
+        flask_app.config['TMP_DIR'] = tmp_directory
+        
+        # Initialize SocketIO
+        socketio = SocketIO(flask_app)
+        flask_app.socketio = socketio
+        
+        # Job queue variables
+        flask_app.job_queue = queue.Queue()
+        flask_app.active_jobs = {}
+        flask_app.queued_jobs = []
+        flask_app.max_concurrent_jobs = 2
+        flask_app.queue_lock = threading.Lock()
+        flask_app.cache = {}
+        
+        # Global cache for the db_structure
+        flask_app.DB_STRUCTURE = None
+        
+        # Import and register database functions AFTER app creation
+        try:
+            from .db import (
+                init_app, get_db_structure, refresh_db_structure, 
+                filter_datasets, get_filter_options, get_dataset_by_id
+            )
+            init_app(flask_app)
+            logger.info("Database functions imported and initialized successfully")
+            
+            # Test database connection immediately
+            with flask_app.app_context():
+                try:
+                    from .db import query_db
+                    test_result = query_db("SELECT COUNT(*) as count FROM datasets", one=True)
+                    dataset_count = test_result['count'] if test_result else 0
+                    logger.info(f"Database connection successful: {dataset_count:,} datasets found")
+                except Exception as e:
+                    logger.warning(f"Database test failed: {e}, but continuing...")
+            
+        except ImportError as e:
+            logger.error(f"Failed to import database functions: {e}")
+            # Provide fallback functions
+            def get_db_structure(): 
+                return {'superfamilies': []}
+            def filter_datasets(**kwargs): 
+                return {'datasets': [], 'total_count': 0, 'filters_applied': {}}
+            def get_filter_options(): 
+                return {
+                    'superfamilies': [],
+                    'sources': [],
+                    'data_types': [],
+                    'reviewed_options': ['yes', 'no'],
+                    'dataset_names': [],
+                    'hmm_names': []
+                }
+            def get_dataset_by_id(dataset_id):
+                return None
+        
+        # Register routes
+        register_routes(flask_app)
+        register_socketio_events(flask_app.socketio, flask_app)
+        
+        # Initialize database structure in app context
+        with flask_app.app_context():
+            try:
+                flask_app.DB_STRUCTURE = get_db_structure()
+                logger.info(f"Database loaded with {len(flask_app.DB_STRUCTURE.get('superfamilies', []))} superfamilies")
+            except Exception as e:
+                logger.error(f"Error loading database structure: {e}")
+                flask_app.DB_STRUCTURE = {'superfamilies': []}
+        
+        # Start job processing
+        start_job_processing(flask_app)
+        
+        return flask_app
+        
+    except Exception as e:
+        logger.error(f"Error creating Flask app: {e}", exc_info=True)
+        raise
 
 def register_routes(app):
     """Register all Flask routes"""
@@ -156,62 +195,94 @@ def register_routes(app):
     def help_page():
         return render_template('help.html')
 
-    @app.route('/database')
-    def database_page():
-        """Database page with advanced filtering capabilities"""
+    @app.route('/api/datasets')
+    def api_datasets():
+        """API endpoint to get paginated dataset data"""
         try:
-            # Get filter parameters from URL
-            superfamily = request.args.get('superfamily', '')
-            source = request.args.get('source', '')
-            min_proteins = request.args.get('min_proteins', 0, type=int)
-            max_proteins = request.args.get('max_proteins', type=int)
-            min_characterized = request.args.get('min_characterized', 0, type=int)
-            max_characterized = request.args.get('max_characterized', type=int)
-            min_np_val = request.args.get('min_np_val', 0, type=int)
-            max_np_val = request.args.get('max_np_val', type=int)
-            min_np_pred = request.args.get('min_np_pred', 0, type=int)
-            max_np_pred = request.args.get('max_np_pred', type=int)
-            hmm_name = request.args.get('hmm_name', '')
-            dataset_name = request.args.get('dataset_name', '')
-            reviewed = request.args.get('reviewed', '')
-            data_type = request.args.get('data_type', '')
+            from .db import filter_datasets
             
-            # Sorting parameters - support multiple sort fields
+            # Get pagination parameters
+            page = request.args.get('page', 1, type=int)
+            per_page = min(request.args.get('per_page', 25, type=int), 100)
+            offset = (page - 1) * per_page
+            
+            # Get filter parameters
+            filters = {}
+            
+            superfamily = request.args.get('superfamily', '').strip()
+            if superfamily:
+                filters['superfamily'] = superfamily
+                
+            source = request.args.get('source', '').strip()
+            if source:
+                filters['source'] = source
+                
+            data_type = request.args.get('data_type', '').strip()
+            if data_type:
+                filters['data_type'] = data_type
+                
+            reviewed = request.args.get('reviewed', '').strip()
+            if reviewed:
+                filters['reviewed'] = reviewed
+                
+            dataset_name = request.args.get('dataset_name', '').strip()
+            if dataset_name:
+                filters['dataset_name'] = dataset_name
+                
+            hmm_name = request.args.get('hmm_name', '').strip()
+            if hmm_name:
+                filters['hmm_name'] = hmm_name
+            
+            # Numeric filters
+            min_proteins = request.args.get('min_proteins', 0, type=int)
+            if min_proteins > 0:
+                filters['min_proteins'] = min_proteins
+                
+            max_proteins = request.args.get('max_proteins', type=int)
+            if max_proteins:
+                filters['max_proteins'] = max_proteins
+                
+            min_characterized = request.args.get('min_characterized', 0, type=int)
+            if min_characterized > 0:
+                filters['min_characterized'] = min_characterized
+                
+            max_characterized = request.args.get('max_characterized', type=int)
+            if max_characterized:
+                filters['max_characterized'] = max_characterized
+                
+            min_np_val = request.args.get('min_np_val', 0, type=int)
+            if min_np_val > 0:
+                filters['min_np_val'] = min_np_val
+                
+            max_np_val = request.args.get('max_np_val', type=int)
+            if max_np_val:
+                filters['max_np_val'] = max_np_val
+                
+            min_np_pred = request.args.get('min_np_pred', 0, type=int)
+            if min_np_pred > 0:
+                filters['min_np_pred'] = min_np_pred
+                
+            max_np_pred = request.args.get('max_np_pred', type=int)
+            if max_np_pred:
+                filters['max_np_pred'] = max_np_pred
+            
+            # Get sorting parameters
             sort_by = request.args.get('sort_by', 'superfamily_name')
             sort_order = request.args.get('sort_order', 'asc')
             
-            # Support multi-sort (comma-separated values)
+            # Support multi-sort
             if ',' in sort_by:
                 sort_by_list = [s.strip() for s in sort_by.split(',')]
                 sort_order_list = [s.strip() for s in sort_order.split(',')]
-                # Ensure we have matching lengths
                 while len(sort_order_list) < len(sort_by_list):
                     sort_order_list.append('asc')
             else:
                 sort_by_list = [sort_by]
                 sort_order_list = [sort_order]
-        
-            # Pagination parameters
-            page = request.args.get('page', 1, type=int)
-            per_page = request.args.get('per_page', 50, type=int)
-            offset = (page - 1) * per_page
             
             # Get filtered datasets
             result = filter_datasets(
-                superfamily=superfamily if superfamily else None,
-                source=source if source else None,
-                min_proteins=min_proteins,
-                max_proteins=max_proteins,
-                min_characterized=min_characterized,
-                max_characterized=max_characterized,
-                min_np_val=min_np_val,
-                max_np_val=max_np_val,
-                min_np_pred=min_np_pred,
-                max_np_pred=max_np_pred,
-                hmm_name=hmm_name if hmm_name else None,
-                dataset_name=dataset_name if dataset_name else None,
-                reviewed=reviewed if reviewed else None,
-                data_type=data_type if data_type else None,
+                **filters,
                 sort_by=sort_by_list,
                 sort_order=sort_order_list,
                 limit=per_page,
@@ -220,159 +291,130 @@ def register_routes(app):
             
             datasets = result.get('datasets', [])
             total_count = result.get('total_count', 0)
-            filters_applied = result.get('filters_applied', {})
             
             # Calculate pagination info
-            total_pages = (total_count + per_page - 1) // per_page
+            total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
             has_prev = page > 1
             has_next = page < total_pages
             
-            # Get filter options
-            filter_options = get_filter_options()
-            
-            # For backwards compatibility, also provide the old superfamilies format
-            if app.DB_STRUCTURE is None:
-                app.DB_STRUCTURE = get_db_structure()
-            
-            return render_template(
-                'database.html',
-                datasets=datasets,
-                superfamilies=app.DB_STRUCTURE['superfamilies'],  # For backwards compatibility
-                filter_options=filter_options,
-                current_filters=filters_applied,
-                pagination={
+            response = {
+                'datasets': datasets,
+                'pagination': {
                     'page': page,
                     'per_page': per_page,
                     'total_count': total_count,
                     'total_pages': total_pages,
                     'has_prev': has_prev,
-                    'has_next': has_next
+                    'has_next': has_next,
+                    'showing_from': offset + 1 if total_count > 0 else 0,
+                    'showing_to': min(offset + per_page, total_count)
                 },
-                current_sort={
+                'filters_applied': filters,
+                'sort': {
                     'sort_by': sort_by,
                     'sort_order': sort_order
-                },
-                # Add available sort fields for the UI
-                sort_fields=[
-                    {'value': 'superfamily_name', 'label': 'Superfamily Name'},
-                    {'value': 'dataset_name', 'label': 'Dataset Name'},
-                    {'value': 'source', 'label': 'Source'},
-                    {'value': 'data_type', 'label': 'Data Type'},
-                    {'value': 'reviewed', 'label': 'Reviewed Status'},
-                    {'value': 'N_proteins', 'label': 'Number of Proteins'},
-                    {'value': 'N_characterized', 'label': 'Characterized Proteins'},
-                    {'value': 'N_np_val', 'label': 'Validated NP'},
-                    {'value': 'N_np_pred', 'label': 'Predicted NP'},
-                    {'value': 'hmm_names', 'label': 'HMM Names'},
-                    {'value': 'created_at', 'label': 'Creation Date'}
-                ]
-            )
+                }
+            }
+            
+            return jsonify(response)
             
         except Exception as e:
-            app.logger.error(f"Error in database_page: {e}", exc_info=True)
-            # Fallback to the old method if there's an error
-            if app.DB_STRUCTURE is None:
-                app.DB_STRUCTURE = get_db_structure()
-            return render_template('database.html', superfamilies=app.DB_STRUCTURE['superfamilies'])
+            app.logger.error(f"Error in api_datasets: {e}", exc_info=True)
+            return jsonify({
+                'error': f"Database query failed: {str(e)}",
+                'datasets': [],
+                'pagination': {
+                    'page': 1,
+                    'per_page': 25,
+                    'total_count': 0,
+                    'total_pages': 0,
+                    'has_prev': False,
+                    'has_next': False,
+                    'showing_from': 0,
+                    'showing_to': 0
+                }
+            }), 500
 
     @app.route('/api/filter_options')
     def api_filter_options():
         """API endpoint to get available filter options"""
         try:
+            from .db import get_filter_options
             options = get_filter_options()
-            
-            # Add sort field definitions
-            options['sort_fields'] = [
-                {'value': 'superfamily_name', 'label': 'Superfamily Name', 'type': 'text'},
-                {'value': 'dataset_name', 'label': 'Dataset Name', 'type': 'text'},
-                {'value': 'source', 'label': 'Source', 'type': 'text'},
-                {'value': 'data_type', 'label': 'Data Type', 'type': 'text'},
-                {'value': 'reviewed', 'label': 'Reviewed Status', 'type': 'text'},
-                {'value': 'N_proteins', 'label': 'Number of Proteins', 'type': 'numeric'},
-                {'value': 'N_characterized', 'label': 'Characterized Proteins', 'type': 'numeric'},
-                {'value': 'N_np_val', 'label': 'Validated NP', 'type': 'numeric'},
-                {'value': 'N_np_pred', 'label': 'Predicted NP', 'type': 'numeric'},
-                {'value': 'hmm_names', 'label': 'HMM Names', 'type': 'text'},
-                {'value': 'created_at', 'label': 'Creation Date', 'type': 'date'}
-            ]
-            
-            # Add filter field definitions for advanced UI
-            options['filter_fields'] = [
-                {
-                    'name': 'superfamily',
-                    'label': 'Superfamily',
-                    'type': 'select',
-                    'options': options.get('superfamilies', [])
-                },
-                {
-                    'name': 'source',
-                    'label': 'Source',
-                    'type': 'select',
-                    'options': options.get('sources', [])
-                },
-                {
-                    'name': 'data_type',
-                    'label': 'Data Type',
-                    'type': 'select',
-                    'options': options.get('data_types', [])
-                },
-                {
-                    'name': 'reviewed',
-                    'label': 'Reviewed',
-                    'type': 'select',
-                    'options': options.get('reviewed_options', ['yes', 'no'])
-                },
-                {
-                    'name': 'hmm_name',
-                    'label': 'HMM Name',
-                    'type': 'autocomplete',
-                    'options': options.get('hmm_names', [])
-                },
-                {
-                    'name': 'dataset_name',
-                    'label': 'Dataset Name',
-                    'type': 'text'
-                },
-                {
-                    'name': 'proteins_range',
-                    'label': 'Number of Proteins',
-                    'type': 'range',
-                    'min': options.get('protein_stats', {}).get('min', 0),
-                    'max': options.get('protein_stats', {}).get('max', 1000)
-                },
-                {
-                    'name': 'characterized_range',
-                    'label': 'Characterized Proteins',
-                    'type': 'range',
-                    'min': options.get('characterized_stats', {}).get('min', 0),
-                    'max': options.get('characterized_stats', {}).get('max', 1000)
-                },
-                {
-                    'name': 'np_val_range',
-                    'label': 'Validated NP',
-                    'type': 'range',
-                    'min': options.get('np_val_stats', {}).get('min', 0),
-                    'max': options.get('np_val_stats', {}).get('max', 1000)
-                },
-                {
-                    'name': 'np_pred_range',
-                    'label': 'Predicted NP',
-                    'type': 'range',
-                    'min': options.get('np_pred_stats', {}).get('min', 0),
-                    'max': options.get('np_pred_stats', {}).get('max', 1000)
-                }
-            ]
-            
             return jsonify(options)
-            
         except Exception as e:
             app.logger.error(f"Error in api_filter_options: {e}", exc_info=True)
-            return jsonify({'error': str(e)}), 500
+            return jsonify({
+                'superfamilies': [],
+                'sources': [],
+                'data_types': [],
+                'reviewed_options': ['yes', 'no'],
+                'dataset_names': [],
+                'hmm_names': []
+            }), 500
+
+    @app.route('/database')
+    def database_page():
+        """Database page - loads data via AJAX"""
+        try:
+            from .db import get_filter_options
+            
+            # Get filter options for initial page load
+            filter_options = get_filter_options()
+            
+            # Get current filter/sort parameters for pre-populating form
+            current_filters = {
+                'superfamily': request.args.get('superfamily', ''),
+                'source': request.args.get('source', ''),
+                'data_type': request.args.get('data_type', ''),
+                'reviewed': request.args.get('reviewed', ''),
+                'dataset_name': request.args.get('dataset_name', ''),
+                'hmm_name': request.args.get('hmm_name', ''),
+                'min_proteins': request.args.get('min_proteins', 0, type=int),
+                'max_proteins': request.args.get('max_proteins', type=int),
+                'min_characterized': request.args.get('min_characterized', 0, type=int),
+                'max_characterized': request.args.get('max_characterized', type=int),
+                'min_np_val': request.args.get('min_np_val', 0, type=int),
+                'max_np_val': request.args.get('max_np_val', type=int),
+                'min_np_pred': request.args.get('min_np_pred', 0, type=int),
+                'max_np_pred': request.args.get('max_np_pred', type=int),
+            }
+            
+            current_sort = {
+                'sort_by': request.args.get('sort_by', 'superfamily_name'),
+                'sort_order': request.args.get('sort_order', 'asc')
+            }
+            
+            return render_template(
+                'database.html',
+                filter_options=filter_options,
+                current_filters=current_filters,
+                current_sort=current_sort,
+                datasets=[],
+                pagination=None
+            )
+            
+        except Exception as e:
+            app.logger.error(f"Error in database_page: {e}", exc_info=True)
+            return render_template('database.html', 
+                             filter_options={
+                                 'superfamilies': [],
+                                 'sources': [],
+                                 'data_types': [],
+                                 'reviewed_options': ['yes', 'no'],
+                                 'dataset_names': [],
+                                 'hmm_names': []
+                             }, 
+                             current_filters={}, 
+                             current_sort={},
+                             datasets=[], 
+                             pagination=None)
 
     @app.route('/phylotree_render', methods=['POST','GET'])
     def tree_renderer():
         # Initialize DB_STRUCTURE if needed
         if app.DB_STRUCTURE is None:
+            from .db import get_db_structure
             app.DB_STRUCTURE = get_db_structure()
         
         superfamilyName = request.args.get('superfamily')
@@ -607,6 +649,7 @@ def register_routes(app):
     @app.route('/upload',methods=['POST','GET'])
     def upload_dataset():
         if app.DB_STRUCTURE is None:
+            from .db import get_db_structure
             app.DB_STRUCTURE = get_db_structure()
         superfamilies = app.DB_STRUCTURE['superfamilies']
         superfamilies.append({'name': 'other'})
