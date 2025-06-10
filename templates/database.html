@@ -339,11 +339,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        datasets.forEach(dataset => {
+        datasets.forEach((dataset, index) => {
             const row = document.createElement('tr');
+            
+            // Debug log to see what data we have
+            console.log(`Dataset ${index}:`, dataset);
+            
+            const superfamilyName = dataset.superfamily_name || 'N/A';
+            const datasetName = dataset.name || dataset.dataset_name || 'N/A';
+            const datasetId = dataset.id || dataset.dataset_id || null;
+            
+            console.log(`Processing dataset: id='${datasetId}', superfamily='${superfamilyName}', dataset='${datasetName}'`);
+            
             row.innerHTML = `
-                <td>${dataset.superfamily_name || 'N/A'}</td>
-                <td>${dataset.name || dataset.dataset_name || 'N/A'}</td>
+                <td>${superfamilyName}</td>
+                <td>${datasetName}</td>
                 <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
                 <td>${dataset.data_type ? dataset.data_type.charAt(0).toUpperCase() + dataset.data_type.slice(1) : 'N/A'}</td>
                 <td>${dataset.N_proteins || 0}</td>
@@ -352,9 +362,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${dataset.N_np_pred || 0}</td>
                 <td>
                     <button class="btn btn-bright btn-sm show-tree-btn" 
-                            data-superfamily="${dataset.superfamily_name}" 
-                            data-dataset="${dataset.name || dataset.dataset_name}"
-                            title="View Phylogenetic Tree">
+                            data-dataset-id="${datasetId}"
+                            data-superfamily="${superfamilyName}" 
+                            data-dataset="${datasetName}"
+                            title="View Phylogenetic Tree"
+                            ${!datasetId ? 'disabled' : ''}>
                         <i class="fas fa-tree"></i> Tree
                     </button>
                 </td>
@@ -362,8 +374,10 @@ document.addEventListener('DOMContentLoaded', function() {
             tbody.appendChild(row);
         });
         
-        // Re-attach event listeners for new buttons
+        // IMPORTANT: Re-attach event listeners for new buttons
         attachTableEventListeners();
+        
+        console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
     }
     
     function updatePagination(pagination) {
@@ -492,17 +506,84 @@ document.addEventListener('DOMContentLoaded', function() {
         loadData(currentPage);
     }
     
+    function updateTable(datasets) {
+        const tbody = document.getElementById('datasets-tbody');
+        tbody.innerHTML = '';
+        
+        if (datasets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No datasets found matching your criteria.</td></tr>';
+            return;
+        }
+        
+        datasets.forEach((dataset, index) => {
+            const row = document.createElement('tr');
+            
+            // Debug log to see what data we have
+            console.log(`Dataset ${index}:`, dataset);
+            
+            const superfamilyName = dataset.superfamily_name || 'N/A';
+            const datasetName = dataset.name || dataset.dataset_name || 'N/A';
+            const datasetId = dataset.id || dataset.dataset_id || null;
+            
+            console.log(`Processing dataset: id='${datasetId}', superfamily='${superfamilyName}', dataset='${datasetName}'`);
+            
+            row.innerHTML = `
+                <td>${superfamilyName}</td>
+                <td>${datasetName}</td>
+                <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
+                <td>${dataset.data_type ? dataset.data_type.charAt(0).toUpperCase() + dataset.data_type.slice(1) : 'N/A'}</td>
+                <td>${dataset.N_proteins || 0}</td>
+                <td>${dataset.N_characterized || 0}</td>
+                <td>${dataset.N_np_val || 0}</td>
+                <td>${dataset.N_np_pred || 0}</td>
+                <td>
+                    <button class="btn btn-bright btn-sm show-tree-btn" 
+                            data-dataset-id="${datasetId}"
+                            data-superfamily="${superfamilyName}" 
+                            data-dataset="${datasetName}"
+                            title="View Phylogenetic Tree"
+                            ${!datasetId ? 'disabled' : ''}>
+                        <i class="fas fa-tree"></i> Tree
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // IMPORTANT: Re-attach event listeners for new buttons
+        attachTableEventListeners();
+        
+        console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
+    }
+    
     function attachTableEventListeners() {
         // Tree view buttons
         document.querySelectorAll('.show-tree-btn').forEach(button => {
             button.addEventListener('click', function() {
+                const datasetId = this.getAttribute('data-dataset-id');
                 const superfamilyName = this.getAttribute('data-superfamily');
                 const datasetName = this.getAttribute('data-dataset');
                 
-                if (superfamilyName && datasetName) {
-                    window.location.href = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
+                console.log('Tree button clicked with data:', {
+                    datasetId: datasetId,
+                    superfamilyName: superfamilyName,
+                    datasetName: datasetName,
+                    button: this
+                });
+                
+                if (datasetId && datasetId !== 'null') {
+                    // Use dataset ID for more reliable lookup
+                    const url = `/phylotree_render?dataset_id=${encodeURIComponent(datasetId)}`;
+                    console.log('Navigating to:', url);
+                    window.location.href = url;
+                } else if (superfamilyName && datasetName && superfamilyName !== 'N/A' && datasetName !== 'N/A') {
+                    // Fallback to name-based lookup
+                    const url = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
+                    console.log('Navigating to (fallback):', url);
+                    window.location.href = url;
                 } else {
-                    alert('Dataset information is incomplete.');
+                    console.error('Dataset information is incomplete:', {datasetId, superfamilyName, datasetName});
+                    alert('Dataset information is incomplete. Please check the data.');
                 }
             });
         });

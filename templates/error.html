@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Error!</h4>
+                <p>{{ error_message }}</p>
+                <hr>
+                <p class="mb-0">
+                    <a href="{{ url_for('database_page') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Database
+                    </a>
+                    <a href="{{ url_for('home') }}" class="btn btn-secondary">
+                        <i class="fas fa-home"></i> Home
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

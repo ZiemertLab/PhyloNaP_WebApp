@@ -1496,3 +1496,109 @@ def get_database_stats():
     except Exception as e:
         logger.error(f"Error getting database stats: {e}", exc_info=True)
         return {}
+
+def get_dataset_by_id(dataset_id):
+    """
+    Get a specific dataset by its ID from the single-table schema
+    
+    Args:
+        dataset_id (str): The dataset ID (e.g., 'T000201')
+        
+    Returns:
+        dict: Dataset information with all fields, or None if not found
+    """
+    try:
+        dataset = query_db("""
+            SELECT * FROM datasets WHERE dataset_id = ?
+        """, (dataset_id,), one=True)
+        
+        if not dataset:
+            logger.info(f"Dataset {dataset_id} not found")
+            return None
+        
+        # Handle JSON fields - check if already parsed or need parsing
+        def safe_json_parse(value, default=None):
+            if default is None:
+                default = []
+            
+            if value is None:
+                return default
+            elif isinstance(value, list):
+                # Already parsed by custom row factory
+                return value
+            elif isinstance(value, str):
+                try:
+                    return json.loads(value) if value.strip() else default
+                except json.JSONDecodeError:
+                    return default
+            else:
+                return default
+        
+        hmm_names = safe_json_parse(dataset['superfamily_hmm_names'], [])
+        metadata_columns = safe_json_parse(dataset['metadata_columns'], [])
+        citation_authors = safe_json_parse(dataset['citation_authors'], [])
+        
+        # Build result in the expected format
+        result = {
+            'id': dataset['dataset_id'],
+            'dataset_id': dataset['dataset_id'],
+            'name': dataset['name'],
+            'dataset_name': dataset['name'],  # Alias for compatibility
+            'description': dataset['description'] or '',
+            'superfamily_name': dataset['superfamily_name'],
+            'superfamily_hmm_names': hmm_names,
+            'tree': dataset['tree'] or '',
+            'tree_file': dataset['tree'] or '',  # Alias for compatibility
+            'tree_model': dataset['tree_model'] or '',
+            'metadata': dataset['metadata'] or '',
+            'metadata_file': dataset['metadata'] or '',  # Alias for compatibility
+            'metadata_columns': metadata_columns,
+            'alignment': dataset['alignment'] or '',
+            'sequences': dataset['sequences'] or '',
+            'source': dataset['source'] or '',
+            'data_type': dataset['data_type'] or '',
+            'reviewed': dataset['reviewed'] or '',
+            'N_proteins': dataset['N_proteins'] or 0,
+            'N_characterized': dataset['N_characterized'] or 0,
+            'N_np_val': dataset['N_np_val'] or 0,
+            'N_np_pred': dataset['N_np_pred'] or 0,
+            'created_at': dataset.get('created_at', ''),
+        }
+        
+        # Add citation if available
+        if citation_authors or dataset.get('citation_doi'):
+            cite = {}
+            if citation_authors:
+                # If only one author, store as string; if multiple, store as list
+                cite['name'] = citation_authors[0] if len(citation_authors) == 1 else citation_authors
+            if dataset.get('citation_doi'):
+                cite['doi'] = dataset['citation_doi']
+            result['cite'] = cite
+        
+        logger.info(f"Found dataset {dataset_id}: {result['name']} in superfamily {result['superfamily_name']}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting dataset {dataset_id}: {e}", exc_info=True)
+        return None
+
+def dataset_exists(dataset_id):
+    """
+    Check if a dataset exists in the database
+    
+    Args:
+        dataset_id (str): The dataset ID to check
+        
+    Returns:
+        bool: True if dataset exists, False otherwise
+    """
+    try:
+        dataset = query_db("""
+            SELECT 1 FROM datasets WHERE dataset_id = ? LIMIT 1
+        """, (dataset_id,), one=True)
+        
+        return dataset is not None
+        
+    except Exception as e:
+        logger.error(f"Error checking if dataset {dataset_id} exists: {e}", exc_info=True)
+        return False

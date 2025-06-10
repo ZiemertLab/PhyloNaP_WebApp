@@ -124,7 +124,7 @@ def create_app():
         try:
             from .db import (
                 init_app, get_db_structure, refresh_db_structure, 
-                filter_datasets, get_filter_options, get_dataset_by_id
+                filter_datasets, get_filter_options, get_dataset_by_id, get_db_structure
             )
             init_app(flask_app)
             logger.info("Database functions imported and initialized successfully")
@@ -412,47 +412,110 @@ def register_routes(app):
 
     @app.route('/phylotree_render', methods=['POST','GET'])
     def tree_renderer():
-        # Initialize DB_STRUCTURE if needed
-        if app.DB_STRUCTURE is None:
-            from .db import get_db_structure
-            app.DB_STRUCTURE = get_db_structure()
-        
+        dataset_id = request.args.get('dataset_id')
         superfamilyName = request.args.get('superfamily')
         datasetName = request.args.get('dataset')
-        print(superfamilyName)
-        print(datasetName)
         
-        # Find the matching superfamily and dataset
-        success = False
-        database_dir = app.config['DATABASE_DIR']
+        app.logger.info(f"Tree render request - ID: '{dataset_id}', Superfamily: '{superfamilyName}', Dataset: '{datasetName}'")
         
-        for superfamily in app.DB_STRUCTURE['superfamilies']:
-            if superfamily['name'] == superfamilyName:
-                for dataset in superfamily['datasets']:
-                    if dataset['name'] == datasetName:
-                        tree_link = dataset['tree']
-                        print(tree_link)
-                        metadata_link = dataset['metadata']
-                        metadata_columns = dataset['metadata_columns']
-                        datasetDescr = dataset['description']
-                        success = True
-                        break
-
-        # Handle the case where no matching superfamily or dataset was found
-        if not success:
-            return jsonify({'message': 'No matching superfamily or dataset found'}), 404
-
-        print(os.path.join(database_dir, tree_link))
-        with open(os.path.join(database_dir, tree_link), 'r') as f:
-            print("reading the tree file")
-            tree_content = f.read()
+        try:
+            # Import database functions - ADD THIS LINE
+            from .db import query_db,get_dataset_by_id
             
-        print(tree_content)
-        print("tree content length:", len(tree_content))
-        df = pd.read_csv(os.path.join(database_dir, metadata_link), sep='\t')
-        metadata_json = df.to_json(orient='records')
+            dataset = None
+            
+            # Try ID-based lookup first (more reliable)
+            if dataset_id:
+                dataset = get_dataset_by_id(dataset_id)
+                app.logger.debug(f"ID-based lookup for dataset_id={dataset_id}: {'Found' if dataset else 'Not found'}")
+    
+            # Fallback to name-based lookup
+            if not dataset and superfamilyName and datasetName:
+                dataset = query_db("""
+                    SELECT * FROM datasets 
+                    WHERE superfamily_name = ? AND name = ?
+                """, (superfamilyName, datasetName), one=True)
+                
+                if dataset:
+                    # Convert to the same format as get_dataset_by_id
+                    dataset = get_dataset_by_id(dataset['dataset_id'])
+                
+                app.logger.debug(f"Name-based lookup for '{superfamilyName}'/'{datasetName}': {'Found' if dataset else 'Not found'}")
+        
+            # Validate we found a dataset
+            if not dataset:
+                if dataset_id:
+                    error_msg = f"Dataset with ID '{dataset_id}' not found"
+                elif superfamilyName and datasetName:
+                    error_msg = f"Dataset '{datasetName}' not found in superfamily '{superfamilyName}'"
+                else:
+                    error_msg = "Missing dataset identification parameters"
+                
+                app.logger.error(error_msg)
+                return render_template('error.html', error_message=error_msg), 404
+            
+            # Get file paths from the dataset record
+            database_dir = app.config['DATABASE_DIR']
+            tree_link = dataset['tree_file']
+            metadata_link = dataset['metadata_file']
+            metadata_columns = dataset['metadata_columns']
+            datasetDescr = dataset['description']
+            
+            app.logger.debug(f"Found dataset: {dataset['dataset_name']} (ID: {dataset['id']})")
+            app.logger.debug(f"Tree file: {tree_link}")
+            app.logger.debug(f"Metadata file: {metadata_link}")
+            
+            if not tree_link:
+                app.logger.error("No tree file path found in dataset")
+                return render_template('error.html', 
+                                 error_message="Dataset has no tree file information"), 404
+            
+            if not metadata_link:
+                app.logger.error("No metadata file path found in dataset")
+                return render_template('error.html', 
+                                 error_message="Dataset has no metadata file information"), 404
+            
+            # Validate file paths
+            tree_path = os.path.join(database_dir, tree_link)
+            metadata_path = os.path.join(database_dir, metadata_link)
+            
+            if not os.path.exists(tree_path):
+                app.logger.error(f"Tree file not found: {tree_path}")
+                return render_template('error.html', 
+                                 error_message=f"Tree file not found: {tree_link}"), 404
+            
+            if not os.path.exists(metadata_path):
+                app.logger.error(f"Metadata file not found: {metadata_path}")
+                return render_template('error.html', 
+                                 error_message=f"Metadata file not found: {metadata_link}"), 404
 
-        return render_template('phylotree_render.html', nwk_data=tree_content, metadata=metadata_json, metadata_list=metadata_columns, datasetDescr=datasetDescr)
+            # Read tree content
+            app.logger.info(f"Reading tree file: {tree_path}")
+            with open(tree_path, 'r') as f:
+                tree_content = f.read()
+                
+            app.logger.info(f"Tree content length: {len(tree_content)}")
+            
+            # Read metadata
+            app.logger.info(f"Reading metadata file: {metadata_path}")
+            df = pd.read_csv(metadata_path, sep='\t')
+            metadata_json = df.to_json(orient='records')
+            
+            app.logger.info(f"Metadata loaded: {len(df)} rows, {len(df.columns)} columns")
+            app.logger.debug(f"Metadata columns: {metadata_columns}")
+
+            return render_template('phylotree_render.html', 
+                             nwk_data=tree_content, 
+                             metadata=metadata_json, 
+                             metadata_list=metadata_columns, 
+                             datasetDescr=datasetDescr,
+                             superfamily_name=dataset['superfamily_name'],
+                             dataset_name=dataset['dataset_name'])
+
+        except Exception as e:
+            app.logger.error(f"Error in tree_renderer: {e}", exc_info=True)
+            return render_template('error.html', 
+                             error_message=f"Error loading tree data: {str(e)}"), 500
 
     # Add other routes here...
     @app.route('/submit', methods=['POST'])
@@ -868,21 +931,21 @@ def start_job_processing(app):
 app = create_app()
 
 # Initialize database and start job processing only after app creation
-@app.before_first_request
-def initialize_app():
-    """Initialize app components that require app context"""
-    try:
-        # Load database structure
-        app.DB_STRUCTURE = get_db_structure()
-        print(f"Database loaded with {len(app.DB_STRUCTURE['superfamilies'])} superfamilies")
+# @app.before_first_request
+# def initialize_app():
+#     """Initialize app components that require app context"""
+#     try:
+#         # Load database structure
+#         app.DB_STRUCTURE = get_db_structure()
+#         print(f"Database loaded with {len(app.DB_STRUCTURE['superfamilies'])} superfamilies")
         
-        # Start job processing
-        start_job_processing(app)
+#         # Start job processing
+#         start_job_processing(app)
         
-    except Exception as e:
-        app.logger.error(f"Error during app initialization: {e}", exc_info=True)
-        # Provide fallback
-        app.DB_STRUCTURE = {'superfamilies': []}
+#     except Exception as e:
+#         app.logger.error(f"Error during app initialization: {e}", exc_info=True)
+#         # Provide fallback
+#         app.DB_STRUCTURE = {'superfamilies': []}
 
 if __name__ == '__main__':
     print("app.config['HOST']", app.config['HOST'])
