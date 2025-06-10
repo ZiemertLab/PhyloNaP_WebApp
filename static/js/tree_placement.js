@@ -72,7 +72,15 @@ async function main() {
 
     // Print the extracted numbers in the "placement-container"
     if (placementNumbers) {
-        placementContainer.innerHTML = placementNumbers.map(pair => `(${pair.join(', ')})`).join('<br>');
+        const headers = ["edge_num", "likelihood", "like_weight_ratio", "distal_length", "pendant_length"];
+        const dataRows = placementNumbers.map((values, index) => {
+            const formattedValues = values.map((val, i) => {
+                const formattedVal = typeof val === 'number' ? val.toExponential(3) : val;
+                return `${headers[i]}: ${formattedVal}`;
+            });
+            return `${index + 1}. ${formattedValues.join(' | ')}`;
+        }).join('<br>');
+        placementContainer.innerHTML = dataRows;
     } else {
         placementContainer.innerHTML = 'No placements found.';
     }

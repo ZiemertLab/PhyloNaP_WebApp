@@ -964,6 +964,11 @@ def process_job(job_id, filename, app):
                                         with open(log_file, 'a') as log:
                                             log.write(f"ERROR sending email: {str(e)}\n")
                                             log.flush()
+                                else:
+                                    print(f"Email script not found or not executable: {email_script}", flush=True)
+                                    with open(log_file, 'a') as log:
+                                        log.write(f"ERROR: Email script not found or not executable: {email_script}\n")
+                                        log.flush()
                 except Exception as e:
                     print(f"Failed to send email notification: {str(e)}", flush=True)
             else:
