@@ -699,6 +699,75 @@ def register_routes(app):
                 response['summary'] = None
         
         return jsonify(response)
+    @app.route('/jplace_render.html')
+    def jplace_render():
+        jobId = request.args.get('jobId')
+        query = request.args.get('query')
+        treeId = request.args.get('treeId')
+        
+        try:
+            # Import database functions
+            from .db import get_dataset_by_id
+            
+            # Get dataset information using the treeId
+            dataset = get_dataset_by_id(treeId)
+            
+            if not dataset:
+                app.logger.error(f"Dataset with ID '{treeId}' not found")
+                return render_template('error.html', error_message=f"Dataset with ID '{treeId}' not found"), 404
+            
+            # Get file paths from the dataset record
+            database_dir = app.config['DATABASE_DIR']
+            tmp_directory = app.config['TMP_DIR']
+            
+            # Construct the jplace file path
+            file_path = os.path.join(tmp_directory, jobId, query, treeId, 'epa_result.jplace')
+            
+            # Check if jplace file exists
+            if not os.path.exists(file_path):
+                app.logger.error(f"Jplace file not found: {file_path}")
+                return render_template('error.html', error_message=f"Jplace file not found"), 404
+            
+            # Read the jplace file content
+            with open(file_path, 'r') as file:
+                jplace_content = file.read()
+            
+            app.logger.info(f"Reading jplace file: {file_path}")
+            app.logger.info(f"Jplace content length: {len(jplace_content)}")
+            
+            # Get metadata file path from dataset
+            metadata_link = dataset['metadata_file']
+            metadata_columns = dataset['metadata_columns']
+            datasetDescr = dataset['description']
+            
+            if not metadata_link:
+                app.logger.error("No metadata file path found in dataset")
+                return render_template('error.html', error_message="Dataset has no metadata file information"), 404
+            
+            # Read metadata
+            metadata_path = os.path.join(database_dir, metadata_link)
+            
+            if not os.path.exists(metadata_path):
+                app.logger.error(f"Metadata file not found: {metadata_path}")
+                return render_template('error.html', error_message=f"Metadata file not found: {metadata_link}"), 404
+            
+            app.logger.info(f"Reading metadata file: {metadata_path}")
+            df = pd.read_csv(metadata_path, sep='\t')
+            metadata_json = df.to_json(orient='records')
+            
+            app.logger.info(f"Metadata loaded: {len(df)} rows, {len(df.columns)} columns")
+            
+            return render_template('jplace_render.html', 
+                             nwk_data=jplace_content, 
+                             metadata=metadata_json, 
+                             metadata_list=metadata_columns, 
+                             datasetDescr=datasetDescr,
+                             superfamily_name=dataset['superfamily_name'],
+                             dataset_name=dataset['dataset_name'])
+        
+        except Exception as e:
+            app.logger.error(f"Error in jplace_render: {e}", exc_info=True)
+            return render_template('error.html', error_message=f"Error loading jplace data: {str(e)}"), 500
 
     @app.route('/healthcheck')
     def healthcheck():
