@@ -8,13 +8,7 @@
     
     <!-- Advanced Filters Section -->
     <div class="filter-section">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <button id="clear-filters" class="btn btn-outline-secondary btn-sm">Clear All</button>
-                <button id="apply-filters" class="btn btn-bright btn-sm">Apply Filters</button>
-            </div>
-        </div>
-        
+
         <div class="collapse show" id="advanced-filters">
             <form id="filter-form">
                 <!-- Basic Filters Row -->
@@ -30,20 +24,9 @@
                                    autocomplete="off"
                                    value="{{ current_filters.hmm_name if current_filters and current_filters.hmm_name }}">
                             <button class="btn btn-outline-secondary" type="button" id="hmm-dropdown-toggle">
-                                <i class="fas fa-chevron-down"></i>
+                                ▼
                             </button>
                         </div>
-                        
-                        <!-- REMOVE THIS ENTIRE DATALIST SECTION -->
-                        <!-- 
-                        <datalist id="hmm-names-datalist">
-                            {% if filter_options and filter_options.hmm_names %}
-                                {% for hmm in filter_options.hmm_names %}
-                                <option value="{{ hmm }}">
-                                {% endfor %}
-                            {% endif %}
-                        </datalist>
-                        -->
                         
                         <!-- Keep only the custom dropdown container -->
                         <div id="hmm-dropdown" class="autocomplete-dropdown" style="display: none;"></div>
@@ -166,41 +149,15 @@
                         </div>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Sorting Controls -->
-    <div class="sort-controls">
-        <div class="row align-items-center">
-            <div class="col-md-4">
-                <label for="sort-by" class="form-label">Sort by:</label>
-                <select id="sort-by" class="form-select">
-                    <option value="superfamily_name" {% if current_sort and current_sort.sort_by == 'superfamily_name' %}selected{% endif %}>Superfamily Name</option>
-                    <option value="dataset_name" {% if current_sort and current_sort.sort_by == 'dataset_name' %}selected{% endif %}>Dataset Name</option>
-                    <option value="source" {% if current_sort and current_sort.sort_by == 'source' %}selected{% endif %}>Source</option>
-                    <option value="data_type" {% if current_sort and current_sort.sort_by == 'data_type' %}selected{% endif %}>Data Type</option>
-                    <option value="N_proteins" {% if current_sort and current_sort.sort_by == 'N_proteins' %}selected{% endif %}>Number of Proteins</option>
-                    <option value="N_characterized" {% if current_sort and current_sort.sort_by == 'N_characterized' %}selected{% endif %}>Characterized Proteins</option>
-                    <option value="N_np_val" {% if current_sort and current_sort.sort_by == 'N_np_val' %}selected{% endif %}>Validated NP</option>
-                    <option value="N_np_pred" {% if current_sort and current_sort.sort_by == 'N_np_pred' %}selected{% endif %}>Predicted NP</option>
-                    <option value="created_at" {% if current_sort and current_sort.sort_by == 'created_at' %}selected{% endif %}>Creation Date</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="sort-order" class="form-label">Order:</label>
-                <select id="sort-order" class="form-select">
-                    <option value="asc" {% if current_sort and current_sort.sort_order == 'asc' %}selected{% endif %}>Ascending</option>
-                    <option value="desc" {% if current_sort and current_sort.sort_order == 'desc' %}selected{% endif %}>Descending</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">&nbsp;</label>
-                <div>
-                    <button id="apply-sort" class="btn btn-dark btn-sm">Apply Sort</button>
-                    <button id="reset-sort" class="btn btn-outline-secondary btn-sm">Reset</button>
+                
+                <!-- Apply Filters Button Row - MOVED TO BOTTOM -->
+                <div class="row filter-row">
+                    <div class="col-12 text-center">
+                        <button id="clear-filters" class="btn btn-outline-secondary btn-sm">Clear All</button>
+                        <button id="apply-filters" class="btn btn-bright btn-lg">Apply Filters</button>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -218,35 +175,59 @@
                 <tr>
                     <th class="sortable-header" data-sort="superfamily_name">
                         Superfamily 
-                        <i class="fas fa-sort sort-icon" id="sort-superfamily_name"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="dataset_name">
                         Dataset Name 
-                        <i class="fas fa-sort sort-icon" id="sort-dataset_name"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="source">
                         Source 
-                        <i class="fas fa-sort sort-icon" id="sort-source"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="data_type">
                         Data Type 
-                        <i class="fas fa-sort sort-icon" id="sort-data_type"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="N_proteins">
                         Proteins 
-                        <i class="fas fa-sort sort-icon" id="sort-N_proteins"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="N_characterized">
                         Characterized 
-                        <i class="fas fa-sort sort-icon" id="sort-N_characterized"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="N_np_val">
                         NP Val 
-                        <i class="fas fa-sort sort-icon" id="sort-N_np_val"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th class="sortable-header" data-sort="N_np_pred">
                         NP Pred 
-                        <i class="fas fa-sort sort-icon" id="sort-N_np_pred"></i>
+                        <span class="sort-arrows">
+                            <span class="sort-up">▲</span>
+                            <span class="sort-down">▼</span>
+                        </span>
                     </th>
                     <th>Actions</th>
                 </tr>
@@ -316,6 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateTable(data.datasets);
                 updatePagination(data.pagination);
                 updateSummary(data.pagination);
+                updateSortIndicators(); // Update visual sort indicators
                 currentPage = data.pagination.page;
             })
             .catch(error => {
@@ -336,14 +318,9 @@ document.addEventListener('DOMContentLoaded', function() {
         datasets.forEach((dataset, index) => {
             const row = document.createElement('tr');
             
-            // Debug log to see what data we have
-            console.log(`Dataset ${index}:`, dataset);
-            
             const superfamilyName = dataset.superfamily_name || 'N/A';
             const datasetName = dataset.name || dataset.dataset_name || 'N/A';
             const datasetId = dataset.id || dataset.dataset_id || null;
-            
-            console.log(`Processing dataset: id='${datasetId}', superfamily='${superfamilyName}', dataset='${datasetName}'`);
             
             row.innerHTML = `
                 <td>${superfamilyName}</td>
@@ -361,17 +338,37 @@ document.addEventListener('DOMContentLoaded', function() {
                             data-dataset="${datasetName}"
                             title="View Phylogenetic Tree"
                             ${!datasetId ? 'disabled' : ''}>
-                        <i class="fas fa-tree"></i> Tree
+                        Tree
                     </button>
                 </td>
             `;
             tbody.appendChild(row);
         });
         
-        // IMPORTANT: Re-attach event listeners for new buttons
+        // Re-attach event listeners for new buttons
         attachTableEventListeners();
         
         console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
+    }
+    
+    function updateSortIndicators() {
+        // Reset all sort indicators
+        document.querySelectorAll('.sort-arrows').forEach(arrows => {
+            arrows.classList.remove('active-asc', 'active-desc');
+        });
+        
+        // Find the active sort column and update its indicator
+        const activeHeader = document.querySelector(`[data-sort="${currentSort.sort_by}"]`);
+        if (activeHeader) {
+            const arrows = activeHeader.querySelector('.sort-arrows');
+            if (arrows) {
+                if (currentSort.sort_order === 'asc') {
+                    arrows.classList.add('active-asc');
+                } else {
+                    arrows.classList.add('active-desc');
+                }
+            }
+        }
     }
     
     function updatePagination(pagination) {
@@ -444,7 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showError(message) {
-        // Create or update error message
         let errorDiv = document.getElementById('error-message');
         if (!errorDiv) {
             errorDiv = document.createElement('div');
@@ -455,7 +451,6 @@ document.addEventListener('DOMContentLoaded', function() {
         errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
         errorDiv.style.display = 'block';
         
-        // Auto-hide after 5 seconds
         setTimeout(() => {
             if (errorDiv) {
                 errorDiv.style.display = 'none';
@@ -464,7 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function applyFilters() {
-        // Collect filter values (REMOVED superfamily, kept hmm_name)
         currentFilters = {
             hmm_name: document.getElementById('hmm-name-filter').value,
             source: document.getElementById('source-filter').value,
@@ -490,65 +484,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loadData(1, true); // Reset to first page
     }
     
-    function applySort() {
-        currentSort = {
-            sort_by: document.getElementById('sort-by').value,
-            sort_order: document.getElementById('sort-order').value
-        };
-        
-        loadData(currentPage);
-    }
-    
-    function updateTable(datasets) {
-        const tbody = document.getElementById('datasets-tbody');
-        tbody.innerHTML = '';
-        
-        if (datasets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No datasets found matching your criteria.</td></tr>';
-            return;
-        }
-        
-        datasets.forEach((dataset, index) => {
-            const row = document.createElement('tr');
-            
-            // Debug log to see what data we have
-            console.log(`Dataset ${index}:`, dataset);
-            
-            const superfamilyName = dataset.superfamily_name || 'N/A';
-            const datasetName = dataset.name || dataset.dataset_name || 'N/A';
-            const datasetId = dataset.id || dataset.dataset_id || null;
-            
-            console.log(`Processing dataset: id='${datasetId}', superfamily='${superfamilyName}', dataset='${datasetName}'`);
-            
-            row.innerHTML = `
-                <td>${superfamilyName}</td>
-                <td>${datasetName}</td>
-                <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
-                <td>${dataset.data_type ? dataset.data_type.charAt(0).toUpperCase() + dataset.data_type.slice(1) : 'N/A'}</td>
-                <td>${dataset.N_proteins || 0}</td>
-                <td>${dataset.N_characterized || 0}</td>
-                <td>${dataset.N_np_val || 0}</td>
-                <td>${dataset.N_np_pred || 0}</td>
-                <td>
-                    <button class="btn btn-bright btn-sm show-tree-btn" 
-                            data-dataset-id="${datasetId}"
-                            data-superfamily="${superfamilyName}" 
-                            data-dataset="${datasetName}"
-                            title="View Phylogenetic Tree"
-                            ${!datasetId ? 'disabled' : ''}>
-                        <i class="fas fa-tree"></i> Tree
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-        // IMPORTANT: Re-attach event listeners for new buttons
-        attachTableEventListeners();
-        
-        console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
-    }
-    
     function attachTableEventListeners() {
         // Tree view buttons
         document.querySelectorAll('.show-tree-btn').forEach(button => {
@@ -557,25 +492,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const superfamilyName = this.getAttribute('data-superfamily');
                 const datasetName = this.getAttribute('data-dataset');
                 
-                console.log('Tree button clicked with data:', {
-                    datasetId: datasetId,
-                    superfamilyName: superfamilyName,
-                    datasetName: datasetName,
-                    button: this
-                });
-                
                 if (datasetId && datasetId !== 'null') {
-                    // Use dataset ID for more reliable lookup
                     const url = `/phylotree_render?dataset_id=${encodeURIComponent(datasetId)}`;
-                    console.log('Navigating to:', url);
                     window.location.href = url;
                 } else if (superfamilyName && datasetName && superfamilyName !== 'N/A' && datasetName !== 'N/A') {
-                    // Fallback to name-based lookup
                     const url = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
-                    console.log('Navigating to (fallback):', url);
                     window.location.href = url;
                 } else {
-                    console.error('Dataset information is incomplete:', {datasetId, superfamilyName, datasetName});
                     alert('Dataset information is incomplete. Please check the data.');
                 }
             });
@@ -584,17 +507,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listeners
     document.getElementById('apply-filters').addEventListener('click', applyFilters);
-    document.getElementById('apply-sort').addEventListener('click', applySort);
     
     // Clear filters
     document.getElementById('clear-filters').addEventListener('click', function() {
+        // Reset the form and filters
         document.getElementById('filter-form').reset();
-        document.getElementById('hmm-name-filter').value = ''; // Clear HMM field
-        hideDropdown(); // Hide autocomplete dropdown
+        document.getElementById('hmm-name-filter').value = '';
+        hideDropdown();
         currentFilters = {};
         currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
-        document.getElementById('sort-by').value = 'superfamily_name';
-        document.getElementById('sort-order').value = 'asc';
+        
+        // Reload data without filters
         loadData(1, true);
     });
     
@@ -604,7 +527,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loadData(1, true);
     });
     
-    // Sortable headers
+    // Sortable headers - UPDATED LOGIC
     document.querySelectorAll('.sortable-header').forEach(header => {
         header.addEventListener('click', function() {
             const sortField = this.getAttribute('data-sort');
@@ -615,9 +538,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 currentSort.sort_by = sortField;
                 currentSort.sort_order = 'asc';
             }
-            
-            document.getElementById('sort-by').value = currentSort.sort_by;
-            document.getElementById('sort-order').value = currentSort.sort_order;
             
             loadData(currentPage);
         });
@@ -632,39 +552,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Reset sort button
-    document.getElementById('reset-sort').addEventListener('click', function() {
-        currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
-        document.getElementById('sort-by').value = 'superfamily_name';
-        document.getElementById('sort-order').value = 'asc';
-        loadData(currentPage);
-    });
-    
     // HMM Name autocomplete functionality
     let hmmNames = [];
     let currentHighlight = -1;
-    const ITEMS_PER_LOAD = 20; // Load 20 items at a time
-    const INITIAL_LOAD = 10;   // Show 10 items initially
+    const ITEMS_PER_LOAD = 20;
+    const INITIAL_LOAD = 10;
 
     // Load HMM names from filter options
     fetch('/api/filter_options')
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Full filter options data:', data);
-            console.log('HMM names array:', data.hmm_names);
-            
             hmmNames = data.hmm_names || [];
             console.log('HMM names loaded:', hmmNames.length, 'items');
-            console.log('First 5 HMM names:', hmmNames.slice(0, 5));
-            
-            if (hmmNames.length === 0) {
-                console.error('NO HMM NAMES FOUND! Check your backend API');
-            } else {
-                console.log('HMM names successfully loaded, dropdown should work');
-            }
         })
         .catch(error => {
             console.error('Error loading HMM names:', error);
@@ -968,7 +867,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 
 <style>
     /* Use CSS variables from overall.css */
@@ -991,16 +889,25 @@ document.addEventListener('DOMContentLoaded', function() {
         color: white !important;
     }
     
+    /* UPDATE the Apply Filters button styling: */
     #apply-filters {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
+        font-weight: 600;
+        padding: 12px 40px;
+        font-size: 1.1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
+
     #apply-filters:hover {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
     .selected-superfamily {
