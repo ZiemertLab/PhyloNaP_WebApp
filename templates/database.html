@@ -35,14 +35,14 @@
                                    class="form-control" 
                                    placeholder="Search or select HMM name..."
                                    autocomplete="off"
-                                   list="hmm-names-datalist"
                                    value="{{ current_filters.hmm_name if current_filters and current_filters.hmm_name }}">
                             <button class="btn btn-outline-secondary" type="button" id="hmm-dropdown-toggle">
                                 <i class="fas fa-chevron-down"></i>
                             </button>
                         </div>
                         
-                        <!-- Datalist for autocomplete options -->
+                        <!-- REMOVE THIS ENTIRE DATALIST SECTION -->
+                        <!-- 
                         <datalist id="hmm-names-datalist">
                             {% if filter_options and filter_options.hmm_names %}
                                 {% for hmm in filter_options.hmm_names %}
@@ -50,8 +50,9 @@
                                 {% endfor %}
                             {% endif %}
                         </datalist>
+                        -->
                         
-                        <!-- Dropdown container for custom autocomplete -->
+                        <!-- Keep only the custom dropdown container -->
                         <div id="hmm-dropdown" class="autocomplete-dropdown" style="display: none;"></div>
                     </div>
                     
@@ -650,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let hmmNames = [];
     let currentHighlight = -1;
 
-    // Load HMM names from filter options with debugging
+    // Load HMM names from filter options
     fetch('/api/filter_options')
         .then(response => {
             console.log('Response status:', response.status);
@@ -669,18 +670,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 console.log('HMM names successfully loaded, dropdown should work');
             }
-            
-            // Populate the datalist as well
-            const datalist = document.getElementById('hmm-names-datalist');
-            if (datalist) {
-                datalist.innerHTML = '';
-                hmmNames.forEach(name => {
-                    const option = document.createElement('option');
-                    option.value = name;
-                    datalist.appendChild(option);
-                });
-                console.log('Datalist populated with', hmmNames.length, 'options');
-            }
         })
         .catch(error => {
             console.error('Error loading HMM names:', error);
@@ -693,20 +682,19 @@ document.addEventListener('DOMContentLoaded', function() {
         const value = this.value.toLowerCase();
         
         if (value === '') {
-            // Show all options when input is empty
+            // Show first 10 options when input is empty
             showDropdown(hmmNames.slice(0, 10), '');
         } else {
             // Filter options based on input
             const filtered = hmmNames.filter(name => 
                 name.toLowerCase().includes(value)
             );
-            showDropdown(filtered, value);
+            showDropdown(filtered.slice(0, 10), value);
         }
     });
 
     hmmInput.addEventListener('focus', function() {
         if (hmmNames.length > 0) {
-            // Show all options when focusing, regardless of current value
             const currentValue = this.value.toLowerCase();
             let filtered = hmmNames;
             
@@ -716,13 +704,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 );
             }
             
-            showDropdown(filtered, currentValue);
+            showDropdown(filtered.slice(0, 10), currentValue);
         }
     });
 
     hmmInput.addEventListener('click', function() {
         if (hmmNames.length > 0) {
-            // Show all options when clicking, regardless of current value
             const currentValue = this.value.toLowerCase();
             let filtered = hmmNames;
             
@@ -732,7 +719,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 );
             }
             
-            showDropdown(filtered, currentValue);
+            showDropdown(filtered.slice(0, 10), currentValue);
         }
     });
 
@@ -750,7 +737,9 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (e.key === 'Enter') {
             e.preventDefault();
             if (currentHighlight >= 0 && items[currentHighlight]) {
-                selectItem(items[currentHighlight].textContent);
+                // Get the actual text content, not innerHTML with <mark> tags
+                const selectedText = items[currentHighlight].getAttribute('data-value') || items[currentHighlight].textContent;
+                selectItem(selectedText);
             } else {
                 applyFilters();
             }
@@ -759,36 +748,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    hmmInput.addEventListener('blur', function() {
-        // Delay hiding to allow click on dropdown items
-        setTimeout(() => hideDropdown(), 150);
+    // IMPORTANT: Use mousedown instead of click to prevent blur event
+    hmmInput.addEventListener('blur', function(e) {
+        // Only hide if not clicking on dropdown
+        setTimeout(() => {
+            if (!hmmDropdown.contains(document.activeElement) && !hmmDropdown.matches(':hover')) {
+                hideDropdown();
+            }
+        }, 100);
     });
 
-    // Make sure the dropdown toggle exists before adding event listener
+    // Dropdown toggle button
     const hmmDropdownToggle = document.getElementById('hmm-dropdown-toggle');
     if (hmmDropdownToggle) {
-        hmmDropdownToggle.addEventListener('click', function() {
+        hmmDropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
             const input = document.getElementById('hmm-name-filter');
-            if (input) {
+            if (input && hmmNames.length > 0) {
                 input.focus();
-                if (hmmNames.length > 0) {
-                    const currentValue = input.value.toLowerCase();
-                    let filtered = hmmNames;
-                    
-                    if (currentValue) {
-                        filtered = hmmNames.filter(name => 
-                            name.toLowerCase().includes(currentValue)
-                        );
-                    }
-                    
-                    showDropdown(filtered, currentValue);
+                const currentValue = input.value.toLowerCase();
+                let filtered = hmmNames;
+                
+                if (currentValue) {
+                    filtered = hmmNames.filter(name => 
+                        name.toLowerCase().includes(currentValue)
+                    );
                 }
+                
+                showDropdown(filtered.slice(0, 10), currentValue);
             }
         });
     }
 
     function showDropdown(items, searchValue) {
-        // Always show dropdown if we have items, even with empty search
         if (items.length === 0) {
             hideDropdown();
             return;
@@ -797,22 +789,26 @@ document.addEventListener('DOMContentLoaded', function() {
         hmmDropdown.innerHTML = '';
         currentHighlight = -1;
         
-        // Show up to 10 items
-        const itemsToShow = items.slice(0, 10);
-        
-        itemsToShow.forEach(item => {
+        items.forEach(item => {
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
-            div.textContent = item;
+            div.setAttribute('data-value', item); // Store original value
             
             // Highlight matching text if there's a search value
             if (searchValue && searchValue.length > 0) {
                 const regex = new RegExp(`(${searchValue})`, 'gi');
                 const highlightedText = item.replace(regex, '<mark>$1</mark>');
                 div.innerHTML = highlightedText;
+            } else {
+                div.textContent = item;
             }
             
-            div.addEventListener('click', () => selectItem(item));
+            // IMPORTANT: Use mousedown instead of click to prevent blur event
+            div.addEventListener('mousedown', function(e) {
+                e.preventDefault(); // Prevent blur
+                selectItem(item);
+            });
+            
             hmmDropdown.appendChild(div);
         });
         
@@ -835,9 +831,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function selectItem(value) {
+        console.log('Selecting HMM item:', value);
         hmmInput.value = value;
         hideDropdown();
-        applyFilters();
+        // Don't auto-apply filters - let user click Apply Filters button
+        // applyFilters();
     }
 });
 </script>
