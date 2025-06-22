@@ -5,17 +5,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
 <div class="container-fluid">
-    <h1>PhyloNaP Database</h1>
     
     <!-- Advanced Filters Section -->
     <div class="filter-section">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">
-                <span class="collapse-toggle" data-bs-toggle="collapse" data-bs-target="#advanced-filters">
-                    <i class="fas fa-filter"></i> Advanced Filters
-                    <i class="fas fa-chevron-down" id="filter-chevron"></i>
-                </span>
-            </h4>
             <div>
                 <button id="clear-filters" class="btn btn-outline-secondary btn-sm">Clear All</button>
                 <button id="apply-filters" class="btn btn-bright btn-sm">Apply Filters</button>
@@ -650,6 +643,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // HMM Name autocomplete functionality
     let hmmNames = [];
     let currentHighlight = -1;
+    const ITEMS_PER_LOAD = 20; // Load 20 items at a time
+    const INITIAL_LOAD = 10;   // Show 10 items initially
 
     // Load HMM names from filter options
     fetch('/api/filter_options')
@@ -677,49 +672,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const hmmInput = document.getElementById('hmm-name-filter');
     const hmmDropdown = document.getElementById('hmm-dropdown');
+    let currentFilteredItems = [];
+    let currentLoadedCount = 0;
 
     hmmInput.addEventListener('input', function() {
         const value = this.value.toLowerCase();
         
         if (value === '') {
-            // Show first 10 options when input is empty
-            showDropdown(hmmNames.slice(0, 10), '');
+            // Show first items when input is empty
+            currentFilteredItems = hmmNames;
         } else {
             // Filter options based on input
-            const filtered = hmmNames.filter(name => 
+            currentFilteredItems = hmmNames.filter(name => 
                 name.toLowerCase().includes(value)
             );
-            showDropdown(filtered.slice(0, 10), value);
         }
+        
+        showDropdown(currentFilteredItems, value, true); // Reset view
     });
 
     hmmInput.addEventListener('focus', function() {
         if (hmmNames.length > 0) {
             const currentValue = this.value.toLowerCase();
-            let filtered = hmmNames;
             
             if (currentValue) {
-                filtered = hmmNames.filter(name => 
+                currentFilteredItems = hmmNames.filter(name => 
                     name.toLowerCase().includes(currentValue)
                 );
+            } else {
+                currentFilteredItems = hmmNames;
             }
             
-            showDropdown(filtered.slice(0, 10), currentValue);
+            showDropdown(currentFilteredItems, currentValue, true); // Reset view
         }
     });
 
     hmmInput.addEventListener('click', function() {
         if (hmmNames.length > 0) {
             const currentValue = this.value.toLowerCase();
-            let filtered = hmmNames;
             
             if (currentValue) {
-                filtered = hmmNames.filter(name => 
+                currentFilteredItems = hmmNames.filter(name => 
                     name.toLowerCase().includes(currentValue)
                 );
+            } else {
+                currentFilteredItems = hmmNames;
             }
             
-            showDropdown(filtered.slice(0, 10), currentValue);
+            showDropdown(currentFilteredItems, currentValue, true); // Reset view
         }
     });
 
@@ -730,6 +730,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             currentHighlight = Math.min(currentHighlight + 1, items.length - 1);
             updateHighlight(items);
+            
+            // Load more items if we're near the end
+            if (currentHighlight >= items.length - 3) {
+                loadMoreItems();
+            }
         } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             currentHighlight = Math.max(currentHighlight - 1, -1);
@@ -737,7 +742,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (e.key === 'Enter') {
             e.preventDefault();
             if (currentHighlight >= 0 && items[currentHighlight]) {
-                // Get the actual text content, not innerHTML with <mark> tags
                 const selectedText = items[currentHighlight].getAttribute('data-value') || items[currentHighlight].textContent;
                 selectItem(selectedText);
             } else {
@@ -748,9 +752,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // IMPORTANT: Use mousedown instead of click to prevent blur event
     hmmInput.addEventListener('blur', function(e) {
-        // Only hide if not clicking on dropdown
         setTimeout(() => {
             if (!hmmDropdown.contains(document.activeElement) && !hmmDropdown.matches(':hover')) {
                 hideDropdown();
@@ -767,32 +769,43 @@ document.addEventListener('DOMContentLoaded', function() {
             if (input && hmmNames.length > 0) {
                 input.focus();
                 const currentValue = input.value.toLowerCase();
-                let filtered = hmmNames;
                 
                 if (currentValue) {
-                    filtered = hmmNames.filter(name => 
+                    currentFilteredItems = hmmNames.filter(name => 
                         name.toLowerCase().includes(currentValue)
                     );
+                } else {
+                    currentFilteredItems = hmmNames;
                 }
                 
-                showDropdown(filtered.slice(0, 10), currentValue);
+                showDropdown(currentFilteredItems, currentValue, true); // Reset view
             }
         });
     }
 
-    function showDropdown(items, searchValue) {
+    function showDropdown(items, searchValue, resetView = false) {
         if (items.length === 0) {
             hideDropdown();
             return;
         }
         
-        hmmDropdown.innerHTML = '';
-        currentHighlight = -1;
+        if (resetView) {
+            currentLoadedCount = 0;
+            hmmDropdown.innerHTML = '';
+            currentHighlight = -1;
+        }
         
-        items.forEach(item => {
+        const itemsToShow = Math.min(
+            resetView ? INITIAL_LOAD : currentLoadedCount + ITEMS_PER_LOAD,
+            items.length
+        );
+        
+        // Add new items
+        for (let i = currentLoadedCount; i < itemsToShow; i++) {
+            const item = items[i];
             const div = document.createElement('div');
             div.className = 'autocomplete-item';
-            div.setAttribute('data-value', item); // Store original value
+            div.setAttribute('data-value', item);
             
             // Highlight matching text if there's a search value
             if (searchValue && searchValue.length > 0) {
@@ -803,27 +816,143 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.textContent = item;
             }
             
-            // IMPORTANT: Use mousedown instead of click to prevent blur event
             div.addEventListener('mousedown', function(e) {
-                e.preventDefault(); // Prevent blur
+                e.preventDefault();
                 selectItem(item);
             });
             
             hmmDropdown.appendChild(div);
-        });
+        }
+        
+        currentLoadedCount = itemsToShow;
+        
+        // Add "Load more" indicator if there are more items
+        if (currentLoadedCount < items.length) {
+            addLoadMoreIndicator();
+        } else {
+            removeLoadMoreIndicator();
+        }
+        
+        // Add scroll listener for infinite scroll
+        addScrollListener();
         
         hmmDropdown.style.display = 'block';
+    }
+
+    function loadMoreItems() {
+        if (currentLoadedCount >= currentFilteredItems.length) {
+            return; // No more items to load
+        }
+        
+        const searchValue = hmmInput.value.toLowerCase();
+        const itemsToAdd = Math.min(ITEMS_PER_LOAD, currentFilteredItems.length - currentLoadedCount);
+        
+        // Add more items
+        for (let i = currentLoadedCount; i < currentLoadedCount + itemsToAdd; i++) {
+            const item = currentFilteredItems[i];
+            const div = document.createElement('div');
+            div.className = 'autocomplete-item';
+            div.setAttribute('data-value', item);
+            
+            if (searchValue && searchValue.length > 0) {
+                const regex = new RegExp(`(${searchValue})`, 'gi');
+                const highlightedText = item.replace(regex, '<mark>$1</mark>');
+                div.innerHTML = highlightedText;
+            } else {
+                div.textContent = item;
+            }
+            
+            div.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                selectItem(item);
+            });
+            
+            // Insert before the load more indicator if it exists
+            const loadMoreIndicator = hmmDropdown.querySelector('.load-more-indicator');
+            if (loadMoreIndicator) {
+                hmmDropdown.insertBefore(div, loadMoreIndicator);
+            } else {
+                hmmDropdown.appendChild(div);
+            }
+        }
+        
+        currentLoadedCount += itemsToAdd;
+        
+        // Update load more indicator
+        if (currentLoadedCount >= currentFilteredItems.length) {
+            removeLoadMoreIndicator();
+        } else {
+            updateLoadMoreIndicator();
+        }
+    }
+
+    function addLoadMoreIndicator() {
+        if (hmmDropdown.querySelector('.load-more-indicator')) {
+            return; // Already exists
+        }
+        
+        const indicator = document.createElement('div');
+        indicator.className = 'load-more-indicator';
+        indicator.innerHTML = `
+            <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
+                Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
+                <br><small>Scroll down or use arrow keys to load more</small>
+            </div>
+        `;
+        hmmDropdown.appendChild(indicator);
+    }
+
+    function updateLoadMoreIndicator() {
+        const indicator = hmmDropdown.querySelector('.load-more-indicator');
+        if (indicator) {
+            indicator.innerHTML = `
+                <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
+                    Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
+                    <br><small>Scroll down or use arrow keys to load more</small>
+                </div>
+            `;
+        }
+    }
+
+    function removeLoadMoreIndicator() {
+        const indicator = hmmDropdown.querySelector('.load-more-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+    }
+
+    function addScrollListener() {
+        // Remove existing listener to avoid duplicates
+        hmmDropdown.removeEventListener('scroll', handleScroll);
+        hmmDropdown.addEventListener('scroll', handleScroll);
+    }
+
+    function handleScroll() {
+        const dropdown = hmmDropdown;
+        const scrollTop = dropdown.scrollTop;
+        const scrollHeight = dropdown.scrollHeight;
+        const clientHeight = dropdown.clientHeight;
+        
+        // Load more when near bottom (within 50px)
+        if (scrollTop + clientHeight >= scrollHeight - 50) {
+            loadMoreItems();
+        }
     }
 
     function hideDropdown() {
         hmmDropdown.style.display = 'none';
         currentHighlight = -1;
+        currentLoadedCount = 0;
+        // Remove scroll listener
+        hmmDropdown.removeEventListener('scroll', handleScroll);
     }
 
     function updateHighlight(items) {
         items.forEach((item, index) => {
             if (index === currentHighlight) {
                 item.classList.add('highlighted');
+                // Scroll highlighted item into view
+                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
             } else {
                 item.classList.remove('highlighted');
             }
@@ -834,8 +963,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Selecting HMM item:', value);
         hmmInput.value = value;
         hideDropdown();
-        // Don't auto-apply filters - let user click Apply Filters button
-        // applyFilters();
     }
 });
 </script>
@@ -1141,16 +1268,17 @@ document.addEventListener('DOMContentLoaded', function() {
         border: 1px solid #ccc;
         border-top: none;
         border-radius: 0 0 4px 4px;
-        max-height: 200px;
+        max-height: 300px; /* Increased height */
         overflow-y: auto;
         z-index: 1000;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     .autocomplete-item {
-        padding: 8px 12px;
+        padding: 10px 12px; /* Slightly more padding */
         cursor: pointer;
         border-bottom: 1px solid #eee;
+        transition: background-color 0.2s ease;
     }
 
     .autocomplete-item:hover,
@@ -1161,6 +1289,49 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .autocomplete-item:last-child {
         border-bottom: none;
+    }
+
+    /* Load more indicator styling */
+    .load-more-indicator {
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        font-size: 0.85em;
+    }
+
+    .load-more-indicator:hover {
+        background-color: #e9ecef;
+    }
+
+    /* Improved scrollbar for dropdown */
+    .autocomplete-dropdown::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .autocomplete-dropdown::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .autocomplete-dropdown::-webkit-scrollbar-thumb {
+        background: var(--bright-color);
+        border-radius: 3px;
+    }
+
+    .autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+        background: var(--background-dark);
+    }
+
+    /* Highlight styling */
+    .autocomplete-item mark {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+
+    .autocomplete-item:hover mark,
+    .autocomplete-item.highlighted mark {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
     }
 
     /* Position relative for the input container */
@@ -1189,19 +1360,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .input-group #hmm-name-filter:focus + .btn-outline-secondary {
         border-color: var(--bright-color) !important;
-    }
-
-    /* Add this to your existing styles section: */
-    .autocomplete-item mark {
-        background-color: yellow;
-        color: black;
-        padding: 0;
-    }
-
-    .autocomplete-item:hover mark,
-    .autocomplete-item.highlighted mark {
-        background-color: rgba(255, 255, 255, 0.3);
-        color: white;
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
