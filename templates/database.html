@@ -36,14 +36,13 @@
                         <label class="form-label">Source</label>
                         <div class="radio-group">
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="source" id="source-all" value="">
+                                <input class="form-check-input" type="radio" name="source" id="source-all" value="" checked>
                                 <label class="form-check-label" for="source-all">All</label>
                             </div>
                             {% if filter_options and filter_options.sources %}
                                 {% for source in filter_options.sources %}
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="source" id="source-{{ source }}" value="{{ source }}"
-                                           {% if source.lower() == 'curated' %}checked{% endif %}>
+                                    <input class="form-check-input" type="radio" name="source" id="source-{{ source }}" value="{{ source }}">
                                     <label class="form-check-label" for="source-{{ source }}">{{ source|title }}</label>
                                 </div>
                                 {% endfor %}
@@ -263,11 +262,10 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
     let currentPerPage = 10;
-    let currentFilters = { source: 'curated' };
-    let currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
+    let currentFilters = {}; // CHANGED: Remove default source filter
+    let currentSort = { sort_by: 'source', sort_order: 'desc' }; // CHANGED: Sort by source descending
     
-    // Set initial form values to match defaults - UPDATED for radio buttons
-    // No need to set source-filter dropdown value anymore
+    // Set initial form values - DON'T check any source radio button by default
     document.getElementById('per-page-filter').value = '10';
     
     // Load initial data
@@ -531,17 +529,17 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('hmm-name-filter').value = '';
         hideDropdown();
         
-        // Set defaults for radio buttons - UPDATED IDs
-        const curatedRadio = document.querySelector('input[name="source"][value="curated"]');
+        // Set defaults - DON'T check curated, check "All" for source
+        const allSourceRadio = document.getElementById('source-all');
         const allDataTypeRadio = document.getElementById('datatype-all');
         
-        if (curatedRadio) curatedRadio.checked = true;
+        if (allSourceRadio) allSourceRadio.checked = true; // CHANGED: Check "All" instead of "curated"
         if (allDataTypeRadio) allDataTypeRadio.checked = true;
         document.getElementById('per-page-filter').value = '10';
         
-        // Reset to default filters
-        currentFilters = { source: 'curated' };
-        currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
+        // Reset to default sort (by source descending, no filters)
+        currentFilters = {}; // CHANGED: No default source filter
+        currentSort = { sort_by: 'source', sort_order: 'desc' }; // Sort by source descending
         currentPerPage = 10;
         
         // Reload data with defaults
@@ -1280,6 +1278,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .input-group #hmm-name-filter:focus + .btn-outline-secondary {
         border-color: var(--bright-color) !important;
+    }
+
+    /* ADD this CSS to show Source column as sorted by default: */
+    .table-dark th[data-sort="source"] .sort-arrows {
+        opacity: 1;
+    }
+
+    .table-dark th[data-sort="source"] .sort-arrows .sort-down {
+        opacity: 1;
+        color: var(--bright-color);
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
