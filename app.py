@@ -206,134 +206,74 @@ def register_routes(app):
             per_page = min(request.args.get('per_page', 25, type=int), 100)
             offset = (page - 1) * per_page
             
-            # Get filter parameters
-            filters = {}
-            
-            superfamily = request.args.get('superfamily', '').strip()
-            if superfamily:
-                filters['superfamily'] = superfamily
-                
-            source = request.args.get('source', '').strip()
-            if source:
-                filters['source'] = source
-                
-            data_type = request.args.get('data_type', '').strip()
-            if data_type:
-                filters['data_type'] = data_type
-                
-            reviewed = request.args.get('reviewed', '').strip()
-            if reviewed:
-                filters['reviewed'] = reviewed
-                
-            dataset_name = request.args.get('dataset_name', '').strip()
-            if dataset_name:
-                filters['dataset_name'] = dataset_name
-                
+            # Get filter parameters - FIXED: Pass individual parameters, not a dict
             hmm_name = request.args.get('hmm_name', '').strip()
-            if hmm_name:
-                filters['hmm_name'] = hmm_name
+            source = request.args.get('source', '').strip()
+            data_type = request.args.get('data_type', '').strip()
+            reviewed = request.args.get('reviewed', '').strip()
+            dataset_name = request.args.get('dataset_name', '').strip()
+            superfamily = request.args.get('superfamily', '').strip()
             
             # Numeric filters
             min_proteins = request.args.get('min_proteins', 0, type=int)
-            if min_proteins > 0:
-                filters['min_proteins'] = min_proteins
-                
             max_proteins = request.args.get('max_proteins', type=int)
-            if max_proteins:
-                filters['max_proteins'] = max_proteins
-                
             min_characterized = request.args.get('min_characterized', 0, type=int)
-            if min_characterized > 0:
-                filters['min_characterized'] = min_characterized
-                
             max_characterized = request.args.get('max_characterized', type=int)
-            if max_characterized:
-                filters['max_characterized'] = max_characterized
-                
             min_np_val = request.args.get('min_np_val', 0, type=int)
-            if min_np_val > 0:
-                filters['min_np_val'] = min_np_val
-                
             max_np_val = request.args.get('max_np_val', type=int)
-            if max_np_val:
-                filters['max_np_val'] = max_np_val
-                
             min_np_pred = request.args.get('min_np_pred', 0, type=int)
-            if min_np_pred > 0:
-                filters['min_np_pred'] = min_np_pred
-                
             max_np_pred = request.args.get('max_np_pred', type=int)
-            if max_np_pred:
-                filters['max_np_pred'] = max_np_pred
             
-            # Get sorting parameters
+            # Get sort parameters
             sort_by = request.args.get('sort_by', 'superfamily_name')
             sort_order = request.args.get('sort_order', 'asc')
             
-            # Support multi-sort
-            if ',' in sort_by:
-                sort_by_list = [s.strip() for s in sort_by.split(',')]
-                sort_order_list = [s.strip() for s in sort_order.split(',')]
-                while len(sort_order_list) < len(sort_by_list):
-                    sort_order_list.append('asc')
-            else:
-                sort_by_list = [sort_by]
-                sort_order_list = [sort_order]
-            
-            # Get filtered datasets
+            # Call filter_datasets with individual parameters (matching the function signature)
             result = filter_datasets(
-                **filters,
-                sort_by=sort_by_list,
-                sort_order=sort_order_list,
+                superfamily=superfamily if superfamily else None,
+                source=source if source else None,
+                min_proteins=min_proteins,
+                max_proteins=max_proteins,
+                hmm_name=hmm_name if hmm_name else None,  # This maps to the hmm_name parameter
+                dataset_name=dataset_name if dataset_name else None,
+                reviewed=reviewed if reviewed else None,
+                data_type=data_type if data_type else None,
+                min_characterized=min_characterized,
+                max_characterized=max_characterized,
+                min_np_val=min_np_val,
+                max_np_val=max_np_val,
+                min_np_pred=min_np_pred,
+                max_np_pred=max_np_pred,
+                sort_by=sort_by,
+                sort_order=sort_order,
                 limit=per_page,
                 offset=offset
             )
             
-            datasets = result.get('datasets', [])
-            total_count = result.get('total_count', 0)
-            
             # Calculate pagination info
-            total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
-            has_prev = page > 1
-            has_next = page < total_pages
+            total_count = result['total_count']
+            total_pages = (total_count + per_page - 1) // per_page
             
-            response = {
-                'datasets': datasets,
-                'pagination': {
-                    'page': page,
-                    'per_page': per_page,
-                    'total_count': total_count,
-                    'total_pages': total_pages,
-                    'has_prev': has_prev,
-                    'has_next': has_next,
-                    'showing_from': offset + 1 if total_count > 0 else 0,
-                    'showing_to': min(offset + per_page, total_count)
-                },
-                'filters_applied': filters,
-                'sort': {
-                    'sort_by': sort_by,
-                    'sort_order': sort_order
-                }
+            pagination = {
+                'page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_prev': page > 1,
+                'has_next': page < total_pages,
+                'showing_from': offset + 1 if total_count > 0 else 0,
+                'showing_to': min(offset + per_page, total_count)
             }
             
-            return jsonify(response)
+            return jsonify({
+                'datasets': result['datasets'],
+                'pagination': pagination,
+                'filters_applied': result.get('filters_applied', {})
+            })
             
         except Exception as e:
             app.logger.error(f"Error in api_datasets: {e}", exc_info=True)
-            return jsonify({
-                'error': f"Database query failed: {str(e)}",
-                'datasets': [],
-                'pagination': {
-                    'page': 1,
-                    'per_page': 25,
-                    'total_count': 0,
-                    'total_pages': 0,
-                    'has_prev': False,
-                    'has_next': False,
-                    'showing_from': 0,
-                    'showing_to': 0
-                }
-            }), 500
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/api/filter_options')
     def api_filter_options():
@@ -341,6 +281,22 @@ def register_routes(app):
         try:
             from .db import get_filter_options
             options = get_filter_options()
+            
+            # Enhanced debug logging
+            app.logger.info(f"=== FILTER OPTIONS DEBUG ===")
+            app.logger.info(f"Total superfamilies: {len(options.get('superfamilies', []))}")
+            app.logger.info(f"Total sources: {len(options.get('sources', []))}")
+            app.logger.info(f"Total data types: {len(options.get('data_types', []))}")
+            app.logger.info(f"Total HMM names: {len(options.get('hmm_names', []))}")
+            
+            if options.get('hmm_names'):
+                app.logger.info(f"First 5 HMM names: {options['hmm_names'][:5]}")
+            else:
+                app.logger.error("HMM names is empty or None!")
+                app.logger.info(f"HMM names value: {options.get('hmm_names')}")
+            
+            app.logger.info(f"=== END DEBUG ===")
+            
             return jsonify(options)
         except Exception as e:
             app.logger.error(f"Error in api_filter_options: {e}", exc_info=True)
@@ -364,12 +320,11 @@ def register_routes(app):
             
             # Get current filter/sort parameters for pre-populating form
             current_filters = {
-                'superfamily': request.args.get('superfamily', ''),
+                'hmm_names': request.args.get('hmm_names', ''),  # CHANGED: removed 'superfamily'
                 'source': request.args.get('source', ''),
                 'data_type': request.args.get('data_type', ''),
                 'reviewed': request.args.get('reviewed', ''),
                 'dataset_name': request.args.get('dataset_name', ''),
-                'hmm_name': request.args.get('hmm_name', ''),
                 'min_proteins': request.args.get('min_proteins', 0, type=int),
                 'max_proteins': request.args.get('max_proteins', type=int),
                 'min_characterized': request.args.get('min_characterized', 0, type=int),
@@ -793,6 +748,43 @@ def register_routes(app):
         return send_from_directory('database', the_file)
 
     # Add more routes as needed...
+    @app.route('/debug_hmm')
+    def debug_hmm():
+        """Temporary debug endpoint to check HMM names in database"""
+        try:
+            from .db import query_db
+            
+            # Check what's actually in the superfamily_hmm_names column
+            raw_results = query_db("""
+                SELECT superfamily_hmm_names, COUNT(*) as count 
+                FROM datasets 
+                WHERE superfamily_hmm_names IS NOT NULL 
+                AND superfamily_hmm_names != '[]'
+                AND superfamily_hmm_names != ''
+                GROUP BY superfamily_hmm_names
+                LIMIT 10
+            """)
+            
+            # Also check if the column exists and what values it has
+            sample_data = query_db("""
+                SELECT superfamily_hmm_names 
+                FROM datasets 
+                WHERE superfamily_hmm_names IS NOT NULL 
+                LIMIT 5
+            """)
+            
+            return jsonify({
+                'status': 'success',
+                'grouped_hmm_data': [dict(row) for row in raw_results],
+                'sample_hmm_data': [dict(row) for row in sample_data],
+                'total_records': len(raw_results)
+            })
+            
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
 
 def register_socketio_events(socketio, app):
     """Register SocketIO events"""

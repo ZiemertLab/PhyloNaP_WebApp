@@ -1340,25 +1340,63 @@ def get_filter_options():
         """)
         data_type_names = [dt['data_type'] for dt in data_types]
         
-        # Get unique HMM names from JSON field
+        # Get unique HMM names from JSON field - ENHANCED WITH DEBUGGING
         hmm_datasets = query_db("""
             SELECT DISTINCT superfamily_hmm_names 
             FROM datasets 
             WHERE superfamily_hmm_names IS NOT NULL 
             AND superfamily_hmm_names != '[]'
             AND superfamily_hmm_names != ''
+            AND superfamily_hmm_names != 'null'
         """)
         
+        logger.info(f"Raw HMM query returned {len(hmm_datasets)} records")
+        
+        # Debug: Log first few raw values
+        for i, record in enumerate(hmm_datasets[:3]):
+            logger.info(f"Raw HMM record {i+1}: '{record['superfamily_hmm_names']}'")
+        
         hmm_names = set()
+        successful_parses = 0
+        failed_parses = 0
+        
         for hmm_dataset in hmm_datasets:
             try:
-                hmm_list = json.loads(hmm_dataset['superfamily_hmm_names'])
-                if isinstance(hmm_list, list):
-                    hmm_names.update(hmm_list)
-            except (json.JSONDecodeError, TypeError):
+                raw_value = hmm_dataset['superfamily_hmm_names']
+                
+                # Clean the value first
+                if isinstance(raw_value, str):
+                    cleaned_value = raw_value.strip()
+                    if cleaned_value and cleaned_value not in ['[]', 'null', '""']:
+                        hmm_list = json.loads(cleaned_value)
+                        if isinstance(hmm_list, list) and len(hmm_list) > 0:
+                            hmm_names.update(hmm_list)
+                            successful_parses += 1
+                        else:
+                            failed_parses += 1
+                    else:
+                        failed_parses += 1
+                elif isinstance(raw_value, list):
+                    # Already parsed by custom row factory
+                    if len(raw_value) > 0:
+                        hmm_names.update(raw_value)
+                        successful_parses += 1
+                    else:
+                        failed_parses += 1
+                else:
+                    failed_parses += 1
+                    
+            except (json.JSONDecodeError, TypeError) as e:
+                logger.warning(f"Failed to parse HMM value '{raw_value}': {e}")
+                failed_parses += 1
                 continue
         
         hmm_names = sorted(list(hmm_names))
+        
+        logger.info(f"HMM parsing results: {successful_parses} successful, {failed_parses} failed")
+        logger.info(f"Total unique HMM names extracted: {len(hmm_names)}")
+        if hmm_names:
+            logger.info(f"First 5 HMM names: {hmm_names[:5]}")
         
         # Get protein statistics
         protein_stats = query_db("""
