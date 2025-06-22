@@ -33,33 +33,40 @@
                     </div>
                     
                     <div class="col-md-4">
-                        <label for="source-filter" class="form-label">Source</label>
-                        <select id="source-filter" name="source" class="form-select">
-                            <option value="">All Sources</option>
+                        <label class="form-label">Source</label>
+                        <div class="radio-group">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="source" id="source-all" value="">
+                                <label class="form-check-label" for="source-all">All</label>
+                            </div>
                             {% if filter_options and filter_options.sources %}
                                 {% for source in filter_options.sources %}
-                                <option value="{{ source }}"
-                                    {% if current_filters and current_filters.source == source %}selected{% endif %}>
-                                    {{ source|title }}
-                                </option>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="source" id="source-{{ source }}" value="{{ source }}"
+                                           {% if source.lower() == 'curated' %}checked{% endif %}>
+                                    <label class="form-check-label" for="source-{{ source }}">{{ source|title }}</label>
+                                </div>
                                 {% endfor %}
                             {% endif %}
-                        </select>
+                        </div>
                     </div>
                     
                     <div class="col-md-4">
-                        <label for="data-type-filter" class="form-label">Data Type</label>
-                        <select id="data-type-filter" name="data_type" class="form-select">
-                            <option value="">All Types</option>
+                        <label class="form-label">Data Type</label>
+                        <div class="radio-group">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="data_type" id="datatype-all" value="" checked>
+                                <label class="form-check-label" for="datatype-all">All</label>
+                            </div>
                             {% if filter_options and filter_options.data_types %}
                                 {% for data_type in filter_options.data_types %}
-                                <option value="{{ data_type }}"
-                                    {% if current_filters and current_filters.data_type == data_type %}selected{% endif %}>
-                                    {{ data_type|title }}
-                                </option>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="data_type" id="datatype-{{ data_type }}" value="{{ data_type }}">
+                                    <label class="form-check-label" for="datatype-{{ data_type }}">{{ data_type|title }}</label>
+                                </div>
                                 {% endfor %}
                             {% endif %}
-                        </select>
+                        </div>
                     </div>
                 </div>
                 
@@ -75,6 +82,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Records per page</label>
                         <select id="per-page-filter" name="per_page" class="form-select">
+                            <option value="10" selected>10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
@@ -254,9 +262,13 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let currentPage = 1;
-    let currentPerPage = 25;
-    let currentFilters = {};
+    let currentPerPage = 10;
+    let currentFilters = { source: 'curated' };
     let currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
+    
+    // Set initial form values to match defaults - UPDATED for radio buttons
+    // No need to set source-filter dropdown value anymore
+    document.getElementById('per-page-filter').value = '10';
     
     // Load initial data
     loadData();
@@ -459,10 +471,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function applyFilters() {
+        // Get selected radio button values
+        const sourceRadio = document.querySelector('input[name="source"]:checked');
+        const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
+    
         currentFilters = {
             hmm_name: document.getElementById('hmm-name-filter').value,
-            source: document.getElementById('source-filter').value,
-            data_type: document.getElementById('data-type-filter').value,
+            source: sourceRadio ? sourceRadio.value : '',
+            data_type: dataTypeRadio ? dataTypeRadio.value : '',
             dataset_name: document.getElementById('dataset-name-filter').value,
             min_proteins: document.getElementById('min-proteins').value,
             max_proteins: document.getElementById('max-proteins').value,
@@ -510,14 +526,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Clear filters
     document.getElementById('clear-filters').addEventListener('click', function() {
-        // Reset the form and filters
+        // Reset the form
         document.getElementById('filter-form').reset();
         document.getElementById('hmm-name-filter').value = '';
         hideDropdown();
-        currentFilters = {};
-        currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
         
-        // Reload data without filters
+        // Set defaults for radio buttons - UPDATED IDs
+        const curatedRadio = document.querySelector('input[name="source"][value="curated"]');
+        const allDataTypeRadio = document.getElementById('datatype-all');
+        
+        if (curatedRadio) curatedRadio.checked = true;
+        if (allDataTypeRadio) allDataTypeRadio.checked = true;
+        document.getElementById('per-page-filter').value = '10';
+        
+        // Reset to default filters
+        currentFilters = { source: 'curated' };
+        currentSort = { sort_by: 'superfamily_name', sort_order: 'asc' };
+        currentPerPage = 10;
+        
+        // Reload data with defaults
         loadData(1, true);
     });
     
@@ -935,116 +962,102 @@ document.addEventListener('DOMContentLoaded', function() {
     
     .filter-section {
         background-color: var(--background-light);
-        padding: 20px;
+        padding: 15px; /* REDUCED from 20px */
         border-radius: 8px;
-        margin-bottom: 20px;
+        margin-bottom: 15px; /* REDUCED from 20px */
         border: 1px solid #dee2e6;
     }
     
     .filter-row {
-        margin-bottom: 15px;
+        margin-bottom: 10px; /* REDUCED from 15px */
     }
     
+    /* COMPACT form controls */
+    .form-control, .form-select {
+        padding: 6px 12px; /* REDUCED from default */
+        font-size: 0.9rem; /* Slightly smaller text */
+    }
+
+    .form-label {
+        margin-bottom: 4px; /* REDUCED from default 8px */
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
     .stats-info {
-        font-size: 0.9em;
+        font-size: 0.8em; /* REDUCED from 0.9em */
         color: #6c757d;
-        margin-top: 5px;
+        margin-top: 3px; /* REDUCED from 5px */
     }
-    
-    .pagination-info {
-        margin: 10px 0;
-        font-size: 0.9em;
-        color: #6c757d;
-    }
-    
-    .collapse-toggle {
-        cursor: pointer;
-        user-select: none;
-        color: var(--bright-color);
-    }
-    
+
     .range-input-group {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px; /* REDUCED from 5px */
     }
-    
+
     .range-input-group input {
-        width: 80px;
+        width: 75px; /* REDUCED from 80px */
+        padding: 4px 8px; /* Smaller padding */
     }
-    
-    .sort-controls {
-        background-color: var(--background-light);
-        padding: 15px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        border: 1px solid #dee2e6;
+
+    .range-input-group span {
+        font-size: 0.85em;
+        color: #6c757d;
     }
-    
-    .table-container {
-        overflow-x: auto;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+    /* Compact buttons */
+    #apply-filters {
+        padding: 10px 30px; /* REDUCED from 12px 40px */
+        font-size: 1rem; /* REDUCED from 1.1rem */
     }
-    
-    /* UPDATED: Fix table header visibility with dark background */
-    .table-dark {
-        --bs-table-bg: var(--background-dark) !important;
-        background-color: var(--background-dark) !important;
-    }
-    
-    .table-dark th {
-        background-color: var(--background-dark) !important;
-        border-color: var(--bright-color) !important;
-        color: var(--background-light) !important; /* Light text on dark background */
-        font-weight: bold;
-        border-bottom: 2px solid var(--bright-color) !important;
-    }
-    
-    .table-dark thead th {
-        background-color: var(--background-dark) !important;
-        color: var(--background-light) !important;
-        border-color: var(--bright-color) !important;
-    }
-    
-    .sortable-header {
-        cursor: pointer;
-        user-select: none;
-        background-color: var(--background-dark) !important;
-        color: var(--background-light) !important; /* Light text on dark background */
-        position: relative;
-    }
-    
-    .sortable-header:hover {
-        background-color: var(--bright-color) !important;
-        color: white !important;
-    }
-    
-    .sort-icon {
-        margin-left: 5px;
-        font-size: 0.8em;
-        color: var(--background-light) !important; /* Light colored icons */
-    }
-    
-    .sortable-header:hover .sort-icon {
-        color: white !important;
-    }
-    
-    .active-sort {
-        background-color: var(--bright-color) !important;
-        color: white !important;
-    }
-    
-    .active-sort .sort-icon {
-        color: white !important;
+
+    #clear-filters {
+        padding: 6px 16px; /* Smaller clear button */
+        font-size: 0.9rem;
     }
     
     .btn-group-sm .btn {
         font-size: 0.8rem;
         padding: 0.25rem 0.5rem;
     }
-    
+    /* ADD this CSS for radio button styling: */
+    .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 5px;
+    }
+
+    .form-check-inline {
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+
+    .form-check-input[type="radio"] {
+        border-color: var(--bright-color);
+    }
+
+    .form-check-input[type="radio"]:checked {
+        background-color: var(--bright-color);
+        border-color: var(--bright-color);
+    }
+
+    .form-check-input[type="radio"]:focus {
+        box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25);
+    }
+
+    .form-check-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--background-dark);
+        cursor: pointer;
+    }
+
+    .form-check-input[type="radio"]:checked + .form-check-label {
+        color: var(--bright-color);
+        font-weight: 600;
+    }
     /* UPDATED: Bright buttons for Tree and Apply Filters - maintain white text */
     .btn-bright {
         background-color: var(--bright-color) !important;
