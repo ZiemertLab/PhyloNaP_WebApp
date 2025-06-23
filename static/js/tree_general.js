@@ -329,53 +329,76 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
 
   function colorSameCluster(){
     let columnName = 'Cluster';
-    if (metadata.length > 0) {
-      let columnNames = Object.keys(metadata[0]);
-      console.log("Available columns:", columnNames);
-    } else {
-      console.log("No metadata available.");
+    
+    // SAFETY CHECK: Ensure metadata exists and has the required column
+    if (!metadata || metadata.length === 0) {
+        console.error('No metadata available for clustering');
+        return;
     }
+    
+    if (!metadata[0].hasOwnProperty(columnName)) {
+        console.error(`Column '${columnName}' not found in metadata`);
+        console.log('Available columns:', Object.keys(metadata[0]));
+        return;
+    }
+    
+    if (metadata.length > 0) {
+        let columnNames = Object.keys(metadata[0]);
+        console.log("Available columns:", columnNames);
+    } else {
+        console.log("No metadata available.");
+    }
+    
     console.log(columnName);
     let annot = metadata.reduce((obj, item) => {
-      obj[item["ID"]] = item[columnName];
-      return obj;
+        obj[item["ID"]] = item[columnName];
+        return obj;
     }, {});
+    
     console.log('annot:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
 
     // Group nodes by their text content
     let textGroups = {};
     nodes.each(function(d) {
-      let text = annot[d.data.name];
-      console.log('text:', text);
-      if (text !== null) {
-        if (!textGroups[text]) {
-          textGroups[text] = [];
+        let text = annot[d.data.name];
+        console.log('text:', text);
+        if (text !== null && text !== undefined && text !== '') {
+            if (!textGroups[text]) {
+                textGroups[text] = [];
+            }
+            textGroups[text].push(this);
         }
-        textGroups[text].push(this);
-      }
     });
+    
     // Filter out text groups with only one element
     textGroups = Object.keys(textGroups).filter(text => textGroups[text].length > 1).reduce((obj, key) => {
-      obj[key] = textGroups[key];
-      return obj;
+        obj[key] = textGroups[key];
+        return obj;
     }, {});
+    
     console.log('textGroups with more than one:', textGroups);
 
+    if (Object.keys(textGroups).length === 0) {
+        console.log('No clusters with multiple members found');
+        return;
+    }
 
     var clusters_colors = palette('tol-rainbow', Object.keys(textGroups).length);
     Object.keys(textGroups).forEach((text, index) => {
-      textGroups[text].forEach(node => {
-        let textElement = d3.select(node).select('text');
-        let bbox = textElement.node().getBBox();
-        d3.select(node)
-          .insert('rect', 'text')
-          .attr('x', bbox.x - 2) // Adjust as needed
-          .attr('y', bbox.y - 2) // Adjust as needed
-          .attr('width', bbox.width + 4) // Adjust as needed
-          .attr('height', bbox.height + 4) // Adjust as needed
-          .style('fill', clusters_colors[index]); // Use different color from clusters_colors
-      });
+        textGroups[text].forEach(node => {
+            let textElement = d3.select(node).select('text');
+            if (textElement.node()) {
+                let bbox = textElement.node().getBBox();
+                d3.select(node)
+                    .insert('rect', 'text')
+                    .attr('x', bbox.x - 2) // Adjust as needed
+                    .attr('y', bbox.y - 2) // Adjust as needed
+                    .attr('width', bbox.width + 4) // Adjust as needed
+                    .attr('height', bbox.height + 4) // Adjust as needed
+                    .style('fill', clusters_colors[index]); // Use different color from clusters_colors
+            }
+        });
     });
   }
   function removeColors() {
@@ -578,26 +601,48 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
   });
 
   ["cluster"].forEach(id => {
-    let button = document.getElementById(id);
-    if (button) {
-      button.dataset.active = 'false'; // Add data-active attribute
+    // CHECK if 'Cluster' column exists in metadata before creating button
+    let hasClusterColumn = false;
+    if (metadata && metadata.length > 0) {
+        hasClusterColumn = metadata[0].hasOwnProperty('Cluster');
+        console.log('Checking for Cluster column:', hasClusterColumn);
+        console.log('Available columns:', Object.keys(metadata[0]));
+    }
+    
+    // Only create button if Cluster column exists
+    if (hasClusterColumn) {
+        let button = document.getElementById(id);
+        if (button) {
+            button.dataset.active = 'false'; // Add data-active attribute
 
-      button.addEventListener('click', function() {
-        if (button.dataset.active === 'false') {
-          // If the button is not active, display the content and set the button to active
-          colorSameCluster(id);
-          button.dataset.active = 'true';
-          button.classList.add('active-button');
-          button.classList.remove('non-active-button');
+            button.addEventListener('click', function() {
+                if (button.dataset.active === 'false') {
+                    // If the button is not active, display the content and set the button to active
+                    colorSameCluster(id);
+                    button.dataset.active = 'true';
+                    button.classList.add('active-button');
+                    button.classList.remove('non-active-button');
+                } else {
+                    // If the button is active, hide the content and set the button to inactive
+                    removeColors(id);
+                    button.dataset.active = 'false';
+                    button.classList.remove('active-button');
+                    button.classList.add('non-active-button');
+                }
+            });
+            buttonContainer.appendChild(button);
+            console.log('Cluster button created and added');
         } else {
-          // If the button is active, hide the content and set the button to inactive
-          removeColors(id);
-          button.dataset.active = 'false';
-          button.classList.remove('active-button');
-          button.classList.add('non-active-button');
+            console.log('Cluster button element not found in DOM');
         }
-      });
-      buttonContainer.appendChild(button);
+    } else {
+        console.log('Cluster column not found in metadata - button not created');
+        // OPTIONAL: Hide the button if it exists in HTML but shouldn't be shown
+        let button = document.getElementById(id);
+        if (button) {
+            button.style.display = 'none';
+            console.log('Cluster button hidden because column does not exist');
+        }
     }
   });
 
