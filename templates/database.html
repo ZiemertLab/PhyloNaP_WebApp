@@ -3,7 +3,9 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
-
+<div style="font-size: 1rem; color: var(--background-dark); font-weight: 500;">
+    Apply filters to narrow down the datasets.
+</div>
 <div class="container-fluid">
     
     <!-- Advanced Filters Section -->
@@ -1754,6 +1756,114 @@ function debounce(func, wait) {
     .col-md-2 {
         min-height: 80px; /* Give some space for the dropdown to show */
         overflow: visible; /* Allow content to overflow */
+    }
+
+    /* ADD these styles to make text and fields bigger - DON'T replace anything */
+
+    /* Make filter labels bigger to match table text */
+    .form-label {
+        font-size: 1rem !important; /* OVERRIDE existing 0.9rem */
+        font-weight: 600 !important; /* OVERRIDE existing 500 */
+    }
+
+    /* Make HMM Name input bigger */
+    .col-md-2 .form-control {
+        padding: 6px 10px !important; /* OVERRIDE existing 5px 8px */
+        font-size: 0.9rem !important; /* OVERRIDE existing 0.8rem */
+    }
+
+    .col-md-2 .form-label {
+        font-size: 1rem !important; /* OVERRIDE existing 0.8rem */
+    }
+
+    /* Make radio button labels bigger */
+    .radio-group-vertical .form-check-label {
+        font-size: 0.9rem !important; /* OVERRIDE existing 0.75rem */
+    }
+
+    /* Make range filter labels bigger */
+    .form-label-compact {
+        font-size: 0.9rem !important; /* OVERRIDE existing 0.75rem */
+    }
+
+    /* Make range stats bigger */
+    .stats-info-compact {
+        font-size: 0.8rem !important; /* OVERRIDE existing 0.65rem */
+    }
+
+    /* Make range input fields bigger */
+    .form-control-compact {
+        width: 50px !important; /* OVERRIDE existing 40px */
+        padding: 4px 6px !important; /* OVERRIDE existing 2px 4px */
+        font-size: 0.85rem !important; /* OVERRIDE existing 0.7rem */
+    }
+
+    /* Make button text bigger */
+    .btn-sm-compact {
+        font-size: 0.85rem !important; /* OVERRIDE existing 0.7rem */
+    }
+
+    .btn-compact {
+        font-size: 0.95rem !important; /* OVERRIDE existing 0.8rem */
+    }
+
+    /* Add a bit more padding to filter section for bigger content */
+    .filter-section {
+        padding: 12px 18px !important; /* OVERRIDE existing 10px 15px */
+    }
+    /* ADD these styles to align all filter labels to the same size and position */
+
+    /* Make ALL filter labels the same size and alignment */
+    .form-label,
+    .form-label-compact {
+        font-size: 1rem !important; /* Same size as Source */
+        font-weight: 600 !important;
+        margin-bottom: 5px !important; /* Same spacing as Source */
+        color: var(--background-dark) !important;
+        display: block !important;
+        height: 24px !important; /* Fixed height for alignment */
+        line-height: 24px !important; /* Center text vertically */
+    }
+
+    /* Ensure all filter columns have the same top alignment */
+    .filter-row-compact > div {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+
+    /* Ensure the range columns inner structure maintains alignment */
+    .col-md-6 .row .col-3 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important; /* Center the range inputs */
+    }
+
+    /* Keep the range labels centered but same size */
+    .col-md-6 .form-label-compact {
+        text-align: center !important;
+        width: 100% !important;
+    }
+
+    /* Make sure radio group containers have consistent spacing */
+    .radio-group-vertical {
+        margin-top: 5px !important; /* Same as other form elements */
+    }
+
+    /* Ensure HMM input container has consistent spacing */
+    .col-md-2 .input-group {
+        margin-top: 5px !important; /* Same spacing as radio groups */
+    }
+
+    /* Ensure stats info has consistent spacing */
+    .stats-info-compact {
+        margin-bottom: 5px !important; /* Consistent spacing */
+        height: auto !important;
+    }
+
+    /* Ensure button column alignment */
+    .col-md-2.d-flex.flex-column.justify-content-end {
+        padding-top: 29px !important; /* Offset for label height + margin */
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
