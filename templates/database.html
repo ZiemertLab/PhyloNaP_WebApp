@@ -938,6 +938,30 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('Filtered ranges response:', data);
                 updateRangeDisplays(data);
+                
+                // IMPORTANT: Update HMM names dropdown with filtered list
+                if (data.hmm_names && Array.isArray(data.hmm_names)) {
+                    // Only update if we're not currently filtering by HMM name
+                    // (to avoid clearing the dropdown when user is typing in HMM field)
+                    if (!hmmName || hmmName.trim() === '') {
+                        hmmNames = data.hmm_names;
+                        console.log('Updated HMM names list:', hmmNames.length, 'items');
+                        
+                        // If dropdown is currently open, refresh it
+                        if (hmmDropdown.style.display === 'block') {
+                            const currentValue = hmmInput.value.toLowerCase();
+                            let filtered = hmmNames;
+                            
+                            if (currentValue) {
+                                filtered = hmmNames.filter(name => 
+                                    name.toLowerCase().includes(currentValue)
+                                );
+                            }
+                            
+                            showDropdown(filtered, currentValue, true);
+                        }
+                    }
+                }
             })
             .catch(error => {
                 console.error('Error fetching filtered ranges:', error);
@@ -945,15 +969,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateRangeDisplays(data) {
+        console.log('Updating range displays with data:', data);
+        
         // Update protein stats
         if (data.protein_stats) {
             const proteinStatsDiv = document.querySelector('.col-md-3:nth-child(1) .stats-info');
             if (proteinStatsDiv) {
-                proteinStatsDiv.textContent = `Range: ${data.protein_stats.min} - ${Math.round(data.protein_stats.max)}`;
-                proteinStatsDiv.style.color = '#28a745'; // Green to show it updated
+                const newText = `Range: ${data.protein_stats.min} - ${Math.round(data.protein_stats.max)}`;
+                proteinStatsDiv.textContent = newText;
+                proteinStatsDiv.style.color = '#28a745';
+                proteinStatsDiv.style.fontWeight = 'bold';
                 setTimeout(() => {
                     proteinStatsDiv.style.color = '#6c757d';
+                    proteinStatsDiv.style.fontWeight = 'normal';
                 }, 2000);
+            }
+            
+            // Update input placeholders and limits
+            const minProteins = document.getElementById('min-proteins');
+            const maxProteins = document.getElementById('max-proteins');
+            if (minProteins && maxProteins) {
+                minProteins.setAttribute('min', data.protein_stats.min);
+                minProteins.setAttribute('max', data.protein_stats.max);
+                minProteins.placeholder = `Min (${data.protein_stats.min})`;
+                
+                maxProteins.setAttribute('min', data.protein_stats.min);
+                maxProteins.setAttribute('max', data.protein_stats.max);
+                maxProteins.placeholder = `Max (${Math.round(data.protein_stats.max)})`;
             }
         }
         
@@ -961,11 +1003,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.characterized_stats) {
             const characterizedStatsDiv = document.querySelector('.col-md-3:nth-child(2) .stats-info');
             if (characterizedStatsDiv) {
-                characterizedStatsDiv.textContent = `Range: ${data.characterized_stats.min} - ${Math.round(data.characterized_stats.max)}`;
+                const newText = `Range: ${data.characterized_stats.min} - ${Math.round(data.characterized_stats.max)}`;
+                characterizedStatsDiv.textContent = newText;
                 characterizedStatsDiv.style.color = '#28a745';
+                characterizedStatsDiv.style.fontWeight = 'bold';
                 setTimeout(() => {
                     characterizedStatsDiv.style.color = '#6c757d';
+                    characterizedStatsDiv.style.fontWeight = 'normal';
                 }, 2000);
+            }
+            
+            // Update input placeholders and limits
+            const minCharacterized = document.getElementById('min-characterized');
+            const maxCharacterized = document.getElementById('max-characterized');
+            if (minCharacterized && maxCharacterized) {
+                minCharacterized.setAttribute('min', data.characterized_stats.min);
+                minCharacterized.setAttribute('max', data.characterized_stats.max);
+                minCharacterized.placeholder = `Min (${data.characterized_stats.min})`;
+                
+                maxCharacterized.setAttribute('min', data.characterized_stats.min);
+                maxCharacterized.setAttribute('max', data.characterized_stats.max);
+                maxCharacterized.placeholder = `Max (${Math.round(data.characterized_stats.max)})`;
             }
         }
         
@@ -973,11 +1031,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.np_val_stats) {
             const npValStatsDiv = document.querySelector('.col-md-3:nth-child(3) .stats-info');
             if (npValStatsDiv) {
-                npValStatsDiv.textContent = `Range: ${data.np_val_stats.min} - ${Math.round(data.np_val_stats.max)}`;
+                const newText = `Range: ${data.np_val_stats.min} - ${Math.round(data.np_val_stats.max)}`;
+                npValStatsDiv.textContent = newText;
                 npValStatsDiv.style.color = '#28a745';
+                npValStatsDiv.style.fontWeight = 'bold';
                 setTimeout(() => {
                     npValStatsDiv.style.color = '#6c757d';
+                    npValStatsDiv.style.fontWeight = 'normal';
                 }, 2000);
+            }
+            
+            // Update input placeholders and limits
+            const minNpVal = document.getElementById('min-np-val');
+            const maxNpVal = document.getElementById('max-np-val');
+            if (minNpVal && maxNpVal) {
+                minNpVal.setAttribute('min', data.np_val_stats.min);
+                minNpVal.setAttribute('max', data.np_val_stats.max);
+                minNpVal.placeholder = `Min (${data.np_val_stats.min})`;
+                
+                maxNpVal.setAttribute('min', data.np_val_stats.min);
+                maxNpVal.setAttribute('max', data.np_val_stats.max);
+                maxNpVal.placeholder = `Max (${Math.round(data.np_val_stats.max)})`;
             }
         }
         
@@ -985,11 +1059,27 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.np_pred_stats) {
             const npPredStatsDiv = document.querySelector('.col-md-3:nth-child(4) .stats-info');
             if (npPredStatsDiv) {
-                npPredStatsDiv.textContent = `Range: ${data.np_pred_stats.min} - ${Math.round(data.np_pred_stats.max)}`;
+                const newText = `Range: ${data.np_pred_stats.min} - ${Math.round(data.np_pred_stats.max)}`;
+                npPredStatsDiv.textContent = newText;
                 npPredStatsDiv.style.color = '#28a745';
+                npPredStatsDiv.style.fontWeight = 'bold';
                 setTimeout(() => {
                     npPredStatsDiv.style.color = '#6c757d';
+                    npPredStatsDiv.style.fontWeight = 'normal';
                 }, 2000);
+            }
+            
+            // Update input placeholders and limits
+            const minNpPred = document.getElementById('min-np-pred');
+            const maxNpPred = document.getElementById('max-np-pred');
+            if (minNpPred && maxNpPred) {
+                minNpPred.setAttribute('min', data.np_pred_stats.min);
+                minNpPred.setAttribute('max', data.np_pred_stats.max);
+                minNpPred.placeholder = `Min (${data.np_pred_stats.min})`;
+                
+                maxNpPred.setAttribute('min', data.np_pred_stats.min);
+                maxNpPred.setAttribute('max', data.np_pred_stats.max);
+                maxNpPred.placeholder = `Max (${Math.round(data.np_pred_stats.max)})`;
             }
         }
     }
@@ -1016,7 +1106,57 @@ document.addEventListener('DOMContentLoaded', function() {
             showDropdown(filtered, value, true);
         }
     });
+    
+    // Update ranges when Source radio buttons change
+    document.querySelectorAll('input[name="source"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const hmmValue = document.getElementById('hmm-name-filter').value;
+            updateRangesForHMM(hmmValue);
+        });
+    });
+
+    // Update ranges when Data Type radio buttons change
+    document.querySelectorAll('input[name="data_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const hmmValue = document.getElementById('hmm-name-filter').value;
+            updateRangesForHMM(hmmValue);
+        });
+    });
+
+    // Update ranges when Dataset Name changes
+    document.getElementById('dataset-name-filter').addEventListener('input', debounce(function() {
+        const hmmValue = document.getElementById('hmm-name-filter').value;
+        updateRangesForHMM(hmmValue);
+    }, 500)); // Debounce to avoid too many API calls while typing
+
+    // Update ranges when numeric fields change
+    ['min-proteins', 'max-proteins', 'min-characterized', 'max-characterized',
+     'min-np-val', 'max-np-val', 'min-np-pred', 'max-np-pred'].forEach(fieldId => {
+        document.getElementById(fieldId).addEventListener('change', function() {
+            const hmmValue = document.getElementById('hmm-name-filter').value;
+            updateRangesForHMM(hmmValue);
+        });
+        
+        // Also trigger on blur (when user leaves the field)
+        document.getElementById(fieldId).addEventListener('blur', function() {
+            const hmmValue = document.getElementById('hmm-name-filter').value;
+            updateRangesForHMM(hmmValue);
+        });
+    });
 });
+
+// ADD this debounce function at the top of your script section (around line 300):
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
