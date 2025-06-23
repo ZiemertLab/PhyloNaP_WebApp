@@ -99,12 +99,10 @@
                         {% endif %}
                         <div class="range-input-group">
                             <input type="number" id="min-proteins" name="min_proteins" class="form-control" 
-                                   placeholder="Min" min="0"
-                                   value="{{ current_filters.min_proteins if current_filters and current_filters.min_proteins > 0 }}">
+                                   placeholder="Min" min="0">
                             <span>to</span>
                             <input type="number" id="max-proteins" name="max_proteins" class="form-control" 
-                                   placeholder="Max" min="0"
-                                   value="{{ current_filters.max_proteins if current_filters and current_filters.max_proteins }}">
+                                   placeholder="Max" min="0">
                         </div>
                     </div>
                     
@@ -115,12 +113,10 @@
                         {% endif %}
                         <div class="range-input-group">
                             <input type="number" id="min-characterized" name="min_characterized" class="form-control" 
-                                   placeholder="Min" min="0"
-                                   value="{{ current_filters.min_characterized if current_filters and current_filters.min_characterized > 0 }}">
+                                   placeholder="Min" min="0">
                             <span>to</span>
                             <input type="number" id="max-characterized" name="max_characterized" class="form-control" 
-                                   placeholder="Max" min="0"
-                                   value="{{ current_filters.max_characterized if current_filters and current_filters.max_characterized }}">
+                                   placeholder="Max" min="0">
                         </div>
                     </div>
                     
@@ -131,12 +127,10 @@
                         {% endif %}
                         <div class="range-input-group">
                             <input type="number" id="min-np-val" name="min_np_val" class="form-control" 
-                                   placeholder="Min" min="0"
-                                   value="{{ current_filters.min_np_val if current_filters and current_filters.min_np_val > 0 }}">
+                                   placeholder="Min" min="0">
                             <span>to</span>
                             <input type="number" id="max-np-val" name="max_np_val" class="form-control" 
-                                   placeholder="Max" min="0"
-                                   value="{{ current_filters.max_np_val if current_filters and current_filters.max_np_val }}">
+                                   placeholder="Max" min="0">
                         </div>
                     </div>
                     
@@ -147,12 +141,10 @@
                         {% endif %}
                         <div class="range-input-group">
                             <input type="number" id="min-np-pred" name="min_np_pred" class="form-control" 
-                                   placeholder="Min" min="0"
-                                   value="{{ current_filters.min_np_pred if current_filters and current_filters.min_np_pred > 0 }}">
+                                   placeholder="Min" min="0">
                             <span>to</span>
                             <input type="number" id="max-np-pred" name="max_np_pred" class="form-control" 
-                                   placeholder="Max" min="0"
-                                   value="{{ current_filters.max_np_pred if current_filters and current_filters.max_np_pred }}">
+                                   placeholder="Max" min="0">
                         </div>
                     </div>
                 </div>
@@ -533,18 +525,31 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('hmm-name-filter').value = '';
         hideDropdown();
         
-        // Set defaults - DON'T check curated, check "All" for source
+        // Clear all numeric inputs explicitly
+        document.getElementById('min-proteins').value = '';
+        document.getElementById('max-proteins').value = '';
+        document.getElementById('min-characterized').value = '';
+        document.getElementById('max-characterized').value = '';
+        document.getElementById('min-np-val').value = '';
+        document.getElementById('max-np-val').value = '';
+        document.getElementById('min-np-pred').value = '';
+        document.getElementById('max-np-pred').value = '';
+        
+        // Set defaults
         const allSourceRadio = document.getElementById('source-all');
         const allDataTypeRadio = document.getElementById('datatype-all');
         
-        if (allSourceRadio) allSourceRadio.checked = true; // CHANGED: Check "All" instead of "curated"
+        if (allSourceRadio) allSourceRadio.checked = true;
         if (allDataTypeRadio) allDataTypeRadio.checked = true;
         document.getElementById('per-page-filter').value = '10';
         
-        // Reset to default sort (by source descending, no filters)
-        currentFilters = {}; // CHANGED: No default source filter
-        currentSort = { sort_by: 'source', sort_order: 'desc' }; // Sort by source descending
+        // Reset to default sort
+        currentFilters = {};
+        currentSort = { sort_by: 'source', sort_order: 'desc' };
         currentPerPage = 10;
+        
+        // Reset ranges to global ranges
+        updateRangesForHMM('');
         
         // Reload data with defaults
         loadData(1, true);
@@ -864,11 +869,114 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function selectItem(value) {
         console.log('Selecting HMM item:', value);
-        hmmInput.value = value;
+        const trimmedValue = value.trim();
+        hmmInput.value = trimmedValue;
         hideDropdown();
-        // Don't auto-apply filters - let user click Apply Filters button
-        // applyFilters();
+        
+        // Update ranges based on selected HMM
+        updateRangesForHMM(trimmedValue);
     }
+
+    // ADD this function after the selectItem function:
+    function updateRangesForHMM(hmmName) {
+        if (!hmmName || hmmName.trim() === '') {
+            // Reset to global ranges if no HMM selected
+            fetch('/api/filter_options')
+                .then(response => response.json())
+                .then(data => {
+                    updateRangeDisplays(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching global ranges:', error);
+                });
+            return;
+        }
+        
+        // Fetch ranges for specific HMM
+        const params = new URLSearchParams({ hmm_name: hmmName });
+        fetch(`/api/filter_options?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Updated ranges for HMM:', hmmName, data);
+                updateRangeDisplays(data);
+            })
+            .catch(error => {
+                console.error('Error fetching HMM-specific ranges:', error);
+            });
+    }
+
+    function updateRangeDisplays(data) {
+        // Update protein stats
+        if (data.protein_stats) {
+            const proteinStatsDiv = document.querySelector('.col-md-3:nth-child(1) .stats-info');
+            if (proteinStatsDiv) {
+                proteinStatsDiv.textContent = `Range: ${data.protein_stats.min} - ${Math.round(data.protein_stats.max)}`;
+                proteinStatsDiv.style.color = '#28a745'; // Green to show it updated
+                setTimeout(() => {
+                    proteinStatsDiv.style.color = '#6c757d';
+                }, 2000);
+            }
+        }
+        
+        // Update characterized stats
+        if (data.characterized_stats) {
+            const characterizedStatsDiv = document.querySelector('.col-md-3:nth-child(2) .stats-info');
+            if (characterizedStatsDiv) {
+                characterizedStatsDiv.textContent = `Range: ${data.characterized_stats.min} - ${Math.round(data.characterized_stats.max)}`;
+                characterizedStatsDiv.style.color = '#28a745';
+                setTimeout(() => {
+                    characterizedStatsDiv.style.color = '#6c757d';
+                }, 2000);
+            }
+        }
+        
+        // Update NP validation stats
+        if (data.np_val_stats) {
+            const npValStatsDiv = document.querySelector('.col-md-3:nth-child(3) .stats-info');
+            if (npValStatsDiv) {
+                npValStatsDiv.textContent = `Range: ${data.np_val_stats.min} - ${Math.round(data.np_val_stats.max)}`;
+                npValStatsDiv.style.color = '#28a745';
+                setTimeout(() => {
+                    npValStatsDiv.style.color = '#6c757d';
+                }, 2000);
+            }
+        }
+        
+        // Update NP prediction stats
+        if (data.np_pred_stats) {
+            const npPredStatsDiv = document.querySelector('.col-md-3:nth-child(4) .stats-info');
+            if (npPredStatsDiv) {
+                npPredStatsDiv.textContent = `Range: ${data.np_pred_stats.min} - ${Math.round(data.np_pred_stats.max)}`;
+                npPredStatsDiv.style.color = '#28a745';
+                setTimeout(() => {
+                    npPredStatsDiv.style.color = '#6c757d';
+                }, 2000);
+            }
+        }
+    }
+    
+    // ADD this event listener after the existing HMM input event listeners:
+    hmmInput.addEventListener('change', function() {
+        const value = this.value.trim();
+        updateRangesForHMM(value);
+    });
+
+    // Also update ranges when input is cleared
+    hmmInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        
+        // Update dropdown as before
+        if (value === '') {
+            showDropdown(hmmNames, '', true);
+            // Also reset ranges when input is cleared
+            updateRangesForHMM('');
+        } else {
+            const filtered = hmmNames.filter(name => 
+                name.toLowerCase().includes(value)
+            );
+            showDropdown(filtered, value, true);
+        }
+    });
 });
 </script>
 
