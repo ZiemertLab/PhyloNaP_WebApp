@@ -472,9 +472,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get selected radio button values
         const sourceRadio = document.querySelector('input[name="source"]:checked');
         const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
-    
+
         currentFilters = {
-            hmm_name: document.getElementById('hmm-name-filter').value,
+            hmm_name: document.getElementById('hmm-name-filter').value, // CORRECT: Keep as 'hmm_name'
             source: sourceRadio ? sourceRadio.value : '',
             data_type: dataTypeRadio ? dataTypeRadio.value : '',
             dataset_name: document.getElementById('dataset-name-filter').value,
@@ -520,7 +520,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Event listeners
-    document.getElementById('apply-filters').addEventListener('click', applyFilters);
+    document.getElementById('apply-filters').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent form submission
+        console.log('Apply Filters button clicked'); // Debug log
+        applyFilters();
+    });
     
     // Clear filters
     document.getElementById('clear-filters').addEventListener('click', function() {
@@ -580,70 +584,82 @@ document.addEventListener('DOMContentLoaded', function() {
     // HMM Name autocomplete functionality
     let hmmNames = [];
     let currentHighlight = -1;
+    let currentFilteredItems = [];
+    let currentLoadedCount = 0;
+
+    // Constants for lazy loading
     const ITEMS_PER_LOAD = 20;
     const INITIAL_LOAD = 10;
 
     // Load HMM names from filter options
     fetch('/api/filter_options')
-        .then(response => response.json())
-        .then(data => {
-            hmmNames = data.hmm_names || [];
-            console.log('HMM names loaded:', hmmNames.length, 'items');
-        })
-        .catch(error => {
-            console.error('Error loading HMM names:', error);
-        });
+        .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Full filter options data:', data);
+        console.log('HMM names array:', data.hmm_names);
+        
+        hmmNames = data.hmm_names || [];
+        console.log('HMM names loaded:', hmmNames.length, 'items');
+        console.log('First 5 HMM names:', hmmNames.slice(0, 5));
+        
+        if (hmmNames.length === 0) {
+            console.error('NO HMM NAMES FOUND! Check your backend API');
+        } else {
+            console.log('HMM names successfully loaded, dropdown should work');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading HMM names:', error);
+    });
 
     const hmmInput = document.getElementById('hmm-name-filter');
     const hmmDropdown = document.getElementById('hmm-dropdown');
-    let currentFilteredItems = [];
-    let currentLoadedCount = 0;
 
     hmmInput.addEventListener('input', function() {
         const value = this.value.toLowerCase();
         
         if (value === '') {
-            // Show first items when input is empty
-            currentFilteredItems = hmmNames;
+            // Show all options when input is empty
+            showDropdown(hmmNames, '', true);
         } else {
             // Filter options based on input
-            currentFilteredItems = hmmNames.filter(name => 
+            const filtered = hmmNames.filter(name => 
                 name.toLowerCase().includes(value)
             );
+            showDropdown(filtered, value, true);
         }
-        
-        showDropdown(currentFilteredItems, value, true); // Reset view
     });
 
     hmmInput.addEventListener('focus', function() {
         if (hmmNames.length > 0) {
             const currentValue = this.value.toLowerCase();
+            let filtered = hmmNames;
             
             if (currentValue) {
-                currentFilteredItems = hmmNames.filter(name => 
+                filtered = hmmNames.filter(name => 
                     name.toLowerCase().includes(currentValue)
                 );
-            } else {
-                currentFilteredItems = hmmNames;
             }
             
-            showDropdown(currentFilteredItems, currentValue, true); // Reset view
+            showDropdown(filtered, currentValue, true);
         }
     });
 
     hmmInput.addEventListener('click', function() {
         if (hmmNames.length > 0) {
             const currentValue = this.value.toLowerCase();
+            let filtered = hmmNames;
             
             if (currentValue) {
-                currentFilteredItems = hmmNames.filter(name => 
+                filtered = hmmNames.filter(name => 
                     name.toLowerCase().includes(currentValue)
                 );
-            } else {
-                currentFilteredItems = hmmNames;
             }
             
-            showDropdown(currentFilteredItems, currentValue, true); // Reset view
+            showDropdown(filtered, currentValue, true);
         }
     });
 
@@ -693,16 +709,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (input && hmmNames.length > 0) {
                 input.focus();
                 const currentValue = input.value.toLowerCase();
+                let filtered = hmmNames;
                 
                 if (currentValue) {
-                    currentFilteredItems = hmmNames.filter(name => 
+                    filtered = hmmNames.filter(name => 
                         name.toLowerCase().includes(currentValue)
                     );
-                } else {
-                    currentFilteredItems = hmmNames;
                 }
                 
-                showDropdown(currentFilteredItems, currentValue, true); // Reset view
+                showDropdown(filtered, currentValue, true); // Reset view
             }
         });
     }
@@ -713,51 +728,17 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (resetView) {
-            currentLoadedCount = 0;
-            hmmDropdown.innerHTML = '';
-            currentHighlight = -1;
-        }
+        // Store all filtered items for lazy loading
+        currentFilteredItems = items;
+        currentLoadedCount = 0;
         
-        const itemsToShow = Math.min(
-            resetView ? INITIAL_LOAD : currentLoadedCount + ITEMS_PER_LOAD,
-            items.length
-        );
+        hmmDropdown.innerHTML = '';
+        currentHighlight = -1;
         
-        // Add new items
-        for (let i = currentLoadedCount; i < itemsToShow; i++) {
-            const item = items[i];
-            const div = document.createElement('div');
-            div.className = 'autocomplete-item';
-            div.setAttribute('data-value', item);
-            
-            // Highlight matching text if there's a search value
-            if (searchValue && searchValue.length > 0) {
-                const regex = new RegExp(`(${searchValue})`, 'gi');
-                const highlightedText = item.replace(regex, '<mark>$1</mark>');
-                div.innerHTML = highlightedText;
-            } else {
-                div.textContent = item;
-            }
-            
-            div.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                selectItem(item);
-            });
-            
-            hmmDropdown.appendChild(div);
-        }
+        // Load initial items
+        loadMoreItems();
         
-        currentLoadedCount = itemsToShow;
-        
-        // Add "Load more" indicator if there are more items
-        if (currentLoadedCount < items.length) {
-            addLoadMoreIndicator();
-        } else {
-            removeLoadMoreIndicator();
-        }
-        
-        // Add scroll listener for infinite scroll
+        // Add scroll listener for lazy loading
         addScrollListener();
         
         hmmDropdown.style.display = 'block';
@@ -765,11 +746,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadMoreItems() {
         if (currentLoadedCount >= currentFilteredItems.length) {
+            removeLoadMoreIndicator();
             return; // No more items to load
         }
         
         const searchValue = hmmInput.value.toLowerCase();
         const itemsToAdd = Math.min(ITEMS_PER_LOAD, currentFilteredItems.length - currentLoadedCount);
+        
+        // Remove load more indicator temporarily
+        removeLoadMoreIndicator();
         
         // Add more items
         for (let i = currentLoadedCount; i < currentLoadedCount + itemsToAdd; i++) {
@@ -791,23 +776,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectItem(item);
             });
             
-            // Insert before the load more indicator if it exists
-            const loadMoreIndicator = hmmDropdown.querySelector('.load-more-indicator');
-            if (loadMoreIndicator) {
-                hmmDropdown.insertBefore(div, loadMoreIndicator);
-            } else {
-                hmmDropdown.appendChild(div);
-            }
+            hmmDropdown.appendChild(div);
         }
         
         currentLoadedCount += itemsToAdd;
         
-        // Update load more indicator
-        if (currentLoadedCount >= currentFilteredItems.length) {
-            removeLoadMoreIndicator();
-        } else {
-            updateLoadMoreIndicator();
+        // Add load more indicator if there are more items
+        if (currentLoadedCount < currentFilteredItems.length) {
+            addLoadMoreIndicator();
         }
+        
+        console.log(`Loaded ${itemsToAdd} more items. Total: ${currentLoadedCount}/${currentFilteredItems.length}`);
     }
 
     function addLoadMoreIndicator() {
@@ -820,7 +799,7 @@ document.addEventListener('DOMContentLoaded', function() {
         indicator.innerHTML = `
             <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
                 Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
-                <br><small>Scroll down or use arrow keys to load more</small>
+                <br><small>Scroll down to load more</small>
             </div>
         `;
         hmmDropdown.appendChild(indicator);
@@ -832,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function() {
             indicator.innerHTML = `
                 <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
                     Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
-                    <br><small>Scroll down or use arrow keys to load more</small>
+                    <br><small>Scroll down to load more</small>
                 </div>
             `;
         }
@@ -887,6 +866,8 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Selecting HMM item:', value);
         hmmInput.value = value;
         hideDropdown();
+        // Don't auto-apply filters - let user click Apply Filters button
+        // applyFilters();
     }
 });
 </script>
