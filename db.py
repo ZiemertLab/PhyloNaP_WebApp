@@ -1305,42 +1305,139 @@ def get_db():
             
     return db
 
-def get_filter_options():
+def get_filter_options(hmm_name=None, source=None, min_proteins=None, max_proteins=None, 
+                      min_characterized=None, max_characterized=None,
+                      min_np_val=None, max_np_val=None, 
+                      min_np_pred=None, max_np_pred=None,
+                      dataset_name=None, data_type=None, reviewed=None):
     """
-    Get all available filter options for the database interface
-    Returns a dictionary with available superfamilies, sources, data types, etc.
+    Get filter options with optional filtering to show ranges for subset
+    If no filters provided, returns global options
     """
     try:
         conn = get_db()
         
-        # Get unique superfamilies
+        # Build WHERE clause for filtering
+        where_conditions = ["1=1"]  # Always true base condition
+        params = []
+        
+        if hmm_name:
+            where_conditions.append("superfamily_hmm_names LIKE ?")
+            params.append(f"%{hmm_name}%")
+        
+        if source:
+            where_conditions.append("source = ?")
+            params.append(source)
+            
+        if dataset_name:
+            where_conditions.append("name LIKE ?")
+            params.append(f"%{dataset_name}%")
+            
+        if data_type:
+            where_conditions.append("data_type = ?")
+            params.append(data_type)
+            
+        if reviewed:
+            where_conditions.append("reviewed = ?")
+            params.append(reviewed)
+            
+        if min_proteins is not None:
+            where_conditions.append("N_proteins >= ?")
+            params.append(min_proteins)
+            
+        if max_proteins is not None:
+            where_conditions.append("N_proteins <= ?")
+            params.append(max_proteins)
+            
+        if min_characterized is not None:
+            where_conditions.append("N_characterized >= ?")
+            params.append(min_characterized)
+            
+        if max_characterized is not None:
+            where_conditions.append("N_characterized <= ?")
+            params.append(max_characterized)
+            
+        if min_np_val is not None:
+            where_conditions.append("N_np_val >= ?")
+            params.append(min_np_val)
+            
+        if max_np_val is not None:
+            where_conditions.append("N_np_val <= ?")
+            params.append(max_np_val)
+            
+        if min_np_pred is not None:
+            where_conditions.append("N_np_pred >= ?")
+            params.append(min_np_pred)
+            
+        if max_np_pred is not None:
+            where_conditions.append("N_np_pred <= ?")
+            params.append(max_np_pred)
+        
+        where_clause = " AND ".join(where_conditions)
+        
+        # Get statistics from filtered dataset
+        protein_stats = query_db(f"""
+            SELECT 
+                MIN(N_proteins) as min_proteins,
+                MAX(N_proteins) as max_proteins,
+                AVG(N_proteins) as avg_proteins
+            FROM datasets 
+            WHERE N_proteins IS NOT NULL AND {where_clause}
+        """, params, one=True)
+        
+        characterized_stats = query_db(f"""
+            SELECT 
+                MIN(N_characterized) as min_characterized,
+                MAX(N_characterized) as max_characterized,
+                AVG(N_characterized) as avg_characterized
+            FROM datasets 
+            WHERE N_characterized IS NOT NULL AND {where_clause}
+        """, params, one=True)
+        
+        np_pred_stats = query_db(f"""
+            SELECT 
+                MIN(N_np_pred) as min_np_pred,
+                MAX(N_np_pred) as max_np_pred,
+                AVG(N_np_pred) as avg_np_pred
+            FROM datasets 
+            WHERE N_np_pred IS NOT NULL AND {where_clause}
+        """, params, one=True)
+        
+        np_val_stats = query_db(f"""
+            SELECT 
+                MIN(N_np_val) as min_np_val,
+                MAX(N_np_val) as max_np_val,
+                AVG(N_np_val) as avg_np_val
+            FROM datasets 
+            WHERE N_np_val IS NOT NULL AND {where_clause}
+        """, params, one=True)
+        
+        # For filter options (dropdowns), always return complete lists
+        # Only the ranges change based on filters
+        
+        # Get complete lists (not filtered)
         superfamilies = query_db("""
             SELECT DISTINCT superfamily_name 
             FROM datasets 
             WHERE superfamily_name IS NOT NULL 
             ORDER BY superfamily_name
         """)
-        superfamily_names = [sf['superfamily_name'] for sf in superfamilies]
         
-        # Get unique sources
         sources = query_db("""
             SELECT DISTINCT source 
             FROM datasets 
             WHERE source IS NOT NULL 
             ORDER BY source
         """)
-        source_names = [src['source'] for src in sources]
         
-        # Get unique data types
         data_types = query_db("""
             SELECT DISTINCT data_type 
             FROM datasets 
             WHERE data_type IS NOT NULL 
             ORDER BY data_type
         """)
-        data_type_names = [dt['data_type'] for dt in data_types]
         
-        # Get unique HMM names from JSON field - ENHANCED WITH DEBUGGING
+        # Get HMM names (complete list)
         hmm_datasets = query_db("""
             SELECT DISTINCT superfamily_hmm_names 
             FROM datasets 
@@ -1350,100 +1447,28 @@ def get_filter_options():
             AND superfamily_hmm_names != 'null'
         """)
         
-        logger.info(f"Raw HMM query returned {len(hmm_datasets)} records")
-        
-        # Debug: Log first few raw values
-        for i, record in enumerate(hmm_datasets[:3]):
-            logger.info(f"Raw HMM record {i+1}: '{record['superfamily_hmm_names']}'")
-        
         hmm_names = set()
-        successful_parses = 0
-        failed_parses = 0
-        
         for hmm_dataset in hmm_datasets:
             try:
                 raw_value = hmm_dataset['superfamily_hmm_names']
-                
-                # Clean the value first
                 if isinstance(raw_value, str):
                     cleaned_value = raw_value.strip()
                     if cleaned_value and cleaned_value not in ['[]', 'null', '""']:
                         hmm_list = json.loads(cleaned_value)
                         if isinstance(hmm_list, list) and len(hmm_list) > 0:
                             hmm_names.update(hmm_list)
-                            successful_parses += 1
-                        else:
-                            failed_parses += 1
-                    else:
-                        failed_parses += 1
                 elif isinstance(raw_value, list):
-                    # Already parsed by custom row factory
                     if len(raw_value) > 0:
                         hmm_names.update(raw_value)
-                        successful_parses += 1
-                    else:
-                        failed_parses += 1
-                else:
-                    failed_parses += 1
-                    
-            except (json.JSONDecodeError, TypeError) as e:
-                logger.warning(f"Failed to parse HMM value '{raw_value}': {e}")
-                failed_parses += 1
+            except (json.JSONDecodeError, TypeError):
                 continue
-        
-        hmm_names = sorted(list(hmm_names))
-        
-        logger.info(f"HMM parsing results: {successful_parses} successful, {failed_parses} failed")
-        logger.info(f"Total unique HMM names extracted: {len(hmm_names)}")
-        if hmm_names:
-            logger.info(f"First 5 HMM names: {hmm_names[:5]}")
-        
-        # Get protein statistics
-        protein_stats = query_db("""
-            SELECT 
-                MIN(N_proteins) as min_proteins,
-                MAX(N_proteins) as max_proteins,
-                AVG(N_proteins) as avg_proteins
-            FROM datasets 
-            WHERE N_proteins IS NOT NULL
-        """, one=True)
-        
-        # Get characterized protein statistics
-        characterized_stats = query_db("""
-            SELECT 
-                MIN(N_characterized) as min_characterized,
-                MAX(N_characterized) as max_characterized,
-                AVG(N_characterized) as avg_characterized
-            FROM datasets 
-            WHERE N_characterized IS NOT NULL
-        """, one=True)
-        
-        # Get NP predicted statistics
-        np_pred_stats = query_db("""
-            SELECT 
-                MIN(N_np_pred) as min_np_pred,
-                MAX(N_np_pred) as max_np_pred,
-                AVG(N_np_pred) as avg_np_pred
-            FROM datasets 
-            WHERE N_np_pred IS NOT NULL
-        """, one=True)
-        
-        # Get NP validated statistics
-        np_val_stats = query_db("""
-            SELECT 
-                MIN(N_np_val) as min_np_val,
-                MAX(N_np_val) as max_np_val,
-                AVG(N_np_val) as avg_np_val
-            FROM datasets 
-            WHERE N_np_val IS NOT NULL
-        """, one=True)
         
         # Build the result dictionary
         options = {
-            'superfamilies': superfamily_names,
-            'sources': source_names,
-            'data_types': data_type_names,
-            'hmm_names': hmm_names,
+            'superfamilies': [sf['superfamily_name'] for sf in superfamilies],
+            'sources': [src['source'] for src in sources],
+            'data_types': [dt['data_type'] for dt in data_types],
+            'hmm_names': sorted(list(hmm_names)),
             'reviewed_options': ['yes', 'no'],
             'protein_stats': {
                 'min': protein_stats['min_proteins'] if protein_stats else 0,
@@ -1466,10 +1491,6 @@ def get_filter_options():
                 'avg': np_val_stats['avg_np_val'] if np_val_stats else 0
             }
         }
-        
-        logger.debug(f"Generated filter options with {len(superfamily_names)} superfamilies, "
-                    f"{len(source_names)} sources, {len(data_type_names)} data types, "
-                    f"{len(hmm_names)} HMM names")
         
         return options
         

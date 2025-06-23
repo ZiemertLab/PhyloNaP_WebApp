@@ -879,29 +879,68 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ADD this function after the selectItem function:
     function updateRangesForHMM(hmmName) {
-        if (!hmmName || hmmName.trim() === '') {
-            // Reset to global ranges if no HMM selected
-            fetch('/api/filter_options')
-                .then(response => response.json())
-                .then(data => {
-                    updateRangeDisplays(data);
-                })
-                .catch(error => {
-                    console.error('Error fetching global ranges:', error);
-                });
-            return;
+        // Get ALL current form values
+        const sourceRadio = document.querySelector('input[name="source"]:checked');
+        const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
+        
+        const params = new URLSearchParams();
+        
+        // Add all current filter values
+        if (hmmName && hmmName.trim() !== '') {
+            params.append('hmm_name', hmmName.trim());
         }
         
-        // Fetch ranges for specific HMM
-        const params = new URLSearchParams({ hmm_name: hmmName });
-        fetch(`/api/filter_options?${params.toString()}`)
+        if (sourceRadio && sourceRadio.value) {
+            params.append('source', sourceRadio.value);
+        }
+        
+        if (dataTypeRadio && dataTypeRadio.value) {
+            params.append('data_type', dataTypeRadio.value);
+        }
+        
+        const datasetName = document.getElementById('dataset-name-filter').value;
+        if (datasetName) {
+            params.append('dataset_name', datasetName);
+        }
+        
+        // Add numeric ranges if they have values
+        const minProteins = document.getElementById('min-proteins').value;
+        if (minProteins) params.append('min_proteins', minProteins);
+        
+        const maxProteins = document.getElementById('max-proteins').value;
+        if (maxProteins) params.append('max_proteins', maxProteins);
+        
+        const minCharacterized = document.getElementById('min-characterized').value;
+        if (minCharacterized) params.append('min_characterized', minCharacterized);
+        
+        const maxCharacterized = document.getElementById('max-characterized').value;
+        if (maxCharacterized) params.append('max_characterized', maxCharacterized);
+        
+        const minNpVal = document.getElementById('min-np-val').value;
+        if (minNpVal) params.append('min_np_val', minNpVal);
+        
+        const maxNpVal = document.getElementById('max-np-val').value;
+        if (maxNpVal) params.append('max_np_val', maxNpVal);
+        
+        const minNpPred = document.getElementById('min-np-pred').value;
+        if (minNpPred) params.append('min_np_pred', minNpPred);
+        
+        const maxNpPred = document.getElementById('max-np-pred').value;
+        if (maxNpPred) params.append('max_np_pred', maxNpPred);
+        
+        const apiUrl = `/api/filter_options?${params.toString()}`;
+        
+        console.log('=== DYNAMIC RANGE UPDATE ===');
+        console.log('Fetching filtered ranges with URL:', apiUrl);
+        
+        fetch(apiUrl)
             .then(response => response.json())
             .then(data => {
-                console.log('Updated ranges for HMM:', hmmName, data);
+                console.log('Filtered ranges response:', data);
                 updateRangeDisplays(data);
             })
             .catch(error => {
-                console.error('Error fetching HMM-specific ranges:', error);
+                console.error('Error fetching filtered ranges:', error);
             });
     }
 

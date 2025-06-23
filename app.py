@@ -276,38 +276,49 @@ def register_routes(app):
             return jsonify({'error': str(e)}), 500
 
     @app.route('/api/filter_options')
-    def api_filter_options():
-        """API endpoint to get available filter options"""
+    
+    def get_filter_options_api():
+        from .db import get_filter_options
         try:
-            from .db import get_filter_options
-            options = get_filter_options()
+            # Get all possible filter parameters from request
+            hmm_name = request.args.get('hmm_name')
+            source = request.args.get('source')
+            dataset_name = request.args.get('dataset_name')
+            data_type = request.args.get('data_type')
+            reviewed = request.args.get('reviewed')
             
-            # Enhanced debug logging
-            app.logger.info(f"=== FILTER OPTIONS DEBUG ===")
-            app.logger.info(f"Total superfamilies: {len(options.get('superfamilies', []))}")
-            app.logger.info(f"Total sources: {len(options.get('sources', []))}")
-            app.logger.info(f"Total data types: {len(options.get('data_types', []))}")
-            app.logger.info(f"Total HMM names: {len(options.get('hmm_names', []))}")
+            # Get numeric parameters
+            min_proteins = request.args.get('min_proteins', type=int)
+            max_proteins = request.args.get('max_proteins', type=int)
+            min_characterized = request.args.get('min_characterized', type=int)
+            max_characterized = request.args.get('max_characterized', type=int)
+            min_np_val = request.args.get('min_np_val', type=int)
+            max_np_val = request.args.get('max_np_val', type=int)
+            min_np_pred = request.args.get('min_np_pred', type=int)
+            max_np_pred = request.args.get('max_np_pred', type=int)
             
-            if options.get('hmm_names'):
-                app.logger.info(f"First 5 HMM names: {options['hmm_names'][:5]}")
-            else:
-                app.logger.error("HMM names is empty or None!")
-                app.logger.info(f"HMM names value: {options.get('hmm_names')}")
-            
-            app.logger.info(f"=== END DEBUG ===")
+            # Call the updated function with all parameters
+            options = get_filter_options(
+                hmm_name=hmm_name,
+                source=source,
+                dataset_name=dataset_name,
+                data_type=data_type,
+                reviewed=reviewed,
+                min_proteins=min_proteins,
+                max_proteins=max_proteins,
+                min_characterized=min_characterized,
+                max_characterized=max_characterized,
+                min_np_val=min_np_val,
+                max_np_val=max_np_val,
+                min_np_pred=min_np_pred,
+                max_np_pred=max_np_pred
+            )
             
             return jsonify(options)
+            
         except Exception as e:
-            app.logger.error(f"Error in api_filter_options: {e}", exc_info=True)
-            return jsonify({
-                'superfamilies': [],
-                'sources': [],
-                'data_types': [],
-                'reviewed_options': ['yes', 'no'],
-                'dataset_names': [],
-                'hmm_names': []
-            }), 500
+            logging.error(f"Error in filter options API: {e}", exc_info=True)
+            return jsonify({'error': str(e)}), 500
 
     @app.route('/database')
     def database_page():
