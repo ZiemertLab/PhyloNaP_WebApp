@@ -3,7 +3,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
-<div style="font-size: 1rem; color: var(--background-dark); font-weight: 500;">
+<div style="font-size: 1rem; color: var(--background-dark); font-weight: 500; margin: 15px 0 10px 0;">
     Apply filters to narrow down the datasets.
 </div>
 <div class="container-fluid">
@@ -74,7 +74,7 @@
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-3">
-                                <label class="form-label-compact">Proteins</label>
+                                <label class="form-label-compact">N of sequences</label>
                                 {% if filter_options and filter_options.protein_stats %}
                                 <div class="stats-info-compact">{{ filter_options.protein_stats.min }}-{{ filter_options.protein_stats.max|int }}</div>
                                 {% endif %}
@@ -88,7 +88,7 @@
                             </div>
                             
                             <div class="col-3">
-                                <label class="form-label-compact">Characterized</label>
+                                <label class="form-label-compact">N of characterized</label>
                                 {% if filter_options and filter_options.characterized_stats %}
                                 <div class="stats-info-compact">{{ filter_options.characterized_stats.min }}-{{ filter_options.characterized_stats.max|int }}</div>
                                 {% endif %}
@@ -102,7 +102,7 @@
                             </div>
                             
                             <div class="col-3">
-                                <label class="form-label-compact">NP Val</label>
+                                <label class="form-label-compact">N of validated NP</label>
                                 {% if filter_options and filter_options.np_val_stats %}
                                 <div class="stats-info-compact">{{ filter_options.np_val_stats.min }}-{{ filter_options.np_val_stats.max|int }}</div>
                                 {% endif %}
@@ -116,7 +116,7 @@
                             </div>
                             
                             <div class="col-3">
-                                <label class="form-label-compact">NP Pred</label>
+                                <label class="form-label-compact">N of predicted NP</label>
                                 {% if filter_options and filter_options.np_pred_stats %}
                                 <div class="stats-info-compact">{{ filter_options.np_pred_stats.min }}-{{ filter_options.np_pred_stats.max|int }}</div>
                                 {% endif %}
@@ -132,10 +132,10 @@
                     </div>
                     
                     <!-- Buttons Column -->
-                    <div class="col-md-2 d-flex flex-column justify-content-end">
-                        <div class="button-group-compact">
-                            <button id="clear-filters" class="btn btn-outline-secondary btn-sm-compact">Clear All</button>
-                            <button id="apply-filters" class="btn btn-bright btn-compact">Apply Filters</button>
+                    <div class="col-md-2 d-flex justify-content-end align-items-end">
+                        <div class="button-group-horizontal">
+                            <button id="clear-filters" class="btn btn-outline-secondary btn-uniform">Clear All</button>
+                            <button id="apply-filters" class="btn btn-bright btn-uniform">Apply Filters</button>
                         </div>
                     </div>
                 </div>
@@ -1793,77 +1793,106 @@ function debounce(func, wait) {
 
     /* Make range input fields bigger */
     .form-control-compact {
-        width: 50px !important; /* OVERRIDE existing 40px */
-        padding: 4px 6px !important; /* OVERRIDE existing 2px 4px */
-        font-size: 0.85rem !important; /* OVERRIDE existing 0.7rem */
+        width: 60px !important; /* INCREASED from 50px */
+        padding: 4px 6px !important;
+        font-size: 0.85rem !important;
     }
 
-    /* Make button text bigger */
-    .btn-sm-compact {
-        font-size: 0.85rem !important; /* OVERRIDE existing 0.7rem */
+    /* Better distribution of filter columns */
+    .filter-row-compact {
+        margin-bottom: 8px;
+        align-items: flex-end;
+        overflow: visible;
     }
 
-    .btn-compact {
-        font-size: 0.95rem !important; /* OVERRIDE existing 0.8rem */
+    /* Adjust column widths for better space usage */
+    .filter-row-compact .col-md-2:first-child {
+        flex: 0 0 20% !important; /* HMM Name - slightly more space */
+        max-width: 20% !important;
     }
 
-    /* Add a bit more padding to filter section for bigger content */
-    .filter-section {
-        padding: 12px 18px !important; /* OVERRIDE existing 10px 15px */
-    }
-    /* ADD these styles to align all filter labels to the same size and position */
-
-    /* Make ALL filter labels the same size and alignment */
-    .form-label,
-    .form-label-compact {
-        font-size: 1rem !important; /* Same size as Source */
-        font-weight: 600 !important;
-        margin-bottom: 5px !important; /* Same spacing as Source */
-        color: var(--background-dark) !important;
-        display: block !important;
-        height: 24px !important; /* Fixed height for alignment */
-        line-height: 24px !important; /* Center text vertically */
+    .filter-row-compact .col-md-1 {
+        flex: 0 0 12% !important; /* Source and Data Type - more space */
+        max-width: 12% !important;
     }
 
-    /* Ensure all filter columns have the same top alignment */
-    .filter-row-compact > div {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: flex-start !important;
+    .filter-row-compact .col-md-6 {
+        flex: 0 0 48% !important; /* Range filters - utilize more space */
+        max-width: 48% !important;
     }
 
-    /* Ensure the range columns inner structure maintains alignment */
+    .filter-row-compact .col-md-2:last-child {
+        flex: 0 0 16% !important; /* Buttons - adequate space */
+        max-width: 16% !important;
+    }
+
+    /* Add more spacing between range input groups */
+    .range-input-group-compact {
+        display: flex;
+        align-items: center;
+        gap: 4px !important; /* INCREASED from 2px */
+        justify-content: center;
+    }
+
+    .range-input-group-compact span {
+        font-size: 0.75rem;
+        color: #6c757d;
+        padding: 0 3px !important; /* INCREASED from 0 1px */
+    }
+
+    /* Add more spacing between range columns */
     .col-md-6 .row .col-3 {
         display: flex !important;
         flex-direction: column !important;
-        align-items: center !important; /* Center the range inputs */
+        align-items: center !important;
+        padding-left: 8px !important; /* INCREASED from default */
+        padding-right: 8px !important; /* INCREASED from default */
     }
 
-    /* Keep the range labels centered but same size */
-    .col-md-6 .form-label-compact {
-        text-align: center !important;
-        width: 100% !important;
-    }
-
-    /* Make sure radio group containers have consistent spacing */
-    .radio-group-vertical {
-        margin-top: 5px !important; /* Same as other form elements */
-    }
-
-    /* Ensure HMM input container has consistent spacing */
-    .col-md-2 .input-group {
-        margin-top: 5px !important; /* Same spacing as radio groups */
-    }
-
-    /* Ensure stats info has consistent spacing */
+    /* Slightly more spacing for the range stats */
     .stats-info-compact {
-        margin-bottom: 5px !important; /* Consistent spacing */
-        height: auto !important;
+        font-size: 0.8rem !important;
+        color: #6c757d;
+        margin-bottom: 6px !important; /* INCREASED from 5px */
+        text-align: center;
+    }
+    /* ADD these styles for horizontal button layout: */
+
+    /* Horizontal button group */
+    .button-group-horizontal {
+        display: flex;
+        gap: 8px; /* Space between buttons */
+        align-items: center;
     }
 
-    /* Ensure button column alignment */
-    .col-md-2.d-flex.flex-column.justify-content-end {
-        padding-top: 29px !important; /* Offset for label height + margin */
+    /* Uniform button sizing - same as Clear All */
+    .btn-uniform {
+        padding: 4px 8px !important; /* Same as btn-sm-compact */
+        font-size: 1.05rem !important; /* Same as btn-sm-compact */
+        border-radius: 3px !important;
+        min-width: 70px; /* Ensure consistent width */
+        text-align: center;
+    }
+
+    /* Override the Apply Filters button to match Clear All size */
+    #apply-filters.btn-uniform {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 4px 8px !important; /* Same as Clear All */
+        font-size: 1.05rem !important; /* Same as Clear All */
+    }
+
+    #apply-filters.btn-uniform:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+    }
+
+    /* Ensure the button column is positioned to the right */
+    .col-md-2.d-flex.justify-content-end {
+        padding-left: 15px !important; /* Push buttons more to the right */
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
