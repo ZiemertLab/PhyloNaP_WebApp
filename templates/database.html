@@ -77,17 +77,6 @@
                                placeholder="Search dataset name..."
                                value="{{ current_filters.dataset_name if current_filters and current_filters.dataset_name }}">
                     </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">Records per page</label>
-                        <select id="per-page-filter" name="per_page" class="form-select">
-                            <option value="10" selected>10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                            <option value="200">200</option>
-                        </select>
-                    </div>
                 </div>
                 
                 <!-- Numeric Range Filters Row -->
@@ -163,9 +152,32 @@
     <!-- Results Table -->
     <div class="table-container">
         <!-- Results summary -->
-        <div class="alert alert-info" id="results-summary" style="display: none;">
-            Showing <span id="showing-from">0</span>-<span id="showing-to">0</span> 
-            of <span id="total-count">0</span> datasets
+        <!-- REPLACE the results summary section: -->
+        <div id="results-summary" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6;">
+                <div style="font-size: 1rem; color: var(--background-dark); font-weight: 500;">
+                    Showing <span id="showing-from">0</span>-<span id="showing-to">0</span> 
+                    of <span id="total-count">0</span> datasets
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label for="per-page-filter" style="margin-bottom: 0; font-size: 1rem; white-space: nowrap; color: var(--background-dark); font-weight: 500;">
+                        Records per page:
+                    </label>
+                    <div class="input-group" style="width: auto;">
+                        <select id="per-page-filter" name="per_page" class="form-select" style="width: auto; min-width: 80px; padding: 6px 12px; font-size: 1rem; border: 1px solid #ced4da; border-radius: 4px 0 0 4px;">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                        </select>
+                        <button class="btn btn-outline-secondary" type="button" style="border-left: 0; color: var(--bright-color); border-color: #ced4da; padding: 6px 12px;">
+                            ▼
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Table -->
@@ -439,6 +451,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('showing-from').textContent = pagination.showing_from;
         document.getElementById('showing-to').textContent = pagination.showing_to;
         document.getElementById('total-count').textContent = pagination.total_count;
+        
+        // FIXED: Use 'block' instead of 'flex' for the original alert-info structure
         document.getElementById('results-summary').style.display = 'block';
     }
     
@@ -460,16 +474,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
     
+    // UPDATE the applyFilters function with better error handling:
     function applyFilters() {
         // Get selected radio button values
         const sourceRadio = document.querySelector('input[name="source"]:checked');
         const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
 
+        // Get dataset name filter safely
+        const datasetNameInput = document.getElementById('dataset-name-filter');
+        const datasetNameValue = datasetNameInput ? datasetNameInput.value : '';
+
         currentFilters = {
-            hmm_name: document.getElementById('hmm-name-filter').value, // CORRECT: Keep as 'hmm_name'
+            hmm_name: document.getElementById('hmm-name-filter').value,
             source: sourceRadio ? sourceRadio.value : '',
             data_type: dataTypeRadio ? dataTypeRadio.value : '',
-            dataset_name: document.getElementById('dataset-name-filter').value,
+            dataset_name: datasetNameValue,
             min_proteins: document.getElementById('min-proteins').value,
             max_proteins: document.getElementById('max-proteins').value,
             min_characterized: document.getElementById('min-characterized').value,
@@ -487,6 +506,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        console.log('Applied filters:', currentFilters); // Debug log
         loadData(1, true); // Reset to first page
     }
     
@@ -877,7 +897,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateRangesForHMM(trimmedValue);
     }
 
-    // ADD this function after the selectItem function:
+    // UPDATE the updateRangesForHMM function with safety checks:
     function updateRangesForHMM(hmmName) {
         // Get ALL current form values
         const sourceRadio = document.querySelector('input[name="source"]:checked');
@@ -898,9 +918,10 @@ document.addEventListener('DOMContentLoaded', function() {
             params.append('data_type', dataTypeRadio.value);
         }
         
-        const datasetName = document.getElementById('dataset-name-filter').value;
-        if (datasetName) {
-            params.append('dataset_name', datasetName);
+        // FIXED: Safety check for dataset name input
+        const datasetNameInput = document.getElementById('dataset-name-filter');
+        if (datasetNameInput && datasetNameInput.value) {
+            params.append('dataset_name', datasetNameInput.value);
         }
         
         // Add numeric ranges if they have values
@@ -942,7 +963,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // IMPORTANT: Update HMM names dropdown with filtered list
                 if (data.hmm_names && Array.isArray(data.hmm_names)) {
                     // Only update if we're not currently filtering by HMM name
-                    // (to avoid clearing the dropdown when user is typing in HMM field)
                     if (!hmmName || hmmName.trim() === '') {
                         hmmNames = data.hmm_names;
                         console.log('Updated HMM names list:', hmmNames.length, 'items');
@@ -1409,10 +1429,44 @@ function debounce(func, wait) {
         color: white !important;
     }
     
+    /* REMOVE the old alert-info styling */
     .alert-info {
-        background-color: var(--background-light);
-        border-color: var(--bright-color);
-        color: var(--background-dark);
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Style the per-page dropdown like HMM input */
+    #per-page-filter:focus {
+        border-color: var(--bright-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25) !important;
+    }
+    
+    /* Style the dropdown button like HMM dropdown button */
+    #results-summary .input-group .btn-outline-secondary {
+        border-left: 0;
+        color: var(--bright-color) !important;
+        border-color: #ced4da !important;
+        background-color: transparent !important;
+    }
+
+    #results-summary .input-group .btn-outline-secondary:hover {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+
+    #results-summary .input-group #per-page-filter:focus + .btn-outline-secondary {
+        border-color: var(--bright-color) !important;
+    }
+
+    /* Ensure proper styling for the results summary container */
+    #results-summary {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 0 15px 0 !important;
     }
     
     h1 {
@@ -1548,14 +1602,45 @@ function debounce(func, wait) {
         border-color: var(--bright-color) !important;
     }
 
-    /* ADD this CSS to show Source column as sorted by default: */
-    .table-dark th[data-sort="source"] .sort-arrows {
-        opacity: 1;
+    /* ADD these styles to your existing CSS (after the existing styles): */
+    /* Remove the old alert-info styling */
+    .alert-info {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    .table-dark th[data-sort="source"] .sort-arrows .sort-down {
-        opacity: 1;
-        color: var(--bright-color);
+    /* Style the per-page dropdown like HMM input */
+    #per-page-filter:focus {
+        border-color: var(--bright-color) !important;
+        box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25) !important;
+    }
+
+    /* Style the dropdown button like HMM dropdown button */
+    #results-summary .input-group .btn-outline-secondary {
+        border-left: 0;
+        color: var(--bright-color) !important;
+        border-color: #ced4da !important;
+        background-color: transparent !important;
+    }
+
+    #results-summary .input-group .btn-outline-secondary:hover {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+    }
+
+    #results-summary .input-group #per-page-filter:focus + .btn-outline-secondary {
+        border-color: var(--bright-color) !important;
+    }
+
+    /* Ensure proper styling for the results summary container */
+    #results-summary {
+        background: none !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 0 15px 0 !important;
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
