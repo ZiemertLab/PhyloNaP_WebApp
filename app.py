@@ -189,7 +189,7 @@ def register_routes(app):
 
     @app.route('/analyse')
     def analyse():
-        return render_template('home.html')
+        return render_template('analyse.html')
 
     @app.route('/help')
     def help_page():

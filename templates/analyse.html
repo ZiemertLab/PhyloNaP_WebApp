@@ -1,0 +1,31 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+{% block content %}
+<style>
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px; /* Add space between the header and the form */
+    }
+    .form-container textarea,
+    .form-container input[type="file"],
+    .form-container input[type="email"],
+    .form-container input[type="submit"] {
+        margin-bottom: 10px; /* Add space between form elements */
+        width: 80%; /* Make the form elements wider */
+    }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
+
+<div class="form-container">
+    <form action="/submit" method="post" enctype="multipart/form-data">
+        <!-- <textarea name="sequence" rows="4" cols="50"></textarea>
+        <input type="submit" value="Submit" class="btn btn-primary"> -->
+        <textarea name="sequence" placeholder="Paste FASTA protein sequence here" rows="4" cols="50"></textarea>></textarea><br>
+        <input type="file" name="file" placeholder="Upload FASTA file"><br>
+        <input type="email" name="email" placeholder="Optional: Enter your email"><br>
+        <input type="submit" value="Submit" class="active-button">
+    </form>
+</div>
+{% endblock %}

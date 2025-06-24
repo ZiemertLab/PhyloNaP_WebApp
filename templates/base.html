@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,13 @@
     <!-- <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet"> -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link
-        href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css"
-        rel="stylesheet"
-      />
-        <!-- Load the overall.css file with CSS variables -->
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" />
+    <!-- Load the overall.css file with CSS variables -->
     <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
     <style>
         .navbar-brand {
-            font-size:2em;
+            font-size: 2em;
             /* color: #982B1C !important; */
             /* color: #CCDDE2 !important; */
             /* color: #a61e37 !important; */
@@ -25,33 +23,43 @@
             margin-right: 5px;
             margin-left: 10px;
         }
+
         .navbar {
-        /* background-color: #ABAD9A !important; */
-        /* background-color: #982B1C !important; */
-        /* background-color: #b69e6c !important; */
-        /* background-color: #E8E4D8 !important; */
-        background-color: var(--bright-color, #7B1B38) !important;
-        padding-top: 0.05rem; /* Adjust padding to make it more narrow */
-        padding-bottom: 0.05rem; /* Adjust padding to make it more narrow */
+            /* background-color: #ABAD9A !important; */
+            /* background-color: #982B1C !important; */
+            /* background-color: #b69e6c !important; */
+            /* background-color: #E8E4D8 !important; */
+            background-color: var(--bright-color, #7B1B38) !important;
+            padding-top: 0.05rem;
+            /* Adjust padding to make it more narrow */
+            padding-bottom: 0.05rem;
+            /* Adjust padding to make it more narrow */
         }
+
         .nav-link {
             margin-right: 10px;
             /* color: #000000; */
-            color:var(--background-light, #E0E0E0)
-            /* color:#7B1B38; */
+            color: var(--background-light, #E0E0E0)
+                /* color:#7B1B38; */
         }
+
         .color-row {
             background-color: var(--bright-color, #7B1B38);
-            height: 5px; /* Adjust height as needed */
+            height: 5px;
+            /* Adjust height as needed */
         }
-    </style> 
+    </style>
     {% block css %}{% endblock %}
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="/">PhyloNaP</a>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/database">Database</a>
                 </li>
@@ -59,19 +67,20 @@
                     <a class="nav-link" href="/analyse">Analyse</a>
                 <li class="nav-item">
                     <a class="nav-link" href="/upload">Contribute</a>
-                <!-- <li class="nav-item">
+                    <!-- <li class="nav-item">
                     <a class="nav-link" href="/help">Help</a>
                 </li> -->
             </ul>
         </div>
     </nav>
-        <!-- Tiny row of color under the navbar -->
-        <div class="color-row"></div>
-        <div class="container-fluid">
-            <!-- Include the content of the child templates -->
-            {% block content %}{% endblock %}
-            <!-- Include additional JavaScript files -->
-            {% block js %}{% endblock %}
-        </div>
+    <!-- Tiny row of color under the navbar -->
+    <div class="color-row"></div>
+    <div class="container-fluid">
+        <!-- Include the content of the child templates -->
+        {% block content %}{% endblock %}
+        <!-- Include additional JavaScript files -->
+        {% block js %}{% endblock %}
+    </div>
 </body>
+
 </html>
