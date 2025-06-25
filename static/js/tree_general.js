@@ -329,13 +329,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   // Add column slot management variables
   let maxColumns = 0;
-  let columnSlots = []; // Array to track which columns are occupied: [false, 'Species', false, 'Enzyme_function', ...]
+  let columnSlots = [];
+  let warningTimeout = null; // Add timeout variable
 
   // Calculate maximum columns based on container width
   function calculateMaxColumns() {
     const container = document.getElementById('tree-container') || document.getElementById('tree');
     const containerWidth = container ? container.offsetWidth : window.innerWidth;
-    const columnWidth = 200; // Based on your existing spacing (200 + activeColumns * 200)
+    const columnWidth = 200;
     const treeMinWidth = 400;
     const availableWidth = containerWidth - treeMinWidth;
     maxColumns = Math.max(1, Math.floor(availableWidth / columnWidth));
@@ -371,6 +372,114 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       columnSlots[slotIndex] = false;
     }
     return slotIndex;
+  }
+
+  // Get CSS variable function
+  function getCSSVariable(variableName) {
+    return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+  }
+
+  // Show warning when user tries to exceed limit
+  function showColumnWarning() {
+    let warningContainer = document.getElementById('column-warning');
+
+    if (!warningContainer) {
+      warningContainer = createWarningContainer();
+    }
+
+    // Clear any existing timeout
+    if (warningTimeout) {
+      clearTimeout(warningTimeout);
+    }
+
+    // If warning is already visible, trigger blink effect
+    if (warningContainer.style.display === 'block') {
+      blinkWarning(warningContainer);
+    } else {
+      // Show the warning with full opacity
+      warningContainer.style.display = 'block';
+      warningContainer.style.opacity = '1';
+    }
+
+    warningContainer.textContent = `Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`;
+
+    // Set timeout to fade out after 3 seconds (reduced from 5 seconds)
+    warningTimeout = setTimeout(() => {
+      fadeOutWarning(warningContainer);
+    }, 1000);
+  }
+
+  // Add new blink function
+  function blinkWarning(warningContainer) {
+    // Quick blink effect - flash the warning
+    warningContainer.style.transform = 'translate(-50%, -50%) scale(1.1)';
+    warningContainer.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.4)'; // Changed to darker, subtler shadow
+
+    setTimeout(() => {
+      warningContainer.style.transform = 'translate(-50%, -50%) scale(1)';
+      warningContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    }, 150);
+
+    // Also add a quick opacity blink
+    warningContainer.style.opacity = '0.7';
+    setTimeout(() => {
+      warningContainer.style.opacity = '1';
+    }, 100);
+  }
+
+  // Add the missing fadeOutWarning function after the blinkWarning function:
+  function fadeOutWarning(warningContainer) {
+    let opacity = 1;
+    const fadeInterval = setInterval(() => {
+      opacity -= 0.1; // Changed from 0.05 to 0.1 for faster fade
+      warningContainer.style.opacity = opacity;
+
+      if (opacity <= 0) {
+        clearInterval(fadeInterval);
+        warningContainer.style.display = 'none';
+      }
+    }, 40); // Changed from 50ms to 40ms for faster fade (10 steps * 40ms = 400ms total)
+  }
+
+  // Update the createWarningContainer function to remove the bright border:
+  function createWarningContainer() {
+    const warningDiv = document.createElement('div');
+    warningDiv.id = 'column-warning';
+
+    // Position the warning 15% higher than center (0.5 - 0.15 = 0.35)
+    const treeContainer = document.getElementById('tree-container') || document.getElementById('tree');
+    const containerRect = treeContainer ? treeContainer.getBoundingClientRect() : { top: 100, left: 50, width: 400, height: 400 };
+
+    warningDiv.style.cssText = `
+      position: fixed;
+      top: ${containerRect.top + (containerRect.height * 0.35)}px;
+      left: ${containerRect.left + (containerRect.width * 0.5)}px;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+      background-color: #E0E0E0;
+      color: #7B1B38;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      display: none;
+      opacity: 1;
+      transition: all 0.15s ease-in-out;
+      white-space: nowrap;
+      text-align: center;
+    `;
+
+    document.body.appendChild(warningDiv);
+
+    // Update position on window resize (also 15% higher)
+    window.addEventListener('resize', () => {
+      const newRect = treeContainer ? treeContainer.getBoundingClientRect() : { top: 100, left: 50, width: 400, height: 400 };
+      warningDiv.style.top = `${newRect.top + (newRect.height * 0.35)}px`;
+      warningDiv.style.left = `${newRect.left + (newRect.width * 0.5)}px`;
+    });
+
+    return warningDiv;
   }
 
   // Initialize on first call
@@ -664,14 +773,20 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     button.dataset.active = 'false'; // Add data-active attribute
 
     button.addEventListener('click', function () {
+      // Check if slots are available for inactive buttons
+      if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
+        console.warn('No available slots for new columns');
+        showColumnWarning(); // Show warning when user tries to add more
+        return;
+      }
+
       if (button.dataset.active === 'false') {
-        // If the button is not active, display the content and set the button to active
-        renderMetadata(id);
-        button.dataset.active = 'true';
-        button.classList.add('active-button');
-        button.classList.remove('non-active-button');
+        if (renderMetadata(id)) {
+          button.dataset.active = 'true';
+          button.classList.add('active-button');
+          button.classList.remove('non-active-button');
+        }
       } else {
-        // If the button is active, hide the content and set the button to inactive
         hideMetadata(id);
         button.dataset.active = 'false';
         button.classList.remove('active-button');
@@ -732,22 +847,28 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     button.dataset.active = 'false'; // Add data-active attribute
 
     button.addEventListener('click', function () {
+      // Check if slots are available for inactive buttons
+      if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
+        console.warn('No available slots for new columns');
+        showColumnWarning(); // Show warning when user tries to add more
+        return; // Don't proceed if no slots available
+      }
+
       if (button.dataset.active === 'false') {
-        // If the button is not active, display the content and set the button to active
-        renderNP();
-        // change the spacing of the tree!
-        tree.display.spacing_x(50).update();
-        // window.setTreeSize(width, height)
-        button.dataset.active = 'true';
-        button.classList.add('active-button');
-        button.classList.remove('non-active-button');
-        console.log(`Button ${id} activated`);
+        if (renderNP()) {
+          tree.display.spacing_x(50).update();
+          button.dataset.active = 'true';
+          button.classList.add('active-button');
+          button.classList.remove('non-active-button');
+          updateButtonStates(); // Update button states after adding
+          console.log(`Button ${id} activated`);
+        }
       } else {
-        // If the button is active, hide the content and set the button to inactive
         hideNP();
         button.dataset.active = 'false';
         button.classList.remove('active-button');
         button.classList.add('non-active-button');
+        updateButtonStates(); // Update button states after removing
         console.log(`Button ${id} deactivated`);
       }
     });
@@ -759,19 +880,55 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     button.dataset.active = 'false'; // Add data-active attribute
 
     button.addEventListener('click', function () {
+      // Check if slots are available for inactive buttons
+      if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
+        console.warn('No available slots for new columns');
+        showColumnWarning(); // Show warning when user tries to add more
+        return; // Don't proceed if no slots available
+      }
+
       if (button.dataset.active === 'false') {
-        // If the button is not active, display the content and set the button to active
-        renderReaction();
-        // change the spacing of the tree!
-        tree.display.spacing_x(50).update();
-        // window.setTreeSize(width, height)
-        button.dataset.active = 'true';
+        if (renderReaction()) {
+          tree.display.spacing_x(50).update();
+          button.dataset.active = 'true';
+          button.classList.add('active-button');
+          button.classList.remove('non-active-button');
+          updateButtonStates(); // Update button states after adding
+        }
       } else {
-        // If the button is active, hide the content and set the button to inactive
-        hideReaction(id);
+        hideReaction();
         button.dataset.active = 'false';
+        button.classList.remove('active-button');
+        button.classList.add('non-active-button');
+        updateButtonStates(); // Update button states after removing
       }
     });
+  });
+
+  // Remove the updateButtonStates calls and the old resize handler
+  // Just keep the calculateMaxColumns call:
+  calculateMaxColumns();
+
+  // Simplified resize handler
+  window.addEventListener('resize', function () {
+    const oldMaxColumns = maxColumns;
+    calculateMaxColumns();
+
+    if (maxColumns < oldMaxColumns) {
+      // Handle overflow - remove columns that no longer fit
+      for (let i = maxColumns; i < oldMaxColumns; i++) {
+        if (columnSlots[i]) {
+          const columnName = columnSlots[i];
+          console.log(`Removing ${columnName} due to resize`);
+
+          const button = document.getElementById(columnName) ||
+            document.getElementById(columnName === 'NP' ? 'BGC_product' : columnName);
+          if (button && button.dataset.active === 'true') {
+            button.click();
+          }
+        }
+      }
+    }
   });
 }
 
