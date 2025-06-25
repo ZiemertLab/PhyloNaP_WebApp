@@ -481,7 +481,47 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     return warningDiv;
   }
+  // Add the checkImagesExist function after createWarningContainer:
+  async function checkImagesExist(metadata, imageType) {
+    if (!metadata || metadata.length === 0) {
+      return false;
+    }
 
+    const sampleSize = Math.min(5, metadata.length);
+    const sampleEntries = metadata.slice(0, sampleSize);
+
+    for (let item of sampleEntries) {
+      if (imageType === 'BGC_product') {
+        if (item.hasOwnProperty('Cluster') && item.Cluster && item.Cluster.startsWith("BGC")) {
+          let bgc = item.Cluster;
+          let bgc1 = bgc.split('.')[0];
+          let image1 = "static/images/" + bgc + "_1.png";
+          let image2 = "static/images/" + bgc1 + "_1.png";
+
+          try {
+            const response1 = await fetch(image1, { method: 'HEAD' });
+            const response2 = await fetch(image2, { method: 'HEAD' });
+            if (response1.ok || response2.ok) {
+              return true;
+            }
+          } catch (error) {
+            continue;
+          }
+        }
+      } else if (imageType === 'Reaction') {
+        let image = "static/images_reactions/" + item.ID + ".png";
+        try {
+          const response = await fetch(image, { method: 'HEAD' });
+          if (response.ok) {
+            return true;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    }
+    return false;
+  }
   // Initialize on first call
   calculateMaxColumns();
 
@@ -562,7 +602,44 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   function removeColors() {
     d3.selectAll('rect').remove();
   }
+  // Add column header functions
+  function createColumnHeader(columnName, slotIndex) {
+    console.log(`Creating header: ${columnName} at slot ${slotIndex}`); // Add this line
 
+    // Remove any existing header for this slot
+    d3.selectAll(`.column-header[data-slot="${slotIndex}"]`).remove();
+
+    const treeSvg = d3.select('#tree svg');
+
+    if (treeSvg.empty()) {
+      console.warn('Tree SVG not found for header placement');
+      return;
+    }
+
+    // Calculate header position
+    const headerX = 200 + slotIndex * 200;
+    const headerY = 20; // Position above the tree content
+
+    console.log(`Header position: x=${headerX}, y=${headerY}`); // Add this line
+
+    // Add header text to the SVG
+    const headerElement = treeSvg.append('text')
+      .attr('class', 'column-header')
+      .attr('data-slot', slotIndex)
+      .attr('x', headerX)
+      .attr('y', headerY)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '14px')
+      .attr('font-weight', 'bold')
+      .attr('fill', '#7B1B38')
+      .text(columnName);
+
+    console.log('Header element created:', headerElement.node()); // Add this line
+  }
+
+  function removeColumnHeader(slotIndex) {
+    d3.selectAll(`.column-header[data-slot="${slotIndex}"]`).remove();
+  }
   function renderNP() {
     const slotIndex = getNextAvailableSlot();
     if (slotIndex === -1) {
@@ -571,6 +648,9 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
 
     columnSlots[slotIndex] = 'NP';
+
+    // Add this line:
+    createColumnHeader('BGC Products', slotIndex);
 
     let columnName = 'Cluster';
     if (metadata.length > 0) {
@@ -643,6 +723,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   function hideNP() {
     const freedSlot = freeColumnSlot('NP');
+    removeColumnHeader(freedSlot); // Add this line
     d3.selectAll('image.NP').remove();
     console.log(`Freed NP from slot ${freedSlot}`);
   }
@@ -655,6 +736,9 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
 
     columnSlots[slotIndex] = 'Reaction';
+
+    // Add this line:
+    createColumnHeader('Reactions', slotIndex);
 
     let nodes = d3.selectAll('.node').filter(d => !d.data.name.startsWith("AS0"));
     nodes.each(function (d) {
@@ -693,6 +777,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   function hideReaction() {
     const freedSlot = freeColumnSlot('Reaction');
+    removeColumnHeader(freedSlot); // Add this line
     d3.selectAll('image.Reaction').remove();
     console.log(`Freed Reaction from slot ${freedSlot}`);
   }
@@ -705,6 +790,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
 
     columnSlots[slotIndex] = columnName;
+
+    // Add these lines:
+    const displayName = columnName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    createColumnHeader(displayName, slotIndex);
 
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
@@ -759,6 +848,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   }
   function hideMetadata(columnName) {
     const freedSlot = freeColumnSlot(columnName);
+    removeColumnHeader(freedSlot); // Add this line
     d3.selectAll(`text.${columnName}`).remove();
     console.log(`Freed ${columnName} from slot ${freedSlot}`);
   }
@@ -768,6 +858,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   // console.log(document.getElementById('biosyn-class-button'));
 
   // ['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
+  const buttonContainer = document.querySelector('.button-container') || document.getElementById('button-container') || document.body;
+
   metadataListArray.forEach(id => {
     let button = document.getElementById(id);
     button.dataset.active = 'false'; // Add data-active attribute
@@ -842,64 +934,6 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
   });
 
-  ["BGC_product"].forEach(id => {
-    let button = document.getElementById(id);
-    button.dataset.active = 'false'; // Add data-active attribute
-
-    button.addEventListener('click', function () {
-      // Check if slots are available for inactive buttons
-      if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
-        console.warn('No available slots for new columns');
-        showColumnWarning(); // Show warning when user tries to add more
-        return; // Don't proceed if no slots available
-      }
-
-      if (button.dataset.active === 'false') {
-        if (renderNP()) {
-          tree.display.spacing_x(50).update();
-          button.dataset.active = 'true';
-          button.classList.add('active-button');
-          button.classList.remove('non-active-button');
-          console.log(`Button ${id} activated`);
-        }
-      } else {
-        hideNP();
-        button.dataset.active = 'false';
-        button.classList.remove('active-button');
-        button.classList.add('non-active-button');
-        console.log(`Button ${id} deactivated`);
-      }
-    });
-  });
-
-
-  ["Reaction"].forEach(id => {
-    let button = document.getElementById(id);
-    button.dataset.active = 'false'; // Add data-active attribute
-
-    button.addEventListener('click', function () {
-      // Check if slots are available for inactive buttons
-      if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
-        console.warn('No available slots for new columns');
-        showColumnWarning(); // Show warning when user tries to add more
-        return; // Don't proceed if no slots available
-      }
-
-      if (button.dataset.active === 'false') {
-        if (renderReaction()) {
-          tree.display.spacing_x(50).update();
-          button.dataset.active = 'true';
-          button.classList.add('active-button');
-          button.classList.remove('non-active-button');
-        }
-      } else {
-        hideReaction();
-        button.dataset.active = 'false';
-        button.classList.remove('active-button');
-        button.classList.add('non-active-button');
-      }
-    });
-  });
 
   // Remove the updateButtonStates calls and the old resize handler
   // Just keep the calculateMaxColumns call:
@@ -965,6 +999,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           }
         });
 
+        // ADD THIS LINE:
+        buttonContainer.appendChild(button);
         console.log('BGC_product button created and added');
       } else {
         console.log('BGC_product images not found - button hidden');
@@ -1011,6 +1047,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           }
         });
 
+        // ADD THIS LINE:
+        buttonContainer.appendChild(button);
         console.log('Reaction button created and added');
       } else {
         console.log('Reaction images not found - button hidden');
@@ -1542,44 +1580,5 @@ window.downloadSequences = function (tree, metadata) {
   return nodeNames;
 }
 
-// Add this helper function after your existing functions
-async function checkImagesExist(metadata, imageType) {
-  if (!metadata || metadata.length === 0) {
-    return false;
-  }
 
-  const sampleSize = Math.min(5, metadata.length);
-  const sampleEntries = metadata.slice(0, sampleSize);
 
-  for (let item of sampleEntries) {
-    if (imageType === 'BGC_product') {
-      if (item.hasOwnProperty('Cluster') && item.Cluster && item.Cluster.startsWith("BGC")) {
-        let bgc = item.Cluster;
-        let bgc1 = bgc.split('.')[0];
-        let image1 = "static/images/" + bgc + "_1.png";
-        let image2 = "static/images/" + bgc1 + "_1.png";
-
-        try {
-          const response1 = await fetch(image1, { method: 'HEAD' });
-          const response2 = await fetch(image2, { method: 'HEAD' });
-          if (response1.ok || response2.ok) {
-            return true;
-          }
-        } catch (error) {
-          continue;
-        }
-      }
-    } else if (imageType === 'Reaction') {
-      let image = "static/images_reactions/" + item.ID + ".png";
-      try {
-        const response = await fetch(image, { method: 'HEAD' });
-        if (response.ok) {
-          return true;
-        }
-      } catch (error) {
-        continue;
-      }
-    }
-  }
-  return false;
-}
