@@ -14,11 +14,11 @@
 
 // import phylotree from "/static/js/phylotree.js/dist/phylotree.js";
 
-window.getContainerDimensions = function(){
+window.getContainerDimensions = function () {
   let container = d3.select('#tree');
   var line = d3.line()
-      .x(function(d) { return x(d.date); })
-      .y(function(d) { return y(d.close); });
+    .x(function (d) { return x(d.date); })
+    .y(function (d) { return y(d.close); });
   const width = container.node().getBoundingClientRect().width;
   // const height = container.node().getBoundingClientRect().height*0.8;
   const height = container.node().offsetHeight;
@@ -28,17 +28,17 @@ window.getContainerDimensions = function(){
   //   c
   // }
   // const height = container.node().getBoundingClientRect().height;
-  console.log( `initiate Width: ${width}, Height: ${height}`);
+  console.log(`initiate Width: ${width}, Height: ${height}`);
   return { container, width, height };
 }
 
-window.getTreeData = function() {
+window.getTreeData = function () {
 
   const nwk = document.getElementById('tree_data').getAttribute('nwk_data');
   console.log("nwk = " + nwk);
   var metadata = JSON.parse(document.getElementById('tree_data').getAttribute('metadata'));
-  var metadataList=document.getElementById('tree_data').getAttribute('metadata_list');
-  var datasetDescr=document.getElementById('tree_data').getAttribute('datasetDescr');
+  var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
+  var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
 
   // var metadataList = JSON.parse(localStorage.getItem('metadataList'));
   console.log("metadataList = " + metadataList);
@@ -48,40 +48,40 @@ window.getTreeData = function() {
   var metadataListArray1 = JSON.parse(metadataList);
   console.log("metadataListArray = ", metadataListArray1);
   console.log(typeof metadataListArray1);
-  return {nwk, metadata, metadataListArray:metadataListArray1, datasetDescr };
+  return { nwk, metadata, metadataListArray: metadataListArray1, datasetDescr };
 }
 
 
 
-window.createTree = function(nwk) {
+window.createTree = function (nwk) {
   return new phylotree.phylotree(nwk);
 }
 
-window.setupEventListeners = function(tree) {
-  document.querySelectorAll("[data-direction]").forEach(function(element) {
-    element.addEventListener("click", function(e) {
+window.setupEventListeners = function (tree) {
+  document.querySelectorAll("[data-direction]").forEach(function (element) {
+    element.addEventListener("click", function (e) {
       console.log("y spacing 1: ", tree.display.spacing_y());
       console.log("x spacing 1: ", tree.display.spacing_x());
-        var which_function =
-            this.getAttribute("data-direction") == "vertical"
-                ? tree.display.spacing_x.bind(tree.display)
-                : tree.display.spacing_y.bind(tree.display)
-                // window.setTreeSize(width, height)
-                console.log("non vertical spacing: ", tree.display.spacing_y());
-                console.log("y spacing 2 data-amount: ",  Number(this.getAttribute("data-amount")));
-        which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
+      var which_function =
+        this.getAttribute("data-direction") == "vertical"
+          ? tree.display.spacing_x.bind(tree.display)
+          : tree.display.spacing_y.bind(tree.display)
+      // window.setTreeSize(width, height)
+      console.log("non vertical spacing: ", tree.display.spacing_y());
+      console.log("y spacing 2 data-amount: ", Number(this.getAttribute("data-amount")));
+      which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
     });
   });
 
-  document.querySelectorAll(".phylotree-layout-mode").forEach(function(element) {
-    element.addEventListener("click", function(e) {
-        if (tree.display.radial() != (this.getAttribute("data-mode") == "radial")) {
-            document.querySelectorAll(".phylotree-layout-mode").forEach(function(btn) {
-                btn.classList.toggle("active");
-            });
-            tree.display.radial(!tree.display.radial()).update();
-            // window.setTreeSize(width, height)
-        }
+  document.querySelectorAll(".phylotree-layout-mode").forEach(function (element) {
+    element.addEventListener("click", function (e) {
+      if (tree.display.radial() != (this.getAttribute("data-mode") == "radial")) {
+        document.querySelectorAll(".phylotree-layout-mode").forEach(function (btn) {
+          btn.classList.toggle("active");
+        });
+        tree.display.radial(!tree.display.radial()).update();
+        // window.setTreeSize(width, height)
+      }
     });
   });
 
@@ -96,8 +96,8 @@ window.setupEventListeners = function(tree) {
   //     }
   //   });
   // });
-  document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) {
-    toggler.addEventListener('click', function(e) {
+  document.querySelectorAll('.phylotree-align-toggler').forEach(function (toggler) {
+    toggler.addEventListener('click', function (e) {
       if (!tree || !tree.display || !tree.display.options) {
         console.error('Tree display options are not defined');
         return;
@@ -107,7 +107,7 @@ window.setupEventListeners = function(tree) {
 
       if (tree_align != button_align) {
         tree.display.alignTips(button_align == 'right');
-        document.querySelectorAll('.phylotree-align-toggler').forEach(function(toggler) {
+        document.querySelectorAll('.phylotree-align-toggler').forEach(function (toggler) {
           toggler.classList.toggle('active');
         });
         tree.display.update();
@@ -116,11 +116,11 @@ window.setupEventListeners = function(tree) {
     });
   });
 
-// remove this (non working) option for now  
-//   document.getElementById('midpoint-root-btn').addEventListener('click', function() {
-//     const result = phylotree.computeMidpoint(tree);
-//     console.log('Midpoint result:', result);
-//   });
+  // remove this (non working) option for now  
+  //   document.getElementById('midpoint-root-btn').addEventListener('click', function() {
+  //     const result = phylotree.computeMidpoint(tree);
+  //     console.log('Midpoint result:', result);
+  //   });
 }
 // document.querySelector("#toggle_animation").addEventListener("click", function(e) {
 //   var current_mode = this.classList.contains("active");
@@ -149,7 +149,7 @@ function default_tree_settings() {
   tree = phylotree();
   tree.branchLength(null);
   tree.branchName(null);
-  tree.display.radial(false).separation(function(a, b) {
+  tree.display.radial(false).separation(function (a, b) {
     return 0;
   });
 }
@@ -158,7 +158,7 @@ function node_colorizer(element, data) {
   try {
     var count_class = 0;
 
-    selection_set.forEach(function(d, i) {
+    selection_set.forEach(function (d, i) {
       if (data[d]) {
         count_class++;
         element.style(
@@ -175,7 +175,7 @@ function node_colorizer(element, data) {
         element.style("fill", null);
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 function edge_colorizer(element, data) {
@@ -183,7 +183,7 @@ function edge_colorizer(element, data) {
   try {
     var count_class = 0;
 
-    selection_set.forEach(function(d, i) {
+    selection_set.forEach(function (d, i) {
       if (data[d]) {
         count_class++;
         element.style(
@@ -199,12 +199,12 @@ function edge_colorizer(element, data) {
     } else if (count_class == 0) {
       element.style("stroke", null).classed("branch-multiple", false);
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Render the tree
 // add the selection to the tree
-window.renderTree = function(tree, height, width, customOptions) {
+window.renderTree = function (tree, height, width, customOptions) {
   const commonOptions = {
     container: '#tree',
     height: height,
@@ -227,7 +227,7 @@ window.renderTree = function(tree, height, width, customOptions) {
     // reroot: true,
     'fixed_width': [250, 500],
   };
-  const options = {...commonOptions, ...customOptions};
+  const options = { ...commonOptions, ...customOptions };
   console.log('options:', options);
 
   let renderedTree = tree.render(options);
@@ -269,7 +269,7 @@ window.renderTree = function(tree, height, width, customOptions) {
 }
 
 // Render bootstrap values
-window.drawBootstrapValues = function(tree) {
+window.drawBootstrapValues = function (tree) {
   bootstrapNodes = tree.getInternals();
   colorScale = d3.scaleSequential(d3.interpolateReds);
   colorNodesByName = function (element, data) {
@@ -289,23 +289,23 @@ window.drawBootstrapValues = function(tree) {
 
 
 
-window.checkSVGSize = function() {
+window.checkSVGSize = function () {
   // Create a new MutationObserver
-  setTimeout(function() {
+  setTimeout(function () {
     // Select the SVG element
     var svg = document.querySelector('#tree svg');
 
     // Create a new MutationObserver
-    var observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
+    var observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
         if (mutation.attributeName === 'width' || mutation.attributeName === 'height') {
           console.log('SVG size changed:', svg.getAttribute('width'), svg.getAttribute('height'));
         }
       });
     });
 
-  // Start observing the SVG for attribute changes
-  observer.observe(svg, { attributes: true });
+    // Start observing the SVG for attribute changes
+    observer.observe(svg, { attributes: true });
   }, 1000);
 
   console.log(tree.Width, tree.Height);
@@ -316,97 +316,152 @@ window.checkSVGSize = function() {
 }
 // Add images after the tree has been rendered
 
-  // nodes.append("line")
-  //   .attr("x1", 0)
-  //   .attr("y1", 0)
-  //   .attr("x2", 200)
-  //   .attr("y2", 0)
-  //   .attr("stroke", "black");
+// nodes.append("line")
+//   .attr("x1", 0)
+//   .attr("y1", 0)
+//   .attr("x2", 200)
+//   .attr("y2", 0)
+//   .attr("stroke", "black");
 
 
-window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
+window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   let activeColumns = 0;
 
-  function colorSameCluster(){
+  // Add column slot management variables
+  let maxColumns = 0;
+  let columnSlots = []; // Array to track which columns are occupied: [false, 'Species', false, 'Enzyme_function', ...]
+
+  // Calculate maximum columns based on container width
+  function calculateMaxColumns() {
+    const container = document.getElementById('tree-container') || document.getElementById('tree');
+    const containerWidth = container ? container.offsetWidth : window.innerWidth;
+    const columnWidth = 200; // Based on your existing spacing (200 + activeColumns * 200)
+    const treeMinWidth = 400;
+    const availableWidth = containerWidth - treeMinWidth;
+    maxColumns = Math.max(1, Math.floor(availableWidth / columnWidth));
+
+    // Resize columnSlots array if needed
+    if (columnSlots.length !== maxColumns) {
+      const oldSlots = [...columnSlots];
+      columnSlots = new Array(maxColumns).fill(false);
+      // Copy existing slots
+      for (let i = 0; i < Math.min(oldSlots.length, maxColumns); i++) {
+        columnSlots[i] = oldSlots[i];
+      }
+    }
+
+    console.log(`Max columns: ${maxColumns}`);
+    return maxColumns;
+  }
+
+  // Find next available slot
+  function getNextAvailableSlot() {
+    for (let i = 0; i < columnSlots.length; i++) {
+      if (!columnSlots[i]) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // Free a column slot
+  function freeColumnSlot(columnName) {
+    const slotIndex = columnSlots.indexOf(columnName);
+    if (slotIndex !== -1) {
+      columnSlots[slotIndex] = false;
+    }
+    return slotIndex;
+  }
+
+  // Initialize on first call
+  calculateMaxColumns();
+
+  function colorSameCluster() {
     let columnName = 'Cluster';
-    
+
     // SAFETY CHECK: Ensure metadata exists and has the required column
     if (!metadata || metadata.length === 0) {
-        console.error('No metadata available for clustering');
-        return;
+      console.error('No metadata available for clustering');
+      return;
     }
-    
+
     if (!metadata[0].hasOwnProperty(columnName)) {
-        console.error(`Column '${columnName}' not found in metadata`);
-        console.log('Available columns:', Object.keys(metadata[0]));
-        return;
+      console.error(`Column '${columnName}' not found in metadata`);
+      console.log('Available columns:', Object.keys(metadata[0]));
+      return;
     }
-    
+
     if (metadata.length > 0) {
-        let columnNames = Object.keys(metadata[0]);
-        console.log("Available columns:", columnNames);
+      let columnNames = Object.keys(metadata[0]);
+      console.log("Available columns:", columnNames);
     } else {
-        console.log("No metadata available.");
+      console.log("No metadata available.");
     }
-    
+
     console.log(columnName);
     let annot = metadata.reduce((obj, item) => {
-        obj[item["ID"]] = item[columnName];
-        return obj;
+      obj[item["ID"]] = item[columnName];
+      return obj;
     }, {});
-    
+
     console.log('annot:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
 
     // Group nodes by their text content
     let textGroups = {};
-    nodes.each(function(d) {
-        let text = annot[d.data.name];
-        console.log('text:', text);
-        if (text !== null && text !== undefined && text !== '') {
-            if (!textGroups[text]) {
-                textGroups[text] = [];
-            }
-            textGroups[text].push(this);
+    nodes.each(function (d) {
+      let text = annot[d.data.name];
+      console.log('text:', text);
+      if (text !== null && text !== undefined && text !== '') {
+        if (!textGroups[text]) {
+          textGroups[text] = [];
         }
+        textGroups[text].push(this);
+      }
     });
-    
+
     // Filter out text groups with only one element
     textGroups = Object.keys(textGroups).filter(text => textGroups[text].length > 1).reduce((obj, key) => {
-        obj[key] = textGroups[key];
-        return obj;
+      obj[key] = textGroups[key];
+      return obj;
     }, {});
-    
+
     console.log('textGroups with more than one:', textGroups);
 
     if (Object.keys(textGroups).length === 0) {
-        console.log('No clusters with multiple members found');
-        return;
+      console.log('No clusters with multiple members found');
+      return;
     }
 
     var clusters_colors = palette('tol-rainbow', Object.keys(textGroups).length);
     Object.keys(textGroups).forEach((text, index) => {
-        textGroups[text].forEach(node => {
-            let textElement = d3.select(node).select('text');
-            if (textElement.node()) {
-                let bbox = textElement.node().getBBox();
-                d3.select(node)
-                    .insert('rect', 'text')
-                    .attr('x', bbox.x - 2) // Adjust as needed
-                    .attr('y', bbox.y - 2) // Adjust as needed
-                    .attr('width', bbox.width + 4) // Adjust as needed
-                    .attr('height', bbox.height + 4) // Adjust as needed
-                    .style('fill', clusters_colors[index]); // Use different color from clusters_colors
-            }
-        });
+      textGroups[text].forEach(node => {
+        let textElement = d3.select(node).select('text');
+        if (textElement.node()) {
+          let bbox = textElement.node().getBBox();
+          d3.select(node)
+            .insert('rect', 'text')
+            .attr('x', bbox.x - 2) // Adjust as needed
+            .attr('y', bbox.y - 2) // Adjust as needed
+            .attr('width', bbox.width + 4) // Adjust as needed
+            .attr('height', bbox.height + 4) // Adjust as needed
+            .style('fill', clusters_colors[index]); // Use different color from clusters_colors
+        }
+      });
     });
   }
   function removeColors() {
     d3.selectAll('rect').remove();
   }
 
-  function renderNP(){
-    activeColumns++;
+  function renderNP() {
+    const slotIndex = getNextAvailableSlot();
+    if (slotIndex === -1) {
+      console.warn('No available column slots for NP');
+      return false;
+    }
+
+    columnSlots[slotIndex] = 'NP';
 
     let columnName = 'Cluster';
     if (metadata.length > 0) {
@@ -422,69 +477,78 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     }, {});
     console.log('annot:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
-    nodes.each(function(d) {
+    nodes.each(function (d) {
       let transformValue = d3.select(this).attr('transform');
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
-    let bgc = annot[d.data.name];
-    if (bgc && bgc.startsWith("BGC")) {
-      let bgc1 = bgc.split('.')[0];
-      console.log(bgc, ': Checking images');
-      
-      let image1 = "static/images/" + bgc + "_1.png";
-      let image2 = "static/images/" + bgc1 + "_1.png";
-      console.log('Checking image1:', image1);
-      console.log('Checking image2:', image2);
-      
-      // Function to check if an image exists
-      async function imageExists(image_url) {
-        try {
-          const response = await fetch(image_url, { method: 'HEAD' });
-          return response.ok;
-        } catch {
-          return false;
-        }
-      }
-      
-      // Check if the image exists
-      Promise.all([imageExists(image1), imageExists(image2)]).then(([exists1, exists2]) => {
-        let image;
-        if (exists1) {
-          image = image1;
-        } else if (exists2) {
-          image = image2;
-        } else {
-          console.log('Image does not exist for both naming conventions');
-          return;
+      let bgc = annot[d.data.name];
+      if (bgc && bgc.startsWith("BGC")) {
+        let bgc1 = bgc.split('.')[0];
+        console.log(bgc, ': Checking images');
+
+        let image1 = "static/images/" + bgc + "_1.png";
+        let image2 = "static/images/" + bgc1 + "_1.png";
+        console.log('Checking image1:', image1);
+        console.log('Checking image2:', image2);
+
+        // Function to check if an image exists
+        async function imageExists(image_url) {
+          try {
+            const response = await fetch(image_url, { method: 'HEAD' });
+            return response.ok;
+          } catch {
+            return false;
+          }
         }
 
-        let img = d3.select(this).append("image")
-          .attr('xlink:href', image)
-          .attr('x', 200 + activeColumns * 200 - translateValues[0])
-          .attr('y', -50)
-          .attr('width', 100)
-          .attr('height', 100)
-          .attr('class', "NP");
-        console.log('image:width', img.attr('width'));
+        // Check if the image exists
+        Promise.all([imageExists(image1), imageExists(image2)]).then(([exists1, exists2]) => {
+          let image;
+          if (exists1) {
+            image = image1;
+          } else if (exists2) {
+            image = image2;
+          } else {
+            console.log('Image does not exist for both naming conventions');
+            return;
+          }
 
-        img.on('click', function() {
-          d3.select('#enlarged-image').attr('src', image);
+          let img = d3.select(this).append("image")
+            .attr('xlink:href', image)
+            .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex instead of activeColumns
+            .attr('y', -50)
+            .attr('width', 100)
+            .attr('height', 100)
+            .attr('class', "NP")
+            .attr('data-slot', slotIndex); // Add slot tracking
+
+          console.log('image:width', img.attr('width'));
+
+          img.on('click', function () {
+            d3.select('#enlarged-image').attr('src', image);
+          });
         });
-      });
-    }
-  });
-}
+      }
+    });
+    return true;
+  }
 
-
-  function hideNP(){
-    activeColumns--;
+  function hideNP() {
+    const freedSlot = freeColumnSlot('NP');
     d3.selectAll('image.NP').remove();
+    console.log(`Freed NP from slot ${freedSlot}`);
   }
 
   function renderReaction() {
-    activeColumns++;
+    const slotIndex = getNextAvailableSlot();
+    if (slotIndex === -1) {
+      console.warn('No available column slots for Reaction');
+      return false;
+    }
+
+    columnSlots[slotIndex] = 'Reaction';
 
     let nodes = d3.selectAll('.node').filter(d => !d.data.name.startsWith("AS0"));
-    nodes.each(function(d) {
+    nodes.each(function (d) {
       let transformValue = d3.select(this).attr('transform');
       let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
       let id = d.data.name;
@@ -495,13 +559,14 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
             if (response.ok) {
               let img = d3.select(this).append("image")
                 .attr('xlink:href', image)
-                .attr('x', 200+activeColumns*200-translateValues[0])
+                .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex
                 .attr('y', -50)
                 .attr('width', 100)
                 .attr('height', 100)
-                .attr('class', "Reaction");
+                .attr('class', "Reaction")
+                .attr('data-slot', slotIndex); // Add slot tracking
 
-              img.on('click', function() {
+              img.on('click', function () {
                 d3.select('#enlarged-image').attr('src', image);
               });
 
@@ -514,21 +579,30 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
           });
       }
     });
+    return true;
   }
 
-  function hideReaction(){
-    activeColumns--;
+  function hideReaction() {
+    const freedSlot = freeColumnSlot('Reaction');
     d3.selectAll('image.Reaction').remove();
+    console.log(`Freed Reaction from slot ${freedSlot}`);
   }
 
-  function renderMetadata(columnName){
-    activeColumns++;
+  function renderMetadata(columnName) {
+    const slotIndex = getNextAvailableSlot();
+    if (slotIndex === -1) {
+      console.warn(`No available column slots for ${columnName}`);
+      return false;
+    }
+
+    columnSlots[slotIndex] = columnName;
+
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
       return obj;
     }, {});
     console.log('metadata:', columnName, annot);
-    setTimeout(function() {
+    setTimeout(function () {
       // Select the nodes where you want to add the image
       // let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
       // nodes.append("text")
@@ -537,7 +611,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       // .attr('y', 0);
       //let leaveFontSize = d3.select('.leaf-class').style('font-size');
       let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
-      nodes.each(function(d) {
+      nodes.each(function (d) {
         let text = annot[d.data.name];
         if (text) { // Check if text is not null
           let leaveFontSize = d3.select(this).attr('font-size');
@@ -551,12 +625,18 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
           console.log('translateValues:', translateValues);
           // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
           // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
-          let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
+          let textElement = d3.select(this).append('text')
+            .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
+            .attr('y', 0)
+            .attr('class', columnName)
+            .attr("font-size", leaveFontSize)
+            .attr("debugging", translateValues)
+            .attr('data-slot', slotIndex); // Add slot tracking
 
           if (text.length > 80) {
             let firstLine = text.substring(0, 80);
             let secondLine = text.substring(80);
-      
+
             textElement.append('tspan').text(firstLine);
             textElement.append('tspan').attr('x', 400).attr('dy', '1em').text(secondLine);
           } else {
@@ -566,11 +646,12 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
       });
     }, 0);
 
+    return true;
   }
-  function hideMetadata(columnName){
-    // Remove the text elements associated with this columnName
-    activeColumns--;
+  function hideMetadata(columnName) {
+    const freedSlot = freeColumnSlot(columnName);
     d3.selectAll(`text.${columnName}`).remove();
+    console.log(`Freed ${columnName} from slot ${freedSlot}`);
   }
   // Check if the buttons exist and the event listeners are being attached
   // console.log(document.getElementById('enzyme-function-button'));
@@ -582,7 +663,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     let button = document.getElementById(id);
     button.dataset.active = 'false'; // Add data-active attribute
 
-    button.addEventListener('click', function() {
+    button.addEventListener('click', function () {
       if (button.dataset.active === 'false') {
         // If the button is not active, display the content and set the button to active
         renderMetadata(id);
@@ -604,45 +685,45 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     // CHECK if 'Cluster' column exists in metadata before creating button
     let hasClusterColumn = false;
     if (metadata && metadata.length > 0) {
-        hasClusterColumn = metadata[0].hasOwnProperty('Cluster');
-        console.log('Checking for Cluster column:', hasClusterColumn);
-        console.log('Available columns:', Object.keys(metadata[0]));
+      hasClusterColumn = metadata[0].hasOwnProperty('Cluster');
+      console.log('Checking for Cluster column:', hasClusterColumn);
+      console.log('Available columns:', Object.keys(metadata[0]));
     }
-    
+
     // Only create button if Cluster column exists
     if (hasClusterColumn) {
-        let button = document.getElementById(id);
-        if (button) {
-            button.dataset.active = 'false'; // Add data-active attribute
+      let button = document.getElementById(id);
+      if (button) {
+        button.dataset.active = 'false'; // Add data-active attribute
 
-            button.addEventListener('click', function() {
-                if (button.dataset.active === 'false') {
-                    // If the button is not active, display the content and set the button to active
-                    colorSameCluster(id);
-                    button.dataset.active = 'true';
-                    button.classList.add('active-button');
-                    button.classList.remove('non-active-button');
-                } else {
-                    // If the button is active, hide the content and set the button to inactive
-                    removeColors(id);
-                    button.dataset.active = 'false';
-                    button.classList.remove('active-button');
-                    button.classList.add('non-active-button');
-                }
-            });
-            buttonContainer.appendChild(button);
-            console.log('Cluster button created and added');
-        } else {
-            console.log('Cluster button element not found in DOM');
-        }
+        button.addEventListener('click', function () {
+          if (button.dataset.active === 'false') {
+            // If the button is not active, display the content and set the button to active
+            colorSameCluster(id);
+            button.dataset.active = 'true';
+            button.classList.add('active-button');
+            button.classList.remove('non-active-button');
+          } else {
+            // If the button is active, hide the content and set the button to inactive
+            removeColors(id);
+            button.dataset.active = 'false';
+            button.classList.remove('active-button');
+            button.classList.add('non-active-button');
+          }
+        });
+        buttonContainer.appendChild(button);
+        console.log('Cluster button created and added');
+      } else {
+        console.log('Cluster button element not found in DOM');
+      }
     } else {
-        console.log('Cluster column not found in metadata - button not created');
-        // OPTIONAL: Hide the button if it exists in HTML but shouldn't be shown
-        let button = document.getElementById(id);
-        if (button) {
-            button.style.display = 'none';
-            console.log('Cluster button hidden because column does not exist');
-        }
+      console.log('Cluster column not found in metadata - button not created');
+      // OPTIONAL: Hide the button if it exists in HTML but shouldn't be shown
+      let button = document.getElementById(id);
+      if (button) {
+        button.style.display = 'none';
+        console.log('Cluster button hidden because column does not exist');
+      }
     }
   });
 
@@ -650,7 +731,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     let button = document.getElementById(id);
     button.dataset.active = 'false'; // Add data-active attribute
 
-    button.addEventListener('click', function() {
+    button.addEventListener('click', function () {
       if (button.dataset.active === 'false') {
         // If the button is not active, display the content and set the button to active
         renderNP();
@@ -663,7 +744,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
         console.log(`Button ${id} activated`);
       } else {
         // If the button is active, hide the content and set the button to inactive
-        hideNP(id);
+        hideNP();
         button.dataset.active = 'false';
         button.classList.remove('active-button');
         button.classList.add('non-active-button');
@@ -677,7 +758,7 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
     let button = document.getElementById(id);
     button.dataset.active = 'false'; // Add data-active attribute
 
-    button.addEventListener('click', function() {
+    button.addEventListener('click', function () {
       if (button.dataset.active === 'false') {
         // If the button is not active, display the content and set the button to active
         renderReaction();
@@ -694,11 +775,11 @@ window.addImagesAndMetadata = function(tree, metadata, metadataListArray) {
   });
 }
 
-window.setupSaveImageButton = function() {
+window.setupSaveImageButton = function () {
 
   // define the function for saving the image
 
-  var datamonkey_save_image = function(type, container) {
+  var datamonkey_save_image = function (type, container) {
     var prefix = {
       xmlns: "http://www.w3.org/2000/xmlns/",
       xlink: "http://www.w3.org/1999/xlink",
@@ -790,7 +871,7 @@ window.setupSaveImageButton = function() {
     } else if (type == "png") {
       b64toBlob(
         image_string,
-        function(blob) {
+        function (blob) {
           var url = window.URL.createObjectURL(blob);
           var pom = document.createElement("a");
           pom.setAttribute("download", "image.png");
@@ -799,7 +880,7 @@ window.setupSaveImageButton = function() {
           pom.click();
           pom.remove();
         },
-        function(error) {
+        function (error) {
           console.log(error); // eslint-disable-line
         }
       );
@@ -817,7 +898,7 @@ window.setupSaveImageButton = function() {
 
   var saveImageBtn = document.querySelector("#save_image");
   if (saveImageBtn) {
-    saveImageBtn.addEventListener("click", function(e) {
+    saveImageBtn.addEventListener("click", function (e) {
       datamonkey_save_image("svg", "#tree_container");
     });
   } else {
@@ -825,34 +906,34 @@ window.setupSaveImageButton = function() {
   }
 }
 
-window.setTreeSize = function(width, height) {
+window.setTreeSize = function (width, height) {
   console.log('Tree rendered, set up the proper size');
-  setTimeout(function() {
+  setTimeout(function () {
     d3.select('#tree svg')
       .attr('width', width);
-      // .attr('height', height);
+    // .attr('height', height);
   }, 1000);
 }
 
-window.setTreeSizeWH = function(width, height) {
+window.setTreeSizeWH = function (width, height) {
   console.log('Tree rendered, set up the proper size');
-  setTimeout(function() {
+  setTimeout(function () {
     d3.select('#tree svg')
       .attr('width', width)
       .attr('height', height);
   }, 10000);
 }
 
-window.showTree = function(tree) {
+window.showTree = function (tree) {
   console.log('showing tree');
   $(tree.display.container).html(tree.display.show());
 }
 
-window.setupSplitPanel = function() {
+window.setupSplitPanel = function () {
   // At the end of tree_rendering.js
-  $(document).ready(function() {
+  $(document).ready(function () {
     Split(['.tree-panel', '.details'], {
-    // Split(['.tree', '.details'], {
+      // Split(['.tree', '.details'], {
       sizes: [75, 25],
       minSize: 100,
       gutterSize: 5,
@@ -860,20 +941,20 @@ window.setupSplitPanel = function() {
     });
   });
 }
-window.iterateOverJplaceNodes = function() {
+window.iterateOverJplaceNodes = function () {
   // check if the jplace annotation is parsed
   let nodes = d3.selectAll('.node');
-  nodes.each(function(d) {
+  nodes.each(function (d) {
     annotation = d.data.annotation;
     console.log(annotation);
   });
 }
 
 //window.getEnzymesSummary = function(tree, node, metadata, metadataListArray) {
-  // Get all the leaves that are included in the subtree
-  // selectedNodes=tree.selectAllDescendants(node, true, false)
-  // console.log("Print the selected nodes");
-  // console.log(selectedNodes);
+// Get all the leaves that are included in the subtree
+// selectedNodes=tree.selectAllDescendants(node, true, false)
+// console.log("Print the selected nodes");
+// console.log(selectedNodes);
 
 
 
@@ -886,36 +967,36 @@ window.iterateOverJplaceNodes = function() {
 //   console.log("Processing terminal nodes:", nodes);
 // }
 // Function to process terminal nodes
-window.processTerminalNodes = function(nodes) {
+window.processTerminalNodes = function (nodes) {
   console.log("Processing terminal nodes:", nodes);
 }
 
 // Add event listener for the custom event
-window.addEventListener("terminalNodesSelected", function(event) {
+window.addEventListener("terminalNodesSelected", function (event) {
   const terminal_nodes = event.detail;
   window.processTerminalNodes(terminal_nodes);
 });
 
 
 
-const getMetadataSubset = function(nodeNames, metadata) {
+const getMetadataSubset = function (nodeNames, metadata) {
   const filteredTable = metadata.filter(row => nodeNames.includes(row.ID));
   //console.log('Filtered metadata table:', filteredTable);
   return filteredTable;
 }
-const getMetadataSummary=function(filteredTable) {
+const getMetadataSummary = function (filteredTable) {
   let summary = {};
   filteredTable.forEach(row => {
-      for (const [key, value] of Object.entries(row)) {
-          if (key === 'ID'|| value === null) continue; // Skip the 'ID' column
-          if (!summary[key]) {
-              summary[key] = {};
-          }
-          if (!summary[key][value]) {
-              summary[key][value] = 0;
-          }
-          summary[key][value]++;
+    for (const [key, value] of Object.entries(row)) {
+      if (key === 'ID' || value === null) continue; // Skip the 'ID' column
+      if (!summary[key]) {
+        summary[key] = {};
       }
+      if (!summary[key][value]) {
+        summary[key][value] = 0;
+      }
+      summary[key][value]++;
+    }
   });
   return summary;
 }
@@ -945,7 +1026,7 @@ const getMetadataSummary=function(filteredTable) {
 //   }
 // }
 
-const displayMetadataSummary = function(summary) {
+const displayMetadataSummary = function (summary) {
   const summaryContainer = document.getElementById('summary-container');
   if (summaryContainer) {
     summaryContainer.innerHTML = ''; // Clear previous content
@@ -953,7 +1034,7 @@ const displayMetadataSummary = function(summary) {
     for (const [key, values] of Object.entries(summary)) {
       const columnDiv = document.createElement('div');
       columnDiv.classList.add('summary-column');
-      
+
       const columnTitle = document.createElement('h3');
       columnTitle.textContent = key;
       columnTitle.style.fontSize = '18px'; // Make the title smaller
@@ -1007,7 +1088,7 @@ const displayMetadataSummary = function(summary) {
 //     for (const [key, values] of Object.entries(summary)) {
 //       const columnDiv = document.createElement('div');
 //       columnDiv.classList.add('summary-column');
-      
+
 //       const columnTitle = document.createElement('h3');
 //       columnTitle.textContent = key;
 
@@ -1042,7 +1123,7 @@ const displayMetadataSummary = function(summary) {
 //     console.error('summaryContainer element not found');
 //   }
 // }
-window.checkForClusters = function(tree, node) {
+window.checkForClusters = function (tree, node) {
   // viewof diameter_threshold = slider({
   //   min: 0.0,
   //   max: 0.2,
@@ -1056,48 +1137,81 @@ window.checkForClusters = function(tree, node) {
   clusters = phylotree.phylopart(tree, bootstrap_threshold, diameter_threshold, node);
   console.log('Clusters:', clusters);
 }
-window.getTerminalNodesArray = function(tree,metadata) {
+window.getTerminalNodesArray = function (tree, metadata) {
   let nodeNames = [];
   document.addEventListener('terminalNodesSelected', event => {
     nodeNames = [];
     // Clear all previous selections
-    
+
     const terminal_nodes = event.detail;
     // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree,terminal_nodes);
+    phylotree.clearAllSelections(tree, terminal_nodes);
     terminal_nodes.forEach(node => {
       nodeNames.push(node.data.name);
     });
     console.log('Node names:', nodeNames);
-    filteredTable=getMetadataSubset(nodeNames, metadata);
-    metadataSummaryResult=getMetadataSummary(filteredTable)
+    filteredTable = getMetadataSubset(nodeNames, metadata);
+    metadataSummaryResult = getMetadataSummary(filteredTable)
     console.log('Metadata summary:', metadataSummaryResult);
     displayMetadataSummary(metadataSummaryResult);
   });
   return nodeNames;
 }
 
-window.downloadSequences = function(tree,metadata) {
+window.downloadSequences = function (tree, metadata) {
   let nodeNames = [];
   document.addEventListener('terminalNodesSelected', summaryEvent => {
     nodeNames = [];
     // Clear all previous selections
-    
+
     const terminal_nodes = summaryEvent.detail;
     // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree,terminal_nodes);
+    phylotree.clearAllSelections(tree, terminal_nodes);
     terminal_nodes.forEach(node => {
       nodeNames.push(node.data.name);
     });
     console.log('Node names:', nodeNames);
-    filteredTable=getMetadataSubset(nodeNames, metadata);
-    metadataSummaryResult=getMetadataSummary(filteredTable)
-    console.log('Metadata summary:', metadataSummaryResult);
-    displayMetadataSummary(metadataSummaryResult);
+    // Send the node names to the backend to retrieve sequences
+
+    try {
+      // Prompt the user to enter a file name
+      const fileName = prompt('Enter a name for the file (default: nodeSequences.fasta):', 'nodeSequences.fasta') || 'nodeSequences.fasta';
+
+      (async function () {
+        const response = await fetch('/api/download_sequences', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ nodeNames }),
+        });
+      })();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch sequences: ${response.statusText}`);
+      }
+
+      // Get the file blob from the response
+      const blob = await(async () => await response.blob())();
+
+      // Create a download link for the file
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName; // Use the user-provided file name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+      console.log('File downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading sequences:', error);
+    }
   });
   return nodeNames;
 }
-window.displayNodeAnnotations = function(tree) {
+window.displayNodeAnnotations = function (tree) {
   console.log("Displaying annotations for all nodes:");
 
   // Check if the tree has a `getNodes` method (phylotree-specific)
@@ -1105,12 +1219,12 @@ window.displayNodeAnnotations = function(tree) {
 
   // Traverse all nodes
   nodes.forEach(node => {
-      const annotation = node.data?.annotation || "No annotation"; // Get annotation or fallback
-      const isLeaf = !node.children || node.children.length === 0; // Check if the node is a leaf
-      const nodeType = isLeaf ? "Leaf" : "Internal Node";
+    const annotation = node.data?.annotation || "No annotation"; // Get annotation or fallback
+    const isLeaf = !node.children || node.children.length === 0; // Check if the node is a leaf
+    const nodeType = isLeaf ? "Leaf" : "Internal Node";
 
-      // Log the node's annotation and type
-      console.log(`Node: ${node.data?.name || "Unnamed"}, Type: ${nodeType}, Annotation: ${annotation}`);
+    // Log the node's annotation and type
+    console.log(`Node: ${node.data?.name || "Unnamed"}, Type: ${nodeType}, Annotation: ${annotation}`);
   });
 
   console.log("Finished displaying annotations.");
@@ -1127,15 +1241,15 @@ window.displayNodeAnnotations = function(tree) {
 
 //   console.log("Finished displaying annotations.");
 // }
-window.downloadSequences = function(tree,metadata) {
+window.downloadSequences = function (tree, metadata) {
   let nodeNames = [];
   document.addEventListener('nodesForDownloadSelected', seqDownloadEvent => {
     nodeNames = [];
     // Clear all previous selections
-    
+
     const terminal_nodes = seqDownloadEvent.detail;
     // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree,terminal_nodes);
+    phylotree.clearAllSelections(tree, terminal_nodes);
     terminal_nodes.forEach(node => {
       nodeNames.push(node.data.name);
     });
@@ -1146,7 +1260,7 @@ window.downloadSequences = function(tree,metadata) {
       // Prompt the user to enter a file name
       const fileName = prompt('Enter a name for the file (default: nodeSequences.fasta):', 'nodeSequences.fasta') || 'nodeSequences.fasta';
 
-      (async function() {
+      (async function () {
         const response = await fetch('/api/download_sequences', {
           method: 'POST',
           headers: {
@@ -1157,11 +1271,11 @@ window.downloadSequences = function(tree,metadata) {
       })();
 
       if (!response.ok) {
-      throw new Error(`Failed to fetch sequences: ${response.statusText}`);
+        throw new Error(`Failed to fetch sequences: ${response.statusText}`);
       }
 
       // Get the file blob from the response
-      const blob = await (async () => await response.blob())();
+      const blob = await(async () => await response.blob())();
 
       // Create a download link for the file
       const url = window.URL.createObjectURL(blob);
