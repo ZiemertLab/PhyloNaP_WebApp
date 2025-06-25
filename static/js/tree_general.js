@@ -860,7 +860,6 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           button.dataset.active = 'true';
           button.classList.add('active-button');
           button.classList.remove('non-active-button');
-          updateButtonStates(); // Update button states after adding
           console.log(`Button ${id} activated`);
         }
       } else {
@@ -868,7 +867,6 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         button.dataset.active = 'false';
         button.classList.remove('active-button');
         button.classList.add('non-active-button');
-        updateButtonStates(); // Update button states after removing
         console.log(`Button ${id} deactivated`);
       }
     });
@@ -893,14 +891,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           button.dataset.active = 'true';
           button.classList.add('active-button');
           button.classList.remove('non-active-button');
-          updateButtonStates(); // Update button states after adding
         }
       } else {
         hideReaction();
         button.dataset.active = 'false';
         button.classList.remove('active-button');
         button.classList.add('non-active-button');
-        updateButtonStates(); // Update button states after removing
       }
     });
   });
@@ -930,6 +926,100 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       }
     }
   });
+
+  // Check BGC_product images and conditionally show button
+  (async function () {
+    let hasBGCImages = false;
+    if (metadata && metadata.length > 0) {
+      hasBGCImages = await checkImagesExist(metadata, 'BGC_product');
+      console.log('Checking for BGC_product images:', hasBGCImages);
+    }
+
+    ["BGC_product"].forEach(id => {
+      let button = document.getElementById(id);
+
+      if (hasBGCImages && button) {
+        button.dataset.active = 'false';
+
+        button.addEventListener('click', function () {
+          if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
+            console.warn('No available slots for new columns');
+            showColumnWarning();
+            return;
+          }
+
+          if (button.dataset.active === 'false') {
+            if (renderNP()) {
+              tree.display.spacing_x(50).update();
+              button.dataset.active = 'true';
+              button.classList.add('active-button');
+              button.classList.remove('non-active-button');
+              console.log(`Button ${id} activated`);
+            }
+          } else {
+            hideNP();
+            button.dataset.active = 'false';
+            button.classList.remove('active-button');
+            button.classList.add('non-active-button');
+            console.log(`Button ${id} deactivated`);
+          }
+        });
+
+        console.log('BGC_product button created and added');
+      } else {
+        console.log('BGC_product images not found - button hidden');
+        if (button) {
+          button.style.display = 'none';
+        }
+      }
+    });
+  })();
+
+  // Check Reaction images and conditionally show button
+  (async function () {
+    let hasReactionImages = false;
+    if (metadata && metadata.length > 0) {
+      hasReactionImages = await checkImagesExist(metadata, 'Reaction');
+      console.log('Checking for Reaction images:', hasReactionImages);
+    }
+
+    ["Reaction"].forEach(id => {
+      let button = document.getElementById(id);
+
+      if (hasReactionImages && button) {
+        button.dataset.active = 'false';
+
+        button.addEventListener('click', function () {
+          if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
+            console.warn('No available slots for new columns');
+            showColumnWarning();
+            return;
+          }
+
+          if (button.dataset.active === 'false') {
+            if (renderReaction()) {
+              tree.display.spacing_x(50).update();
+              button.dataset.active = 'true';
+              button.classList.add('active-button');
+              button.classList.remove('non-active-button');
+            }
+          } else {
+            hideReaction();
+            button.dataset.active = 'false';
+            button.classList.remove('active-button');
+            button.classList.add('non-active-button');
+          }
+        });
+
+        console.log('Reaction button created and added');
+      } else {
+        console.log('Reaction images not found - button hidden');
+        if (button) {
+          button.style.display = 'none';
+        }
+      }
+    });
+  })();
 }
 
 window.setupSaveImageButton = function () {
@@ -1450,4 +1540,46 @@ window.downloadSequences = function (tree, metadata) {
     }
   });
   return nodeNames;
+}
+
+// Add this helper function after your existing functions
+async function checkImagesExist(metadata, imageType) {
+  if (!metadata || metadata.length === 0) {
+    return false;
+  }
+
+  const sampleSize = Math.min(5, metadata.length);
+  const sampleEntries = metadata.slice(0, sampleSize);
+
+  for (let item of sampleEntries) {
+    if (imageType === 'BGC_product') {
+      if (item.hasOwnProperty('Cluster') && item.Cluster && item.Cluster.startsWith("BGC")) {
+        let bgc = item.Cluster;
+        let bgc1 = bgc.split('.')[0];
+        let image1 = "static/images/" + bgc + "_1.png";
+        let image2 = "static/images/" + bgc1 + "_1.png";
+
+        try {
+          const response1 = await fetch(image1, { method: 'HEAD' });
+          const response2 = await fetch(image2, { method: 'HEAD' });
+          if (response1.ok || response2.ok) {
+            return true;
+          }
+        } catch (error) {
+          continue;
+        }
+      }
+    } else if (imageType === 'Reaction') {
+      let image = "static/images_reactions/" + item.ID + ".png";
+      try {
+        const response = await fetch(image, { method: 'HEAD' });
+        if (response.ok) {
+          return true;
+        }
+      } catch (error) {
+        continue;
+      }
+    }
+  }
+  return false;
 }
