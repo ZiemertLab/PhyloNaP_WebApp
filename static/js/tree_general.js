@@ -1000,7 +1000,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         });
 
         // ADD THIS LINE:
-        buttonContainer.appendChild(button);
+        // buttonContainer.appendChild(button);
         console.log('BGC_product button created and added');
       } else {
         console.log('BGC_product images not found - button hidden');
@@ -1048,7 +1048,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         });
 
         // ADD THIS LINE:
-        buttonContainer.appendChild(button);
+        // buttonContainer.appendChild(button);
         console.log('Reaction button created and added');
       } else {
         console.log('Reaction images not found - button hidden');
