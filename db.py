@@ -9,7 +9,9 @@ from datetime import datetime
 # Setup logging - add this section at the top of your file
 def setup_logger():
     """Configure the logger to write to a file"""
-    log_dir = '/home/phylonapadm/PhyloNaP/logs'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(script_dir, '..', 'logs')
+    log_dir = os.path.abspath(log_dir)  # Normalize the path
     os.makedirs(log_dir, exist_ok=True)
     
     logger = logging.getLogger("phylonap.db")
@@ -637,7 +639,10 @@ def export_database_as_json(output_file=None):
     """
     try:
         if output_file is None:
-            output_file = os.path.join('/home/phylonapadm/PhyloNaP/logs', f"db_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            log_dir = os.path.join(script_dir, '..', 'logs')
+            log_dir = os.path.abspath(log_dir)  # Normalize the path
+            output_file = os.path.join(log_dir, f"db_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
         
         # Get the structure in the old format
         db_structure = get_db_structure()

@@ -30,7 +30,9 @@ from logging.handlers import RotatingFileHandler
 # Setup logging configuration
 def setup_app_logging():
     # Create logs directory if it doesn't exist
-    log_dir = '/home/phylonapadm/PhyloNaP/logs'
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.join(script_dir, '..', 'logs')
+    log_dir = os.path.abspath(log_dir)  # Normalize the path
     os.makedirs(log_dir, exist_ok=True)
     
     # Configure root logger
