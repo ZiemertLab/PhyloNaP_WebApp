@@ -318,7 +318,7 @@ window.getTreePositionInfo = function (tree) {
         return display.radius;
       } else {
         // return display.size[1] - display.offsets[1] - display.options["left-offset"] - display.shown_font_size;
-        return display.size[1] + 20;
+        return display.size[1];
       }
     }
   };
@@ -381,19 +381,58 @@ window.checkSVGSize = function () {
 
 
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
-  let activeColumns = 0;
 
-  // Add column slot management variables
+  let activeColumns = 0;
   let maxColumns = 0;
   let columnSlots = [];
   let warningTimeout = null; // Add timeout variable
 
+  // Add these new variables for caching column positions
+  let cachedColumnStartX = null;
+  let cachedTreeWidth = null;
+  let cachedTreeHeight = null;
+
+
+  // Function to get or calculate column start position
+  function getColumnStartX() {
+    const positionInfo = window.getTreePositionInfo(tree);
+
+    if (!positionInfo) {
+      console.warn('Could not get tree position info, using fallback');
+      return 200; // Fallback value
+    }
+
+    // Check if we need to recalculate (tree size changed or first time)
+    const currentWidth = positionInfo.size ? positionInfo.size[0] : 0;
+    const currentHeight = positionInfo.size ? positionInfo.size[1] : 0;
+
+    if (cachedColumnStartX === null ||
+      cachedTreeWidth !== currentWidth ||
+      cachedTreeHeight !== currentHeight) {
+
+      cachedColumnStartX = positionInfo.getScaleEndPosition();
+      cachedTreeWidth = currentWidth;
+      cachedTreeHeight = currentHeight;
+
+      console.log(`Column start position updated: ${cachedColumnStartX}`);
+    }
+
+    return cachedColumnStartX;
+  }
+
+  // Function to invalidate cache (call this when tree is updated)
+  function invalidateColumnPositionCache() {
+    cachedColumnStartX = null;
+    cachedTreeWidth = null;
+    cachedTreeHeight = null;
+    console.log('Column position cache invalidated');
+  }
   // Calculate maximum columns based on container width
   function calculateMaxColumns() {
     const container = document.getElementById('tree-container') || document.getElementById('tree');
     const containerWidth = container ? container.offsetWidth : window.innerWidth;
     const columnWidth = 200;
-    const treeMinWidth = 400;
+    const treeMinWidth = getColumnStartX(); // Use the new function to get column start position
     const availableWidth = containerWidth - treeMinWidth;
     maxColumns = Math.max(1, Math.floor(availableWidth / columnWidth));
 
@@ -672,26 +711,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       return;
     }
 
-    // Get tree position information
-    const positionInfo = window.getTreePositionInfo(tree);
-
-    if (!positionInfo) {
-      console.warn('Could not get tree position info');
-      return;
-    }
-
-    // Calculate header position
-    // Calculate header position based on actual tree dimensions
-    scaleEndPosition = positionInfo.getScaleEndPosition();
-    console.log(`Scale end position: ${scaleEndPosition}`); // Add this line
-    // const columnStartX = positionInfo.getColumnStartPosition();
-    const columnStartX = positionInfo.getScaleEndPosition();
-    const headerX = columnStartX + slotIndex * 200;
+    const headerX = getColumnStartX() + 20 + slotIndex * 200;
     // const headerX = 200 + slotIndex * 200;
     const headerY = 20; // Position above the tree content
 
     console.log(`Header position: x=${headerX}, y=${headerY}`); // Add this line
-    console.log(`Right most leaf at: ${positionInfo.rightMostLeaf}`);
+
     // Add header text to the SVG
     const headerElement = treeSvg.append('text')
       .attr('class', 'column-header')
@@ -775,10 +800,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             .attr('xlink:href', image)
             // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex instead of activeColumns
             .attr('x', (d) => {
-              const positionInfo = window.getTreePositionInfo(tree);
-              const columnStartX = positionInfo.getScaleEndPosition();
 
-              return columnStartX + slotIndex * 200 - translateValues;
+              return getColumnStartX() + slotIndex * 200 - translateValues;
             })
             .attr('y', -50)
             .attr('width', 100)
@@ -830,10 +853,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
                 .attr('xlink:href', image)
                 // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex
                 .attr('x', (d) => {
-                  const positionInfo = window.getTreePositionInfo(tree);
-                  const columnStartX = positionInfo.getScaleEndPosition();
-                  // const columnStartX = positionInfo ? positionInfo.getColumnStartPosition() : 200;
-                  return columnStartX + slotIndex * 200 - translateValues;
+
+                  return getColumnStartX() + slotIndex * 200 - translateValues;
                 })
                 .attr('y', -50)
                 .attr('width', 100)
@@ -908,11 +929,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           let textElement = d3.select(this).append('text')
             // .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
             .attr('x', (d) => {
-              const positionInfo = window.getTreePositionInfo(tree);
-              const columnStartX = positionInfo.getScaleEndPosition();
-              console.log(`Column start X: ${columnStartX}, Slot index: ${slotIndex}, Translate values: ${translateValues[0]}, 'transformValue:', ${transformValue}`);
 
-              return columnStartX + slotIndex * 200 - translateValues;
+              return getColumnStartX() + slotIndex * 200 - translateValues;
 
             })
             .attr('y', 0)
