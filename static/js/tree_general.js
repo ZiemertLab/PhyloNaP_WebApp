@@ -268,6 +268,62 @@ window.renderTree = function (tree, height, width, customOptions) {
   return renderedTree
 }
 
+// Add this function to get tree positioning information
+window.getTreePositionInfo = function (tree) {
+  console.log('=== Checking tree object ===');
+  console.log('Tree:', tree);
+  console.log('Tree.display:', tree ? tree.display : 'tree is null/undefined');
+
+  if (!tree.display) {
+    console.warn('Tree display not available');
+    return null;
+  }
+
+  const display = tree.display;
+
+  return {
+    // Most distant leaf position (rightmost in linear layout)
+    rightMostLeaf: display.right_most_leaf,
+
+    // Tree extents (bounding box)
+    extents: display._extents,
+
+    // Scale information
+    scales: display.scales,
+
+    // Size information
+    size: display.size,
+
+    // Offsets (padding)
+    offsets: display.offsets,
+    leftOffset: display.options["left-offset"],
+
+    // Font and spacing
+    shownFontSize: display.shown_font_size,
+    labelWidth: display.label_width,
+
+    // Layout type
+    isRadial: display.radial(),
+    layout: display.options["layout"],
+
+    // Calculate column start position
+    getColumnStartPosition: function () {
+      // This is where your annotation columns should start
+      return display.right_most_leaf + 20; // Add 20px padding
+    },
+
+    // Get scale bar end position
+    getScaleEndPosition: function () {
+      if (display.radial()) {
+        return display.radius;
+      } else {
+        // return display.size[1] - display.offsets[1] - display.options["left-offset"] - display.shown_font_size;
+        return display.size[1] + 20;
+      }
+    }
+  };
+};
+
 // Render bootstrap values
 window.drawBootstrapValues = function (tree) {
   bootstrapNodes = tree.getInternals();
@@ -616,12 +672,26 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       return;
     }
 
+    // Get tree position information
+    const positionInfo = window.getTreePositionInfo(tree);
+
+    if (!positionInfo) {
+      console.warn('Could not get tree position info');
+      return;
+    }
+
     // Calculate header position
-    const headerX = 200 + slotIndex * 200;
+    // Calculate header position based on actual tree dimensions
+    scaleEndPosition = positionInfo.getScaleEndPosition();
+    console.log(`Scale end position: ${scaleEndPosition}`); // Add this line
+    // const columnStartX = positionInfo.getColumnStartPosition();
+    const columnStartX = positionInfo.getScaleEndPosition();
+    const headerX = columnStartX + slotIndex * 200;
+    // const headerX = 200 + slotIndex * 200;
     const headerY = 20; // Position above the tree content
 
     console.log(`Header position: x=${headerX}, y=${headerY}`); // Add this line
-
+    console.log(`Right most leaf at: ${positionInfo.rightMostLeaf}`);
     // Add header text to the SVG
     const headerElement = treeSvg.append('text')
       .attr('class', 'column-header')
@@ -703,7 +773,13 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
           let img = d3.select(this).append("image")
             .attr('xlink:href', image)
-            .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex instead of activeColumns
+            // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex instead of activeColumns
+            .attr('x', (d) => {
+              const positionInfo = window.getTreePositionInfo(tree);
+              const columnStartX = positionInfo.getScaleEndPosition();
+
+              return columnStartX + slotIndex * 200 - translateValues;
+            })
             .attr('y', -50)
             .attr('width', 100)
             .attr('height', 100)
@@ -752,7 +828,13 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             if (response.ok) {
               let img = d3.select(this).append("image")
                 .attr('xlink:href', image)
-                .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex
+                // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex
+                .attr('x', (d) => {
+                  const positionInfo = window.getTreePositionInfo(tree);
+                  const columnStartX = positionInfo.getScaleEndPosition();
+                  // const columnStartX = positionInfo ? positionInfo.getColumnStartPosition() : 200;
+                  return columnStartX + slotIndex * 200 - translateValues;
+                })
                 .attr('y', -50)
                 .attr('width', 100)
                 .attr('height', 100)
@@ -819,12 +901,20 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           // let translateValues = transformValue.match(/translate\(([^,]+),([^)]+)\)/).slice(1).map(Number);
           let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
           let translateValues = parseFloat(match[1]);
-          console.log('transformValue:', transformValue);
-          console.log('translateValues:', translateValues);
+          // console.log('transformValue:', transformValue);
+          // console.log('translateValues:', translateValues);
           // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
           // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
           let textElement = d3.select(this).append('text')
-            .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
+            // .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
+            .attr('x', (d) => {
+              const positionInfo = window.getTreePositionInfo(tree);
+              const columnStartX = positionInfo.getScaleEndPosition();
+              console.log(`Column start X: ${columnStartX}, Slot index: ${slotIndex}, Translate values: ${translateValues[0]}, 'transformValue:', ${transformValue}`);
+
+              return columnStartX + slotIndex * 200 - translateValues;
+
+            })
             .attr('y', 0)
             .attr('class', columnName)
             .attr("font-size", leaveFontSize)
@@ -1579,6 +1669,57 @@ window.downloadSequences = function (tree, metadata) {
   });
   return nodeNames;
 }
+
+// // Add this function to get tree positioning information
+// window.getTreePositionInfo = function (tree) {
+//   if (!tree.display) {
+//     console.warn('Tree display not available');
+//     return null;
+//   }
+
+//   const display = tree.display;
+
+//   return {
+//     // Most distant leaf position (rightmost in linear layout)
+//     rightMostLeaf: display.right_most_leaf,
+
+//     // Tree extents (bounding box)
+//     extents: display._extents,
+
+//     // Scale information
+//     scales: display.scales,
+
+//     // Size information
+//     size: display.size,
+
+//     // Offsets (padding)
+//     offsets: display.offsets,
+//     leftOffset: display.options["left-offset"],
+
+//     // Font and spacing
+//     shownFontSize: display.shown_font_size,
+//     labelWidth: display.label_width,
+
+//     // Layout type
+//     isRadial: display.radial(),
+//     layout: display.options["layout"],
+
+//     // Calculate column start position
+//     getColumnStartPosition: function () {
+//       // This is where your annotation columns should start
+//       return display.right_most_leaf + 20; // Add 20px padding
+//     },
+
+//     // Get scale bar end position
+//     getScaleEndPosition: function () {
+//       if (display.radial()) {
+//         return display.radius;
+//       } else {
+//         return display.size[1] - display.offsets[1] - display.options["left-offset"] - display.shown_font_size;
+//       }
+//     }
+//   };
+// };
 
 
 
