@@ -711,6 +711,8 @@ def register_routes(app):
             metadata_link = dataset['metadata_file']
             metadata_columns = dataset['metadata_columns']
             datasetDescr = dataset['description']
+            source = dataset['source']
+            cite = dataset['cite']
             
             if not metadata_link:
                 app.logger.error("No metadata file path found in dataset")
@@ -735,7 +737,9 @@ def register_routes(app):
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
                              superfamily_name=dataset['superfamily_name'],
-                             dataset_name=dataset['dataset_name'])
+                             dataset_name=dataset['dataset_name'],
+                             source=source,
+                             cite=cite)
         
         except Exception as e:
             app.logger.error(f"Error in jplace_render: {e}", exc_info=True)

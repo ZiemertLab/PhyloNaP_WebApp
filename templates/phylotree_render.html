@@ -284,28 +284,42 @@
         <h10 id="description">The descripton of the treeThe descripton of the treeThe descripton of the treeThe
           descripton of the tree</h10>
         {% if source == 'curated' and cite %}
-        <div id="cite" style="margin-top: 10px;">
-          <h5><strong>Citation:</strong></h5>
-          <div style="margin-left: 10px;">
+        <div id="cite"
+          style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #3D3D3D; border-radius: 4px;">
+          <h5 style="color: #495057; margin-bottom: 8px; font-weight: 600;">
+            <i class="fa fa-quote-left" style="margin-right: 5px; color: #3D3D3D; font-size: 12px;"></i>
+            Citation
+          </h5>
+          <div style="margin-left: 15px; font-size: 14px; line-height: 1.4;">
             {% if cite.name %}
-            <div><strong>Author(s):</strong> {{ cite.name }}</div>
+            <div style="margin-bottom: 6px;">
+              <span style="font-weight: 500; color: #495057;">Authors:</span>
+              <span style="color: #6c757d;">{{ cite.name }}</span>
+            </div>
             {% endif %}
             {% if cite.doi %}
             <div>
-              <strong>DOI:</strong>
+              <span style="font-weight: 500; color: #495057;">DOI:</span>
               {% if cite.doi.startswith('DOI: ') %}
               <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank"
-                style="color: #007bff; text-decoration: underline;">
+                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
+                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
                 {{ cite.doi }}
+                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
               </a>
               {% elif cite.doi.startswith('http') %}
-              <a href="{{ cite.doi }}" target="_blank" style="color: #007bff; text-decoration: underline;">
+              <a href="{{ cite.doi }}" target="_blank"
+                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
+                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
                 {{ cite.doi }}
+                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
               </a>
               {% else %}
-              <a href="https://doi.org/{{ cite.doi }}" target="_blank"
-                style="color: #007bff; text-decoration: underline;">
-                {{ cite.doi }}
+              <a href="{{ cite.doi }}" target="_blank"
+                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
+                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
+                DOI: {{ cite.doi }}
+                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
               </a>
               {% endif %}
             </div>
