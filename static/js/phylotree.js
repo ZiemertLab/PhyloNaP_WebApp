@@ -1,8 +1,9 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('d3'), require('underscore'), require('lodash')) :
-  typeof define === 'function' && define.amd ? define(['exports', 'd3', 'underscore', 'lodash'], factory) :
-  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.phylotree = global.phylotree || {}, global.d3, global._, global._$1));
-}(this, (function (exports, d3, _, _$1) { 'use strict';
+    typeof define === 'function' && define.amd ? define(['exports', 'd3', 'underscore', 'lodash'], factory) :
+      (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.phylotree = global.phylotree || {}, global.d3, global._, global._$1));
+}(this, (function (exports, d3, _, _$1) {
+  'use strict';
 
   function _interopNamespace(e) {
     if (e && e.__esModule) return e;
@@ -30,12 +31,12 @@
 
   //import { parseString } from "xml2js";
 
-  var nexml_parser = function(xml_string, options) {
+  var nexml_parser = function (xml_string, options) {
     var trees;
-    parseString(xml_string, function(error, xml) {
-      trees = xml["nex:nexml"].trees[0].tree.map(function(nexml_tree) {
+    parseString(xml_string, function (error, xml) {
+      trees = xml["nex:nexml"].trees[0].tree.map(function (nexml_tree) {
         var node_list = nexml_tree.node.map(d => d.$),
-          node_hash = node_list.reduce(function(a, b) {
+          node_hash = node_list.reduce(function (a, b) {
             b.edges = [];
             b.name = b.id;
             a[b.id] = b;
@@ -45,7 +46,7 @@
           root_id = roots > 0 ? roots[0].id : node_list[0].id;
         node_hash[root_id].name = "root";
 
-        nexml_tree.edge.map(d => d.$).forEach(function(edge) {
+        nexml_tree.edge.map(d => d.$).forEach(function (edge) {
           node_hash[edge.source].edges.push(edge);
         });
 
@@ -53,7 +54,7 @@
           if (node.edges) {
             var targets = ___namespace.pluck(node.edges, "target");
             node.children = ___namespace.values(___namespace.pick(node_hash, targets));
-            node.children.forEach(function(child, i) {
+            node.children.forEach(function (child, i) {
               child.attribute = node.edges[i].length || "";
             });
             node.children.forEach(parseNexml);
@@ -83,11 +84,11 @@
         let parentIndex = graftAt.parent.children.indexOf(graftAt);
 
         let newSplit = {
-            name: newParent,
-            parent: graftAt.parent,
-            attribute: lengths ? lengths[2] : null,
-            original_child_order: graftAt["original_child_order"]
-          },
+          name: newParent,
+          parent: graftAt.parent,
+          attribute: lengths ? lengths[2] : null,
+          original_child_order: graftAt["original_child_order"]
+        },
           newNode = {
             name: newChild,
             parent: newSplit,
@@ -109,7 +110,7 @@
 
   function addChild(parent, child) {
 
-    if(parent.children) {
+    if (parent.children) {
       parent.children.push(child);
     } else {
       parent["children"] = [child];
@@ -155,7 +156,7 @@
           nodes.splice(index, 1);
 
           if (node.children) {
-            node.children.forEach(function(d) {
+            node.children.forEach(function (d) {
               d["original_child_order"] = node.parent.children.length;
               node.parent.children.push(d);
               d.parent = node.parent;
@@ -251,7 +252,7 @@
   function assignAttributes(attributes) {
     //return nodes;
     // add annotations to each matching node
-    ___namespace.each(this.nodes.descendants(), function(d) {
+    ___namespace.each(this.nodes.descendants(), function (d) {
       if (d.data && (d.data.name in attributes)) {
         d["annotations"] = attributes[d.data.name];
       }
@@ -276,7 +277,7 @@
    * @returns The current ``this``.
    */
   function updateKeyName(old_key, new_key) {
-    this.nodes.each(function(n) {
+    this.nodes.each(function (n) {
       if (old_key in n) {
         if (new_key) {
           n[new_key] = n[old_key];
@@ -296,7 +297,7 @@
           // TODO: Move away from storing attribute data as root (BREAKS occasionally with d3>3)
           d[this.selection_attribute_name] = false;
 
-          if(!d.data.traits) {
+          if (!d.data.traits) {
             d.data.traits = {};
           }
           d.data.traits[this.selection_attribute_name] = d[this.selection_attribute_name];
@@ -377,11 +378,11 @@
    * @returns {Object} An object with keys ``json`` and ``error``.
    */
 
-  function newickParser(nwk_str, options={}) {
+  function newickParser(nwk_str, options = {}) {
 
     const int_or_float = /^-?\d+(\.\d+)?$/;
-    let left_delimiter = options.left_delimiter ||  '{',
-      right_delimiter = options.right_delimiter ||  '}';
+    let left_delimiter = options.left_delimiter || '{',
+      right_delimiter = options.right_delimiter || '}';
     let clade_stack = [];
 
     function addNewTreeLevel() {
@@ -416,7 +417,7 @@
       }
 
       this_node["attribute"] = current_node_attribute;
-      if(left_delimiter == "[" && current_node_annotation.includes("&&NHX")) {
+      if (left_delimiter == "[" && current_node_annotation.includes("&&NHX")) {
         current_node_annotation
           .split(':')
           .slice(1)
@@ -605,7 +606,7 @@
 
       if (!isLeafNode(n)) {
         element_array.push("(");
-        n.children.forEach(function(d, i) {
+        n.children.forEach(function (d, i) {
           if (i) {
             element_array.push(",");
           }
@@ -614,7 +615,7 @@
         element_array.push(")");
       }
 
-      if(n.data.name !== 'root') {
+      if (n.data.name !== 'root') {
         const node_label = n.data.name.replaceAll("'", "''");
 
         // Surround the entire string with single quotes if it contains any
@@ -638,16 +639,16 @@
     annotator = annotator || "";
     nodeDisplay(root || this.nodes);
 
-    return element_array.join("")+";";
+    return element_array.join("") + ";";
   }
 
-  function parseAnnotations (buf) {
+  function parseAnnotations(buf) {
 
     let str = buf;
     let index = str.toUpperCase().indexOf('BEGIN DATA;');
     let data = str.slice(index);
 
-    if(data.length < 2) {
+    if (data.length < 2) {
       return '';
     }
 
@@ -655,37 +656,37 @@
     let data_str = data.slice(0, index);
 
     // split on semicolon
-    data = ___namespace.map(data_str.split(';'), d => { return d.trim() } );
+    data = ___namespace.map(data_str.split(';'), d => { return d.trim() });
 
     // get dimensions
-    let dimensions = ___namespace.filter(data, d => {return d.toUpperCase().startsWith('DIMENSION')}); 
+    let dimensions = ___namespace.filter(data, d => { return d.toUpperCase().startsWith('DIMENSION') });
     dimensions = dimensions[0].split(' ');
     dimensions = ___namespace.object(___namespace.map(___namespace.rest(dimensions), d => { return d.split('=') }));
 
     // get formats
-    let format = ___namespace.filter(data, d => {return d.toUpperCase().startsWith('FORMAT')}); 
+    let format = ___namespace.filter(data, d => { return d.toUpperCase().startsWith('FORMAT') });
     format = format[0].split(' ');
     format = ___namespace.object(___namespace.map(___namespace.rest(format), d => { return d.split('=') }));
-    format.symbols = ___namespace.reject(format.symbols.split(""), d => d=='"');
+    format.symbols = ___namespace.reject(format.symbols.split(""), d => d == '"');
 
     // get character matrix
-    let matrix = ___namespace.filter(data, d => {return d.toUpperCase().startsWith('MATRIX')}); 
+    let matrix = ___namespace.filter(data, d => { return d.toUpperCase().startsWith('MATRIX') });
     matrix = matrix[0].split('\n');
-    matrix = ___namespace.object(___namespace.map(___namespace.rest(matrix), d=> { return ___namespace.compact(d.split(' ')) }));
+    matrix = ___namespace.object(___namespace.map(___namespace.rest(matrix), d => { return ___namespace.compact(d.split(' ')) }));
 
     // create all possible states for matrix
-    matrix = ___namespace.mapObject(matrix, (v,k) => { 
+    matrix = ___namespace.mapObject(matrix, (v, k) => {
 
-      if(v == '?') {
+      if (v == '?') {
         return format.symbols
       }
-      else { 
+      else {
         return Array(v)
       }
-    
+
     });
 
-    return { 'dimensions' : dimensions, 'format' : format, 'matrix' : matrix }
+    return { 'dimensions': dimensions, 'format': format, 'matrix': matrix }
 
   }
 
@@ -718,7 +719,7 @@
     let index = str.toUpperCase().indexOf('BEGIN TREES;');
     let split = str.slice(index);
 
-    if(split.length < 2) {
+    if (split.length < 2) {
       return '';
     }
 
@@ -745,47 +746,47 @@
   // Modified version from here: http://davidwalsh.name/convert-xml-json
   function xmlToJson(xml) {
 
-  	// Create the return object
-  	var obj = {};
+    // Create the return object
+    var obj = {};
 
-  	if (xml.nodeType == 1) { // element
-  		// do attributes
-  		if (xml.attributes.length > 0) {
-  		obj["@attributes"] = {};
-  			for (var j = 0; j < xml.attributes.length; j++) {
-  				var attribute = xml.attributes.item(j);
-  				obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
-  			}
-  		}
-  	} else if (xml.nodeType == 3) { // text
-  		obj = xml.nodeValue;
-  	}
+    if (xml.nodeType == 1) { // element
+      // do attributes
+      if (xml.attributes.length > 0) {
+        obj["@attributes"] = {};
+        for (var j = 0; j < xml.attributes.length; j++) {
+          var attribute = xml.attributes.item(j);
+          obj["@attributes"][attribute.nodeName] = attribute.nodeValue;
+        }
+      }
+    } else if (xml.nodeType == 3) { // text
+      obj = xml.nodeValue;
+    }
 
-  	// do children
-  	// If just one text node inside
-  	if (xml.hasChildNodes() && xml.childNodes.length === 1 && xml.childNodes[0].nodeType === 3) {
-  		obj = xml.childNodes[0].nodeValue;
-  	}
-  	else if (xml.hasChildNodes()) {
-  		for(var i = 0; i < xml.childNodes.length; i++) {
-  			var item = xml.childNodes.item(i);
-  			var nodeName = item.nodeName;
-  			if (typeof(obj[nodeName]) == "undefined") {
-  				obj[nodeName] = xmlToJson(item);
-  			} else {
-  				if (typeof(obj[nodeName].push) == "undefined") {
-  					var old = obj[nodeName];
-  					obj[nodeName] = [];
-  					obj[nodeName].push(old);
-  				}
-  				obj[nodeName].push(xmlToJson(item));
-  			}
-  		}
-  	}
-  	return obj;
+    // do children
+    // If just one text node inside
+    if (xml.hasChildNodes() && xml.childNodes.length === 1 && xml.childNodes[0].nodeType === 3) {
+      obj = xml.childNodes[0].nodeValue;
+    }
+    else if (xml.hasChildNodes()) {
+      for (var i = 0; i < xml.childNodes.length; i++) {
+        var item = xml.childNodes.item(i);
+        var nodeName = item.nodeName;
+        if (typeof (obj[nodeName]) == "undefined") {
+          obj[nodeName] = xmlToJson(item);
+        } else {
+          if (typeof (obj[nodeName].push) == "undefined") {
+            var old = obj[nodeName];
+            obj[nodeName] = [];
+            obj[nodeName].push(old);
+          }
+          obj[nodeName].push(xmlToJson(item));
+        }
+      }
+    }
+    return obj;
   }
 
-  var phyloxml_parser = function(xml, options) {
+  var phyloxml_parser = function (xml, options) {
 
     function parsePhyloxml(node, index) {
       if (node.clade) {
@@ -794,10 +795,10 @@
         delete node.clade;
       }
 
-  		node.annotation = 1;
-  		node.attribute = "0.01";
+      node.annotation = 1;
+      node.attribute = "0.01";
       if (node.branch_length) {
-  			node.attribute = node.branch_length;
+        node.attribute = node.branch_length;
       }
       if (node.taxonomy) {
         node.name = node.taxonomy.scientific_name;
@@ -825,22 +826,22 @@
     options.right_delimiter = ']';
     const parsed_newick = newickParser(newick, options);
     function parseBeastNode(node) {
-      if(node.annotation) {
+      if (node.annotation) {
         node.beast = {};
         const tokens = node.annotation.split(/=|,|{|}/)
           .filter(token => token);
-        for(var i = 0; i < tokens.length; i+=2) {
+        for (var i = 0; i < tokens.length; i += 2) {
           let key = tokens[i].replace(/&|%/g, '');
-          if(/[a-df-zA-DF-Z]+/.test(tokens[i+2])) {
-            node.beast[key] = +tokens[i+1];
+          if (/[a-df-zA-DF-Z]+/.test(tokens[i + 2])) {
+            node.beast[key] = +tokens[i + 1];
           } else {
-            node.beast[key] = [+tokens[i+1], +tokens[i+2]];
+            node.beast[key] = [+tokens[i + 1], +tokens[i + 2]];
             i++;
           }
         }
       }
       node.annotation = undefined;
-      if(node.children) {
+      if (node.children) {
         node.children.forEach(parseBeastNode);
       }
     }
@@ -855,7 +856,7 @@
   var format_registry = {
     nexml: nexml_parser,
     phyloxml: phyloxml_parser,
-    nexus : loadTree,
+    nexus: loadTree,
     nwk: newickParser,
     nhx: newickParser,
     beast: beast_parser
@@ -878,11 +879,11 @@
     let tips = self.getTips();
 
     // Transform to name, attribute key-pair and sort by attribute length, descending
-    let toExport = ___namespace.map(tips, d => { return {'name' : d.data.name, 'length' : parseFloat(d.data.attribute) } });
-    toExport = ___namespace.sortBy(toExport, d=> -d.length);
+    let toExport = ___namespace.map(tips, d => { return { 'name': d.data.name, 'length': parseFloat(d.data.attribute) } });
+    toExport = ___namespace.sortBy(toExport, d => -d.length);
     return toExport;
-    
-    
+
+
   }
 
   function maxParsimony(respect_existing, attr_name) {
@@ -904,12 +905,12 @@
 
         d.children.forEach(pop_mp_mat);
 
-        var s0 = d.children.reduce(function(p, n) {
+        var s0 = d.children.reduce(function (p, n) {
           return n.mp[0][0] + p;
         }, 0);
 
         // cumulative children score if this node is 0
-        var s1 = d.children.reduce(function(p, n) {
+        var s1 = d.children.reduce(function (p, n) {
           return n.mp[0][1] + p;
         }, 0);
 
@@ -1039,9 +1040,9 @@
    */
   function leftChildRightSibling(root) {
 
-    let declareTrueParent = function(n) {
+    let declareTrueParent = function (n) {
 
-      if(n.children) {
+      if (n.children) {
         // left child is the child
         n.children[0].data.multiway_parent = n;
 
@@ -1055,19 +1056,20 @@
     postOrder(root, declareTrueParent);
 
     // return edge list
-    let edge_list = ___namespace$1.map(root.descendants(), n => { 
+    let edge_list = ___namespace$1.map(root.descendants(), n => {
 
-      let source = n.data.multiway_parent; 
+      let source = n.data.multiway_parent;
       let name = "unknown";
 
-      if(source) {
+      if (source) {
         name = source.data.name;
       }
 
       // In order to get the true name of the infector/infectee, we must traverse
       // the tree from the multiway_parents node.
 
-      return {"source" : n.data.multiway_parent, "target" : n, "name": name } });
+      return { "source": n.data.multiway_parent, "target": n, "name": name }
+    });
 
     // Construct edge list by new parent-child listing
     return edge_list;
@@ -1084,7 +1086,7 @@
     let bl = this.branch_length;
 
     if (bl) {
-      return ___namespace.every(this.nodes.descendants(), function(node) {
+      return ___namespace.every(this.nodes.descendants(), function (node) {
         return !node.parent || !___namespace.isUndefined(bl(node));
       });
 
@@ -1101,7 +1103,7 @@
   function getBranchLengths() {
 
     let bl = this.branch_length;
-    return ___namespace.map(this.nodes.descendants(), node => { return bl(node)});
+    return ___namespace.map(this.nodes.descendants(), node => { return bl(node) });
 
   }
 
@@ -1116,7 +1118,7 @@
       _node_data["attribute"].length
     ) {
 
-      if(new_length > 0) {
+      if (new_length > 0) {
         _node_data["attribute"] = String(new_length);
       }
 
@@ -1129,7 +1131,7 @@
     }
 
     // Allow for empty branch length at root
-    if(_node_data.name == "root") {
+    if (_node_data.name == "root") {
       return 0;
     }
 
@@ -1158,9 +1160,9 @@
 
     let bl = this.branch_length;
 
-    let branch_lengths = ___namespace.map(this.nodes.descendants(), function(node) {
-      if(bl(node)) {
-      return bl(node);
+    let branch_lengths = ___namespace.map(this.nodes.descendants(), function (node) {
+      if (bl(node)) {
+        return bl(node);
       } else {
         return null;
       }
@@ -1170,14 +1172,14 @@
     const min_bl = ___namespace.min(branch_lengths);
 
     let scaler = function (x) {
-      return (x - min_bl)/(max_bl - min_bl);
+      return (x - min_bl) / (max_bl - min_bl);
     };
 
     ___namespace.each(this.nodes.descendants(), (node) => {
-        let len = bl(node);
-        if(len) {
-          bl(node, scaler(len));
-        }     
+      let len = bl(node);
+      if (len) {
+        bl(node, scaler(len));
+      }
     });
 
     return this;
@@ -1195,10 +1197,10 @@
     let bl = this.branch_length;
 
     ___namespace.each(this.nodes.descendants(), (node) => {
-        let len = bl(node);
-        if(len) {
-          bl(node, scale_by(len));
-        }     
+      let len = bl(node);
+      if (len) {
+        bl(node, scale_by(len));
+      }
     });
 
     return this;
@@ -1228,7 +1230,7 @@
   * @returns {Phylotree} The current ``phylotree``.
   */
   function reroot(node, fraction) {
-    console.log('printing the node:', node); 
+    console.log('printing the node:', node);
     /** TODO add the option to root in the middle of a branch */
     // if(!(node instanceof d3__namespace.hierarchy)) {
     //   debugger;
@@ -1244,7 +1246,7 @@
       var new_json = d3__namespace.hierarchy({
         name: "new_root"
       });
-      
+
       new_json.children = [node.copy()];
       new_json.data.__mapped_bl = undefined;
 
@@ -1324,9 +1326,9 @@
       } else {
 
         let new_node = new d3__namespace.hierarchy({ name: "__reroot_top_clade", __mapped_bl: stashed_bl });
-        ___namespace.extendOwn (new_json.children[0], node);
+        ___namespace.extendOwn(new_json.children[0], node);
         new_node.data.__mapped_bl = stashed_bl;
-        new_node.children = current_node.children.map(function(n) {
+        new_node.children = current_node.children.map(function (n) {
           n.parent = new_node;
           return n;
         });
@@ -1334,7 +1336,7 @@
         new_node.parent = remove_me;
         remove_me.children.push(new_node);
 
-     }
+      }
 
     }
 
@@ -1342,11 +1344,11 @@
     this.update(new_json);
 
     this.traverse_and_compute(n => {
-      ___namespace.each (n.children, (c) => {c.parent = n;});
+      ___namespace.each(n.children, (c) => { c.parent = n; });
     }, "pre-order");
 
 
-    if(!___namespace.isUndefined(this.display)) {
+    if (!___namespace.isUndefined(this.display)) {
 
       // get options
       let options = this.display.options;
@@ -1485,10 +1487,10 @@
 
   var draw_line = d3__namespace
     .line()
-    .x(function(d) {
+    .x(function (d) {
       return xCoord(d);
     })
-    .y(function(d) {
+    .y(function (d) {
       return yCoord(d);
     })
     .curve(d3__namespace.curveStepBefore);
@@ -1556,20 +1558,20 @@
 
     // if a custom bubble styler, use that instead
 
-    if(this.options["draw-size-bubbles"] && this.options["bubble-styler"]) {
+    if (this.options["draw-size-bubbles"] && this.options["bubble-styler"]) {
       return this.options["bubble-styler"](node);
     } else {
       return this.options["draw-size-bubbles"]
         ? this.relative_nodeSpan(node) * this.scales[0] * 0.25
         : 0;
-      }
+    }
   }
 
   function shiftTip$1(d) {
     if (this.options["is-radial"]) {
       return [
         (d.text_align == "end" ? -1 : 1) *
-          (this.radius_pad_for_bubbles - d.radius),
+        (this.radius_pad_for_bubbles - d.radius),
         0
       ];
     }
@@ -1611,7 +1613,7 @@
   function nodeSpan$1(attr) {
     if (!arguments.length) return nodeSpan$1;
     if (typeof attr == "string" && attr == "equal") {
-      nodeSpan$1 = function(d) { // eslint-disable-line
+      nodeSpan$1 = function (d) { // eslint-disable-line
         return 1;
       };
     } else {
@@ -1660,7 +1662,7 @@
     shiftTip: shiftTip$1,
     layoutHandler: layoutHandler,
     selectionLabel: selectionLabel,
-    get nodeSpan () { return nodeSpan$1; },
+    get nodeSpan() { return nodeSpan$1; },
     predefined_selecters: predefined_selecters,
     selectionCallback: selectionCallback$1
   });
@@ -1670,7 +1672,7 @@
     if (this.radial()) {
       return [
         (d.text_align == "end" ? -1 : 1) *
-          (this.radius_pad_for_bubbles - d.radius),
+        (this.radius_pad_for_bubbles - d.radius),
         0
       ];
     }
@@ -1702,7 +1704,7 @@
         .append("text")
         .classed(this.css_classes["node_text"], true)
         .merge(labels)
-        .on("click", d=> {
+        .on("click", d => {
           this.handle_node_click(node, d);
         })
         .attr("dy", d => {
@@ -1809,7 +1811,7 @@
           .enter()
           .append("circle");
 
-        circles.attr("r", function(d) {
+        circles.attr("r", function (d) {
           return d;
         })
         // .classed("circle-color", true); // Apply the CSS class for color;
@@ -1834,10 +1836,10 @@
 
     if (!is_leaf) {
       let circles = container
-          .selectAll("circle")
-          .data([node])
-          .enter()
-          .append("circle");
+        .selectAll("circle")
+        .data([node])
+        .enter()
+        .append("circle");
       // radius = this.node_circle_size()(node);
       let radius = this.nodeBubbleSize(node); // Use nodeBubbleSize for non-leaf nodes
       if (radius > 0) {
@@ -1868,7 +1870,7 @@
       if (isLeafNode(nodes[k])) {
         nodes[k].hasHiddenNodes = nodes[k].notshown;
       } else {
-        nodes[k].hasHiddenNodes = nodes[k].children.reduce(function(p, c) {
+        nodes[k].hasHiddenNodes = nodes[k].children.reduce(function (p, c) {
           return c.notshown || p;
         }, false);
       }
@@ -1903,7 +1905,7 @@
   function nodeSpan(attr) {
     if (!arguments.length) return this.nodeSpan;
     if (typeof attr == "string" && attr == "equal") {
-      this.nodeSpan = function(d) {
+      this.nodeSpan = function (d) {
         return 1;
       };
     } else {
@@ -1958,7 +1960,7 @@
       css_classes["collapsed-node"],
       css_classes["tagged-node"],
       css_classes["root-node"]
-    ].reduce(function(p, c, i, a) {
+    ].reduce(function (p, c, i, a) {
       return (p += "g." + c + (i < a.length - 1 ? "," : ""));
     }, "");
   }
@@ -2011,7 +2013,7 @@
   function nodeLabel(attr) {
     if (!arguments.length) return this._nodeLabel;
     this._nodeLabel = attr ? attr : defNodeLabel;
-  	this.update();
+    this.update();
     return this;
   }
 
@@ -2034,7 +2036,7 @@
   });
 
   function cladeCssSelectors(css_classes) {
-    return [css_classes["clade"]].reduce(function(p, c, i, a) {
+    return [css_classes["clade"]].reduce(function (p, c, i, a) {
       return (p += "path." + c + (i < a.length - 1 ? "," : ""));
     }, "");
   }
@@ -2048,12 +2050,12 @@
       .selectAll(cladeCssSelectors(this.css_classes))
       .data(
         this.phylotree.nodes.descendants().filter(isNodeCollapsed),
-        function(d) {
+        function (d) {
           return d.id || (d.id = ++node_id);
         }
       );
 
-    let spline = function() {};
+    let spline = function () { };
     let spline_f = ___namespace.noop();
 
     // Collapse radial differently
@@ -2061,14 +2063,14 @@
       spline = d3__namespace
         .line()
         .curve(d3__namespace.curveBasis)
-        .y(function(d) {
+        .y(function (d) {
           return d[0];
         })
-        .x(function(d) {
+        .x(function (d) {
           return d[1];
         });
 
-      spline_f = function(coord, i, d, init_0, init_1) {
+      spline_f = function (coord, i, d, init_0, init_1) {
         if (i) {
           return [
             d.screen_y + (coord[0] - init_0) / 50,
@@ -2081,17 +2083,17 @@
     } else {
       spline = d3__namespace
         .line()
-        .y(function(d) {
+        .y(function (d) {
           return d[0];
         })
-        .x(function(d) {
+        .x(function (d) {
           return d[1];
         }).curve(d3__namespace.curveBasis);
 
-      spline_f = function(coord, i, d, init_0, init_1) {
+      spline_f = function (coord, i, d, init_0, init_1) {
         if (i) {
-           return [
-            d.screen_y + (coord[0] - init_0) / 50 ,
+          return [
+            d.screen_y + (coord[0] - init_0) / 50,
             d.screen_x + (coord[1] - init_1) / 50,
           ];
         } else {
@@ -2102,7 +2104,7 @@
 
     collapsed_clades
       .exit()
-      .each(function(d) {
+      .each(function (d) {
         d.collapsed_clade = null;
       })
       .remove();
@@ -2113,7 +2115,7 @@
         .insert("path", ":first-child")
         .attr("class", this.css_classes["clade"])
         .merge(collapsed_clades)
-        .attr("d", function(d) {
+        .attr("d", function (d) {
           if (d.collapsed_clade) {
             return d.collapsed_clade;
           }
@@ -2121,17 +2123,17 @@
           //console.log (d.collapsed);
           let init_0 = d.collapsed[0][0];
           let init_1 = d.collapsed[0][1];
-          
 
-    
+
+
           // #1 return spline(d.collapsed.map(spline_f, d, init_0, init_1));
           return spline(
-            d.collapsed.map(function(coord, i) {
+            d.collapsed.map(function (coord, i) {
               return spline_f(coord, i, d, init_0, init_1);
             })
           );
         })
-        .attr("d", function(d) {        
+        .attr("d", function (d) {
           return (d.collapsed_clade = spline(d.collapsed));
         });
     } else {
@@ -2140,7 +2142,7 @@
         .insert("path", ":first-child")
         .attr("class", this.css_classes["clade"])
         .merge(collapsed_clades)
-        .attr("d", function(d) {
+        .attr("d", function (d) {
           return (d.collapsed_clade ? d.collapsed_clade : d.collapsed_clade = spline(d.collapsed));
         });
     }
@@ -2170,7 +2172,7 @@
     if (transition) {
 
       if (container.datum().existing_path) {
-        container = container.attr("d", function(d) {
+        container = container.attr("d", function (d) {
           return d.existing_path;
         });
       }
@@ -2225,7 +2227,7 @@
     this.links.forEach(d => {
 
       // TODO: Move away from storing attribute data as root (BREAKS occasionally with d3>3)
-      if(d.target.data.annotation) {
+      if (d.target.data.annotation) {
         d.target[d.target.data.annotation] = d.target.data.annotation;
       }
 
@@ -2255,7 +2257,7 @@
         return p + (c[this.selection_attribute_name] ? 1 : 0);
       }, 0);
 
-      counts["tagged"] = this.links.reduce(function(p, c) {
+      counts["tagged"] = this.links.reduce(function (p, c) {
         return p + (itemTagged(c) ? 1 : 0);
       }, 0);
 
@@ -2274,13 +2276,13 @@
       css_classes["branch"],
       css_classes["selected-branch"],
       css_classes["tagged-branch"]
-    ].reduce(function(p, c, i, a) {
+    ].reduce(function (p, c, i, a) {
       return (p += "path." + c + (i < a.length - 1 ? "," : ""));
     }, "");
   }
 
-  function placeAlongAnEdge (e, where) {
-      return this.edge_placer (e, where);
+  function placeAlongAnEdge(e, where) {
+    return this.edge_placer(e, where);
   }
 
   var render_edges = /*#__PURE__*/Object.freeze({
@@ -2308,7 +2310,7 @@
     if (node.collapsed) {
       node.collapsed = false;
 
-      let unhide = function(n) {
+      let unhide = function (n) {
         if (!isLeafNode(n)) {
           if (!n.collapsed) {
             n.children.forEach(unhide);
@@ -2349,24 +2351,24 @@
           .attr(
             "transform",
             "translate (" +
-              pad_radius +
-              "," +
-              (pad_radius + vertical_offset) +
-              ")"
+            pad_radius +
+            "," +
+            (pad_radius + vertical_offset) +
+            ")"
           );
       }
     } else {
 
       sizes = [
         sizes[0] +
-          (this.options["top-bottom-spacing"] != "fit-to-size"
-            ? this.pad_height()
-            : 0),
-        sizes[1] 
+        (this.options["top-bottom-spacing"] != "fit-to-size"
+          ? this.pad_height()
+          : 0),
+        sizes[1]
         // +
-          // (this.options["left-right-spacing"] != "fit-to-size"
-          //   ? this.pad_width()
-          //   : 0)
+        // (this.options["left-right-spacing"] != "fit-to-size"
+        //   ? this.pad_width()
+        //   : 0)
       ];
 
     }
@@ -2532,7 +2534,7 @@
             .attr("tabindex", "-1")
             .text("Get the summary of the clade")
             .on("click", mouseEvent => {
-              
+
               const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
               const summaryEvent = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
               document.dispatchEvent(summaryEvent);
@@ -2604,7 +2606,7 @@
             .attr("class", "dropdown-item")
             .attr("tabindex", "-1")
             .text("Incident branch")
-            .on("click", function(d) {
+            .on("click", function (d) {
               menu_object.style("display", "none");
               phylotree.modifySelection([node]);
             });
@@ -2658,7 +2660,7 @@
           .attr("class", "dropdown-item")
           .attr("tabindex", "-1")
           .text("Show all descendant nodes")
-          .on("click", function(d) {
+          .on("click", function (d) {
             menu_object.style("display", "none");
             phylotree
               .modifySelection(
@@ -2677,7 +2679,7 @@
 
       var has_user_elements = [];
       if ("menu_items" in node && typeof node["menu_items"] === "object") {
-        node["menu_items"].forEach(function(d) {
+        node["menu_items"].forEach(function (d) {
           if (d.length == 3) {
             if (!d[2] || d[2](node)) {
               has_user_elements.push([d[0], d[1]]);
@@ -2697,7 +2699,7 @@
           menu_object.append("div").attr("class", "dropdown-divider");
         }
 
-        has_user_elements.forEach(function(d) {
+        has_user_elements.forEach(function (d) {
           menu_object
             .append("a")
             .attr("class", "dropdown-item")
@@ -2709,11 +2711,11 @@
 
       let tree_container = document.querySelector(container); // eslint-disable-line
       let rect = tree_container.getBoundingClientRect();
-     
+
       menu_object
         .style("position", "absolute")
-        .style("left", "" + (event.clientX - rect.x + 12 ) + "px")
-        .style("top", "" + (event.clientY - rect.y ) + "px")
+        .style("left", "" + (event.clientX - rect.x + 12) + "px")
+        .style("top", "" + (event.clientY - rect.y) + "px")
         .style("display", "block");
     } else {
       menu_object.style("display", "none");
@@ -2726,7 +2728,7 @@
       node["menu_items"] = [];
     }
     if (
-      !node["menu_items"].some(function(d) {
+      !node["menu_items"].some(function (d) {
         return d[0] == name && d[1] == callback && d[2] == condition;
       })
     ) {
@@ -2782,7 +2784,7 @@
       var do_refresh = false;
 
       if (typeof node_selecter === "function") {
-        this.links.forEach(function(d) {
+        this.links.forEach(function (d) {
           let select_me = node_selecter(d);
           d[attr] = d[attr] || false;
           if (d[attr] != select_me) {
@@ -2792,7 +2794,7 @@
           }
         });
       } else {
-        node_selecter.forEach(function(d) {
+        node_selecter.forEach(function (d) {
           var new_value;
           switch (mode) {
             case "true":
@@ -2812,7 +2814,7 @@
           }
         });
 
-        this.links.forEach(function(d) {
+        this.links.forEach(function (d) {
           d[attr] = d.target[attr];
         });
       }
@@ -2825,7 +2827,7 @@
         }
         if (this.countHandler) {
           counts = {};
-          counts[attr] = this.links.reduce(function(p, c) {
+          counts[attr] = this.links.reduce(function (p, c) {
             return p + (c[attr] ? 1 : 0);
           }, 0);
           countUpdate(this, counts, this.countHandler);
@@ -2837,7 +2839,7 @@
       }
     } else if (this.options["binary-selectable"]) {
       if (typeof node_selecter === "function") {
-        this.links.forEach(function(d) {
+        this.links.forEach(function (d) {
           var select_me = node_selecter(d);
           d[attr] = d[attr] || false;
 
@@ -2847,7 +2849,7 @@
             d.target[attr] = select_me;
           }
 
-          this.options["attribute-list"].forEach(function(type) {
+          this.options["attribute-list"].forEach(function (type) {
             if (type != attr && d[attr] === true) {
               d[type] = false;
               d.target[type] = false;
@@ -2855,7 +2857,7 @@
           });
         });
       } else {
-        node_selecter.forEach(function(d) {
+        node_selecter.forEach(function (d) {
           var new_value;
           new_value = !d[attr];
 
@@ -2865,9 +2867,9 @@
           }
         });
 
-        this.links.forEach(function(d) {
+        this.links.forEach(function (d) {
           d[attr] = d.target[attr];
-          this.options["attribute-list"].forEach(function(type) {
+          this.options["attribute-list"].forEach(function (type) {
             if (type != attr && d[attr] !== true) {
               d[type] = false;
               d.target[type] = false;
@@ -2882,7 +2884,7 @@
         }
         if (this.countHandler()) {
           counts = {};
-          counts[attr] = this.links.reduce(function(p, c) {
+          counts[attr] = this.links.reduce(function (p, c) {
             return p + (c[attr] ? 1 : 0);
           }, 0);
           this.countUpdate(this, counts, this.countHandler());
@@ -2993,7 +2995,7 @@
 
   // replacement for d3.functor
   function constant(x) {
-    return function() {
+    return function () {
       return x;
     };
   }
@@ -3003,7 +3005,7 @@
       this.css_classes = css_classes;
       this.phylotree = phylotree;
       this.container = options.container;
-      this.separation = function(_node, _previous) {
+      this.separation = function (_node, _previous) {
         return 0;
       };
 
@@ -3019,8 +3021,8 @@
       this.draw_branch = draw_line;
       this.draw_scale_bar = null;
       this.edge_placer = lineSegmentPlacer;
-      this.count_listener_handler = function() {};
-      this.layout_listener_handler = function() {};
+      this.count_listener_handler = function () { };
+      this.layout_listener_handler = function () { };
       this.node_styler = undefined;
       this.edge_styler = undefined;
       this.selection_attribute_name = "selected";
@@ -3030,7 +3032,7 @@
       this.radius = 1;
       this.radius_pad_for_bubbles = 0;
       this.rescale_nodeSpan = 1;
-      this.relative_nodeSpan = function(_node) {
+      this.relative_nodeSpan = function (_node) {
         return this.nodeSpan(_node) / this.rescale_nodeSpan;
       };
 
@@ -3082,7 +3084,7 @@
         "node-span": null
       };
 
-      this.ensure_size_is_in_px = function(value) {
+      this.ensure_size_is_in_px = function (value) {
         return typeof value === "number" ? value + "px" : value;
       };
 
@@ -3103,8 +3105,8 @@
 
       this.nodeSpan = this.options['node-span'];
 
-      if(!this.nodeSpan) {
-        this.nodeSpan = function(_node) {
+      if (!this.nodeSpan) {
+        this.nodeSpan = function (_node) {
           return 1;
         };
       }
@@ -3115,7 +3117,7 @@
             if (isLeafNode(d) || this.showInternalName(d))
               return this.nodeSpan(d);
           })
-          .reduce(function(p, c) {
+          .reduce(function (p, c) {
             return Math.min(c, p || 1e200);
           }, null) || 1;
 
@@ -3218,7 +3220,7 @@
     update_layout(new_json, do_hierarchy) {
       if (do_hierarchy) {
         this.nodes = d3__namespace.hierarchy(new_json);
-        this.nodes.each(function(d) {
+        this.nodes.each(function (d) {
           d.id = null;
         });
       }
@@ -3308,7 +3310,7 @@
         .enter()
         .insert("path", ":first-child")
         .merge(drawn_links)
-        .each(function(d) {
+        .each(function (d) {
           self.drawEdge(this, d, transitions);
         });
 
@@ -3340,7 +3342,7 @@
             d.screen_y
           ]);
         })
-        .each(function(d) {
+        .each(function (d) {
           self.drawNode(this, d, transitions);
         })
         .attr("transform", d => {
@@ -3371,21 +3373,21 @@
             var extent = event.selection,
               shown_links = this.links.filter(edgeVisible);
             var selected_links = shown_links
-                .filter((d, i) => {
-                  return (
-                    d.source.screen_x >= extent[0][0] &&
-                    d.source.screen_x <= extent[1][0] &&
-                    d.source.screen_y >= extent[0][1] &&
-                    d.source.screen_y <= extent[1][1] &&
-                    d.target.screen_x >= extent[0][0] &&
-                    d.target.screen_x <= extent[1][0] &&
-                    d.target.screen_y >= extent[0][1] &&
-                    d.target.screen_y <= extent[1][1]
-                  );
-                })
-                .map(d => {
-                  return d.target;
-                });
+              .filter((d, i) => {
+                return (
+                  d.source.screen_x >= extent[0][0] &&
+                  d.source.screen_x <= extent[1][0] &&
+                  d.source.screen_y >= extent[0][1] &&
+                  d.source.screen_y <= extent[1][1] &&
+                  d.target.screen_x >= extent[0][0] &&
+                  d.target.screen_x <= extent[1][0] &&
+                  d.target.screen_y >= extent[0][1] &&
+                  d.target.screen_y <= extent[1][1]
+                );
+              })
+              .map(d => {
+                return d.target;
+              });
 
             this.modifySelection(
 
@@ -3419,22 +3421,22 @@
             const isRadial = tree.display.radial();
 
             d3__namespace.select("." + css_classes["tree-container"]).attr("transform", d => {
-                if (isRadial) {
-                    // Special handling for radial layout
-                    const centerX = width / 2;
-                    const centerY = height / 2;
-                    return `translate(${centerX},${centerY}) scale(${transform.k}) translate(${-centerX},${-centerY}) translate(${transform.x},${transform.y})`;
-                } else {
-                    // Linear layout
-                    return transform;
-                }
+              if (isRadial) {
+                // Special handling for radial layout
+                const centerX = width / 2;
+                const centerY = height / 2;
+                return `translate(${centerX},${centerY}) scale(${transform.k}) translate(${-centerX},${-centerY}) translate(${transform.x},${transform.y})`;
+              } else {
+                // Linear layout
+                return transform;
+              }
             });
 
             // Give some extra room for the scale bar
             d3__namespace.select("." + css_classes["tree-scale-bar"]).attr("transform", d => {
-                let toTransform = transform;
-                toTransform.y -= 10;
-                return toTransform;
+              let toTransform = transform;
+              toTransform.y -= 10;
+              return toTransform;
             });
 
             // d3__namespace.select("." + css_classes["tree-container"]).attr("transform", d => {
@@ -3448,7 +3450,7 @@
             //   toTransform.y -= 10; 
             //   return toTransform;
             // });
-            
+
           });
 
         this.svg.call(zoom);
@@ -3467,25 +3469,25 @@
         this.x +
         this.separation(this.last_node, a_node) +
         (this.last_span + _nodeSpan) * 0.5;
-        
-   
+
+
       // separation is a user-settable callback to add additional spacing on nodes
       this._extents[1][1] = Math.max(this._extents[1][1], a_node.y);
       this._extents[1][0] = Math.min(
         this._extents[1][0],
         a_node.y - _nodeSpan * 0.5
       );
-      
+
 
       if (this.is_under_collapsed_parent) {
-         this._extents[0][1] = Math.max(
+        this._extents[0][1] = Math.max(
           this._extents[0][1],
           this.save_x +
-            (a_node.x - this.save_x) * this.options["compression"] +
-            this.save_span +
-            (_nodeSpan * 0.5 + this.separation(this.last_node, a_node)) *
-              this.options["compression"]
-        );      
+          (a_node.x - this.save_x) * this.options["compression"] +
+          this.save_span +
+          (_nodeSpan * 0.5 + this.separation(this.last_node, a_node)) *
+          this.options["compression"]
+        );
       } else {
         this._extents[0][1] = Math.max(
           this._extents[0][1],
@@ -3496,7 +3498,7 @@
 
       this.last_node = a_node;
       this.last_span = _nodeSpan;
-      
+
     }
 
     tree_layout(a_node) {
@@ -3601,11 +3603,11 @@
           this.is_under_collapsed_parent = true;
           this.process_internal_node(a_node);
           this.is_under_collapsed_parent = false;
-   
+
           if (typeof a_node.x === "number") {
             a_node.x =
               this.save_x +
-              (a_node.x -this.save_x) * this.options["compression"] +
+              (a_node.x - this.save_x) * this.options["compression"] +
               this.save_span;
 
             a_node.collapsed = [[a_node.x, a_node.y]];
@@ -3613,13 +3615,13 @@
             var map_me = n => {
               n.hidden = true;
 
-              if (isLeafNode(n)) {            
+              if (isLeafNode(n)) {
                 this.x = n.x =
                   this.save_x +
                   (n.x - this.save_x) * this.options["compression"] +
                   this.save_span;
 
-                a_node.collapsed.push([n.x, n.y]);             
+                a_node.collapsed.push([n.x, n.y]);
               } else {
                 n.children.map(map_me);
               }
@@ -3627,7 +3629,7 @@
 
             this.x = this.save_x;
             map_me(a_node);
-           
+
 
             a_node.collapsed.splice(1, 0, [this.save_x, a_node.y]);
             a_node.collapsed.push([this.x, a_node.y]);
@@ -3706,7 +3708,7 @@
       if (this.options["left-right-spacing"] == "fixed-step") {
         this.size[1] = this.max_depth * this.fixed_width[1];
 
-        this.scales[1] = 
+        this.scales[1] =
           (this.size[1] - this.offsets[1] - this.options["left-offset"]) /
           this._extents[1][1];
 
@@ -3753,7 +3755,7 @@
       this.last_span = 0.0;
       //let x = 0.0,
       //  last_span = 0;
-      
+
       this.last_node = null;
       this.last_span = 0.0;
 
@@ -3764,7 +3766,7 @@
 
       this.is_under_collapsed_parent = false;
       this.max_depth = 1;
-      
+
       // Set initial x
       this.phylotree.nodes.x = this.tree_layout(
         this.phylotree.nodes,
@@ -3813,14 +3815,14 @@
           min_radius = 0,
           effective_span = this._extents[0][1] * this.scales[0];
 
-        let compute_distance = function(r1, r2, a1, a2, annular_shift) {
+        let compute_distance = function (r1, r2, a1, a2, annular_shift) {
           annular_shift = annular_shift || 0;
           return Math.sqrt(
             (r2 - r1) * (r2 - r1) +
-              2 *
-                (r1 + annular_shift) *
-                (r2 + annular_shift) *
-                (1 - Math.cos(a1 - a2))
+            2 *
+            (r1 + annular_shift) *
+            (r2 + annular_shift) *
+            (1 - Math.cos(a1 - a2))
           );
         };
 
@@ -3870,9 +3872,9 @@
                     d.radius * last_child_radius -
                     (dd * dd -
                       (last_child_radius - d.radius) *
-                        (last_child_radius - d.radius)) /
-                      2 /
-                      (1 - Math.cos(last_child_angle - d.angle)),
+                      (last_child_radius - d.radius)) /
+                    2 /
+                    (1 - Math.cos(last_child_angle - d.angle)),
                   st = Math.sqrt(b * b - 4 * c);
 
                 annular_shift = Math.min(
@@ -3901,8 +3903,8 @@
             this.radius,
             (Math.min(effective_span, this._extents[1][1] * this.scales[1]) -
               this.label_width) *
-              0.5 -
-              this.radius * annular_shift
+            0.5 -
+            this.radius * annular_shift
           );
         }
 
@@ -3960,12 +3962,12 @@
 
             let last_point = d.collapsed[1];
 
-            d.collapsed = d.collapsed.filter(function(p, i) {
+            d.collapsed = d.collapsed.filter(function (p, i) {
               if (i < 3 || i > d.collapsed.length - 4) return true;
               if (
                 Math.sqrt(
                   Math.pow(p[0] - last_point[0], 2) +
-                    Math.pow(p[1] - last_point[1], 2)
+                  Math.pow(p[1] - last_point[1], 2)
                 ) > 3
               ) {
                 last_point = p;
@@ -3979,7 +3981,7 @@
         this.size[0] = this.radial_center + this.radius / scaler;
         this.size[1] = this.radial_center + this.radius / scaler;
       } else {
-  this.do_lr();
+        this.do_lr();
 
         this.draw_branch = draw_line;
         this.edge_placer = lineSegmentPlacer;
@@ -3988,9 +3990,9 @@
         this.phylotree.nodes.each(d => {
 
           d.x *= this.scales[0];
-          d.y *= this.scales[1]*.8;
+          d.y *= this.scales[1];
 
-          if (this.options["layout"] == "right-to-left") {   
+          if (this.options["layout"] == "right-to-left") {
             d.y = this._extents[1][1] * this.scales[1] - d.y;
           }
 
@@ -4005,12 +4007,12 @@
           if (d.collapsed) {
             d.collapsed.forEach(p => {
               p[0] *= this.scales[0];
-              p[1] *= this.scales[1]*.8;
+              p[1] *= this.scales[1] * .8;
             });
 
             let last_x = d.collapsed[1][0];
 
-            d.collapsed = d.collapsed.filter(function(p, i) {
+            d.collapsed = d.collapsed.filter(function (p, i) {
               if (i < 3 || i > d.collapsed.length - 4) return true;
               if (p[0] - last_x > 3) {
                 last_x = p[0];
@@ -4031,10 +4033,10 @@
             10,
             Math.ceil(
               Math.log((this._extents[1][1] * range_limit) / this.radius) /
-                Math.log(10)
+              Math.log(10)
             )
           );
-          
+
 
           range_limit = domain_limit * (this.radius / this._extents[1][1]);
 
@@ -4048,19 +4050,19 @@
 
           range_limit =
             this.size[1] - this.offsets[1] - this.options["left-offset"] - this.shown_font_size;
-       }
+        }
 
         let scale = d3__namespace
-            .scaleLinear()
-            .domain([0, domain_limit])
-            .range([0, range_limit]),
-           
-            scaleTickFormatter = d3__namespace.format(".2f");
+          .scaleLinear()
+          .domain([0, domain_limit])
+          .range([0, range_limit]),
+
+          scaleTickFormatter = d3__namespace.format(".2f");
 
         this.draw_scale_bar = d3__namespace
           .axisTop()
           .scale(scale)
-          .tickFormat(function(d) {
+          .tickFormat(function (d) {
             if (d === 0) {
               return "";
             }
@@ -4070,7 +4072,7 @@
         if (this.radial()) {
           this.draw_scale_bar.tickValues([domain_limit]);
         } else {
-          let round = function(x, n) {
+          let round = function (x, n) {
             return n ? Math.round(x * (n = Math.pow(10, n))) / n : Math.round(x);
           };
 
@@ -4082,9 +4084,9 @@
               10,
               round(
                 range_limit /
-                  (this.shown_font_size *
-                    scaleTickFormatter(my_ticks).length *
-                    2),
+                (this.shown_font_size *
+                  scaleTickFormatter(my_ticks).length *
+                  2),
                 0
               )
             )
@@ -4257,11 +4259,11 @@
       if (this.svg) {
         this.svg.selectAll(
           "." +
-            this.css_classes["tree-container"] +
-            ",." +
-            this.css_classes["tree-scale-bar"] +
-            ",." +
-            this.css_classes["tree-selection-brush"]
+          this.css_classes["tree-container"] +
+          ",." +
+          this.css_classes["tree-scale-bar"] +
+          ",." +
+          this.css_classes["tree-selection-brush"]
         );
 
         //.remove();
@@ -4453,9 +4455,9 @@
           // Hard failure
           self.logger.error(
             "type " +
-              type +
-              " not in registry! Available types are " +
-              ___namespace.keys(format_registry)
+            type +
+            " not in registry! Available types are " +
+            ___namespace.keys(format_registry)
           );
         }
       } else if (___namespace.isFunction(type)) {
@@ -4671,10 +4673,10 @@
 
     var leaf_count = 0;
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       n.cot_computed_length = bl(n);
 
-   
+
       if (n.parent && ___namespace.isUndefined(n.cot_computed_length)) {
         throw "Non-null branch lengths are required for this operation: missing branch length at node " + n.data.name;
       }
@@ -4691,9 +4693,9 @@
     });
 
     // populate all cot_path_to_leaves_below
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (n.parent) {
-        ___namespace.each(n.cot_path_to_leaves_below, function(length_so_far, leaf_index) {
+        ___namespace.each(n.cot_path_to_leaves_below, function (length_so_far, leaf_index) {
           n.parent.cot_path_to_leaves_below[leaf_index] =
             length_so_far + n.cot_computed_length;
         });
@@ -4712,7 +4714,7 @@
           other_node++
         ) {
           if (this_node != other_node) {
-            ___namespace.each(a_node.children[other_node].cot_path_to_leaves_below, function(
+            ___namespace.each(a_node.children[other_node].cot_path_to_leaves_below, function (
               length,
               index
             ) {
@@ -4730,10 +4732,10 @@
 
     // takes two passes
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (n.parent) {
         // copy parent's 'above' nodes
-        ___namespace.each(n.parent.cot_path_to_leaves_above, function(
+        ___namespace.each(n.parent.cot_path_to_leaves_above, function (
           length_so_far,
           leaf_index
         ) {
@@ -4767,7 +4769,7 @@
     // Count number of ancestors to root for each tree
     let depths = ___namespace.map(tips, d => { return d.depth });
 
-    return ___namespace.reduce(depths, function(memo, num){ return memo + num; }, 0);
+    return ___namespace.reduce(depths, function (memo, num) { return memo + num; }, 0);
 
   }
 
@@ -4781,7 +4783,7 @@
       current_location = null;
 
     if (power == 2) {
-      tree.traverse_and_compute(function(n) {
+      tree.traverse_and_compute(function (n) {
         if (n.parent) {
           // can't consider the root
           var sum_below = 0,
@@ -4791,13 +4793,13 @@
 
           var count_below = 0;
 
-          ___namespace.each(n.cot_path_to_leaves_below, function(l) {
+          ___namespace.each(n.cot_path_to_leaves_below, function (l) {
             sum_below += l;
             sum_below_squared += l * l;
             count_below++;
           });
 
-          ___namespace.each(n.cot_path_to_leaves_above, function(l) {
+          ___namespace.each(n.cot_path_to_leaves_above, function (l) {
             sum_above += l;
             sum_above_squared += l * l;
           });
@@ -4819,8 +4821,8 @@
             2 * (sum_above * (n.cot_computed_length - tt) + sum_below * tt) +
             count_below * tt * tt +
             (n.cot_computed_length - tt) *
-              (n.cot_computed_length - tt) *
-              count_above;
+            (n.cot_computed_length - tt) *
+            count_above;
 
           if (score < current_min) {
             current_location = n;
@@ -4836,22 +4838,22 @@
       });
     } else {
       // in the general case try a simple grid optimization
-      tree.traverse_and_compute(function(n) {
+      tree.traverse_and_compute(function (n) {
         if (n.parent) {
           // can't consider the root
 
           var optimization_step =
-              n.cot_computed_length > 0.0 ? n.cot_computed_length * 0.05 : 0.1,
+            n.cot_computed_length > 0.0 ? n.cot_computed_length * 0.05 : 0.1,
             current_t = 0;
 
           while (current_t < n.cot_computed_length) {
             var score = 0.0;
 
-            ___namespace.each(n.cot_path_to_leaves_below, function(l) {
+            ___namespace.each(n.cot_path_to_leaves_below, function (l) {
               score += Math.pow(l + current_t, power);
             });
 
-            ___namespace.each(n.cot_path_to_leaves_above, function(l) {
+            ___namespace.each(n.cot_path_to_leaves_above, function (l) {
               score += Math.pow(l + (n.cot_computed_length - current_t), power);
             });
 
@@ -4888,7 +4890,7 @@
 
     var bl = tree.branch_length;
 
-    tree.traverse_and_compute(function(node) {
+    tree.traverse_and_compute(function (node) {
       if (node.parent) {
         var my_longest_path_length = bl(node);
         var my_longest_path_terminus;
@@ -4915,7 +4917,7 @@
     var root_node = tree.getRootNode();
     var longest_path_length = 0;
 
-    root_node.children.forEach(function(root_child) {
+    root_node.children.forEach(function (root_child) {
       if (root_child.max_path_terminus !== root_node.max_path_terminus) {
         var pl = root_child.max_path + bl(root_child);
         if (pl >= longest_path_length) {
@@ -4956,7 +4958,7 @@
   }
 
   function annotateCopyNumber(tree) {
-    tree.traverse_and_compute(function(node) {
+    tree.traverse_and_compute(function (node) {
       if (tree.isLeafNode(node)) {
         node.data.copy_number = 1;
       }
@@ -5026,7 +5028,7 @@
     rootToTip(tree);
 
     // To return if best node is the root already
-    tree.traverse_and_compute(function(node) {
+    tree.traverse_and_compute(function (node) {
       if (tree.isLeafNode(node) && !___namespace.isNull(node.data.decimal_date_value)) {
         linear_data.push([node.data.decimal_date_value, node.data.rtta, node.data.copy_number]);
       }
@@ -5034,7 +5036,7 @@
 
     let best_fit = linearFit(linear_data);
 
-    tree.traverse_and_compute(function(node) {
+    tree.traverse_and_compute(function (node) {
 
       if (tree.isLeafNode(node) && !___namespace.isNull(node.data.decimal_date_value)) {
 
@@ -5042,7 +5044,7 @@
 
         linear_data = [];
 
-        tree.traverse_and_compute(function(node) {
+        tree.traverse_and_compute(function (node) {
           if (tree.isLeafNode(node) && !___namespace.isNull(node.data.decimal_date_value)) {
             linear_data.push([
               node.data.decimal_date_value,
@@ -5071,13 +5073,13 @@
   // linear fit of root to tip distances
   function linearFit(data) {
 
-    var ss = data.reduce(function(p, c) {
-        return c[2] + p;
-      }, 0), // sample count
-      sx = data.reduce(function(p, c) {
+    var ss = data.reduce(function (p, c) {
+      return c[2] + p;
+    }, 0), // sample count
+      sx = data.reduce(function (p, c) {
         return c[2] * c[0] + p;
       }, 0), // sum X
-      sy = data.reduce(function(p, c) {
+      sy = data.reduce(function (p, c) {
         return c[2] * c[1] + p;
       }, 0), // sum Y
       sxoss = sx / ss,
@@ -5087,7 +5089,7 @@
       st2 = 0,
       vary = 0;
 
-    data.forEach(function(point) {
+    data.forEach(function (point) {
       var t = point[0] - sxoss;
       st2 += point[2] * t * t;
       fitB += point[2] * t * point[1];
@@ -5100,7 +5102,7 @@
 
     var varres = 0;
 
-    data.forEach(function(point) {
+    data.forEach(function (point) {
       var t = point[1] - a - fitB * point[0];
       varres += point[2] * t * t;
     });
@@ -5151,7 +5153,7 @@
         if (tree.isLeafNode(n)) {
           n.parent.data.r2t[n.data.leaf_index] = n.data._computed_length;
         } else {
-          ___namespace.each(n.data.r2t, function(v, idx) {
+          ___namespace.each(n.data.r2t, function (v, idx) {
             n.parent.data.r2t[idx] = v + n.data._computed_length;
           });
           delete n.data.r2t;
@@ -5178,7 +5180,7 @@
 
   const default_regexp = /([0-9]{4}).?([0-9]{2}).?([0-9]{2})$/g;
 
-  const default_date_getter = function(node) {
+  const default_date_getter = function (node) {
     if (isLeafNode(node)) {
       if ("name" in node) {
         let location = default_regexp.exec(node.name);
@@ -5211,11 +5213,11 @@
    *      n.decimal_date_value (decimal object, e.g. 2018.72)
    *  
    */
-  const extract_dates = function(tree, date_getter, date_converter=default_date_converter) {
+  const extract_dates = function (tree, date_getter, date_converter = default_date_converter) {
 
     date_getter = date_getter || default_date_getter;
-    
-    tree.traverse_and_compute(function(n) {
+
+    tree.traverse_and_compute(function (n) {
       var d_string = date_getter(n);
       if (d_string) {
         try {
@@ -5277,7 +5279,7 @@
     let bl = tree.branch_length;
 
     // initialize member variables
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (n.parent) {
         n._computed_length = bl(n);
         if (!___namespace.isNumber(n._computed_length)) {
@@ -5287,7 +5289,7 @@
       }
     });
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (n.parent) {
         n.parent.max_path_length = Math.max(
           n.parent.max_path_length,
@@ -5298,7 +5300,7 @@
 
     var clusters = [];
 
-    tree.traverse_and_compute(___namespace.noop, "pre-order", root_node, function(n) {
+    tree.traverse_and_compute(___namespace.noop, "pre-order", root_node, function (n) {
       if (!tree.isLeafNode(n)) {
         var bs = ___namespace.isString(n.data.bootstrap_values)
           ? +n.data.bootstrap_values
@@ -5307,7 +5309,7 @@
         if (bs >= bootstrap_threshold) {
           var my_diameter = ___namespace.reduce(
             n.children,
-            function(c, n) {
+            function (c, n) {
               return n.max_path_length + n._computed_length + c;
             },
             0
@@ -5325,7 +5327,7 @@
 
     // clean up member variables
     tree.traverse_and_compute(
-      function(n) {
+      function (n) {
         if (n.parent) {
           delete n._computed_length;
           delete n.max_path_length;
@@ -5335,10 +5337,10 @@
       root_node
     );
 
-    ___namespace.each(clusters, function(cluster) {
+    ___namespace.each(clusters, function (cluster) {
       cluster["members"] = [];
       tree.traverse_and_compute(
-        function(n) {
+        function (n) {
           if (tree.isLeafNode(n)) {
             cluster["members"].push(n);
           }
@@ -5377,7 +5379,7 @@
       throw "Invalid percentile threshold in perform_phylopart";
     }
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (tree.isLeafNode(n)) {
         if (n.cot_computed_length < min_bl) {
           if (min_bl < min_bl2) {
@@ -5400,14 +5402,14 @@
     var max_path_length =
       ___namespace.reduce(
         core_node.cot_path_to_leaves_below,
-        function(c, n) {
+        function (c, n) {
           return n > c ? n : c;
         },
         0
       ) +
       ___namespace.reduce(
         core_node.cot_path_to_leaves_above,
-        function(c, n) {
+        function (c, n) {
           return n > c ? n : c;
         },
         0
@@ -5430,13 +5432,13 @@
 
     root_node.paths_to_leaves = new Array(leaf_count);
 
-    ___namespace.each(root_node.children, function(cn) {
-      ___namespace.each(root_node.cot_path_to_leaves_below, function(v, i) {
+    ___namespace.each(root_node.children, function (cn) {
+      ___namespace.each(root_node.cot_path_to_leaves_below, function (v, i) {
         root_node.paths_to_leaves[i] = v + cn.cot_computed_length;
       });
     });
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (!tree.isLeafNode(n)) {
         n.histogram = new Array(number_of_bins);
         for (var i = 0; i < number_of_bins; i++) {
@@ -5445,7 +5447,7 @@
         if (n.parent) {
           var index = 0;
           n.paths_to_leaves = [];
-          ___namespace.each(n.cot_path_to_leaves_below, function(v, i) {
+          ___namespace.each(n.cot_path_to_leaves_below, function (v, i) {
             n.paths_to_leaves[index++] = v;
           });
         }
@@ -5461,7 +5463,7 @@
           this could be approximated (I think), by merging histograms of children
       */
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (!tree.isLeafNode(n)) {
         for (var n1 = 0; n1 < n.paths_to_leaves.length; n1++) {
           for (var n2 = n1 + 1; n2 < n.paths_to_leaves.length; n2++) {
@@ -5493,12 +5495,12 @@
       min_bl +
       (bin_i +
         (root_node.histogram[bin_i] - total_comparisons) /
-          root_node.histogram[bin_i]) *
-        resolution;
+        root_node.histogram[bin_i]) *
+      resolution;
 
     var clusters = [];
 
-    tree.traverse_and_compute(___namespace.noop, "pre-order", null, function(n) {
+    tree.traverse_and_compute(___namespace.noop, "pre-order", null, function (n) {
       if (!tree.isLeafNode(n)) {
         var bs = ___namespace.isString(n.data.bootstrap_values)
           ? +n.data.bootstrap_values
@@ -5519,7 +5521,7 @@
             min_bl +
             (bin_i +
               (n.histogram[bin_i] - total_comparisons) / n.histogram[bin_i]) *
-              resolution;
+            resolution;
 
           if (my_median <= median_threshold) {
             clusters.push({ root: n, median: my_median, bootstrap: bs });
@@ -5530,7 +5532,7 @@
       return false;
     });
 
-    tree.traverse_and_compute(function(n) {
+    tree.traverse_and_compute(function (n) {
       if (!tree.isLeafNode(n)) {
         if ("histogram" in n) {
           delete n.histogram;
@@ -5539,10 +5541,10 @@
       }
     });
 
-    ___namespace.each(clusters, function(cluster) {
+    ___namespace.each(clusters, function (cluster) {
       cluster["members"] = [];
       tree.traverse_and_compute(
-        function(n) {
+        function (n) {
           if (tree.isLeafNode(n)) {
             cluster["members"].push(n);
           }

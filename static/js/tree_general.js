@@ -442,7 +442,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       cachedTreeWidth !== currentWidth ||
       cachedTreeHeight !== currentHeight) {
 
-      cachedColumnStartX = positionInfo.getScaleEndPosition();
+      cachedColumnStartX = positionInfo.getScaleEndPosition() + 70;
       cachedTreeWidth = currentWidth;
       cachedTreeHeight = currentHeight;
 
