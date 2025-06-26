@@ -428,6 +428,8 @@ def register_routes(app):
             metadata_link = dataset['metadata_file']
             metadata_columns = dataset['metadata_columns']
             datasetDescr = dataset['description']
+            source = dataset['source']
+            cite = dataset['cite']
             
             app.logger.debug(f"Found dataset: {dataset['dataset_name']} (ID: {dataset['id']})")
             app.logger.debug(f"Tree file: {tree_link}")
@@ -478,7 +480,9 @@ def register_routes(app):
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
                              superfamily_name=dataset['superfamily_name'],
-                             dataset_name=dataset['dataset_name'])
+                             dataset_name=dataset['dataset_name'],
+                             source=source,
+                             cite=cite)
 
         except Exception as e:
             app.logger.error(f"Error in tree_renderer: {e}", exc_info=True)
