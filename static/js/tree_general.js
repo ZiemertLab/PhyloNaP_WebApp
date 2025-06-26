@@ -66,10 +66,14 @@ window.setupEventListeners = function (tree) {
         this.getAttribute("data-direction") == "vertical"
           ? tree.display.spacing_x.bind(tree.display)
           : tree.display.spacing_y.bind(tree.display)
-      // window.setTreeSize(width, height)
       console.log("non vertical spacing: ", tree.display.spacing_y());
       console.log("y spacing 2 data-amount: ", Number(this.getAttribute("data-amount")));
       which_function(which_function() + Number(this.getAttribute("data-amount"))).update();
+
+      // Add cache invalidation after spacing changes
+      if (window.invalidateColumnCache) {
+        window.invalidateColumnCache();
+      }
     });
   });
 
@@ -80,7 +84,35 @@ window.setupEventListeners = function (tree) {
           btn.classList.toggle("active");
         });
         tree.display.radial(!tree.display.radial()).update();
-        // window.setTreeSize(width, height)
+
+        // Add cache invalidation after layout changes
+        if (window.invalidateColumnCache) {
+          window.invalidateColumnCache();
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('.phylotree-align-toggler').forEach(function (toggler) {
+    toggler.addEventListener('click', function (e) {
+      if (!tree || !tree.display || !tree.display.options) {
+        console.error('Tree display options are not defined');
+        return;
+      }
+      var button_align = this.getAttribute('data-align');
+      var tree_align = tree.display.options.alignTips;
+
+      if (tree_align != button_align) {
+        tree.display.alignTips(button_align == 'right');
+        document.querySelectorAll('.phylotree-align-toggler').forEach(function (toggler) {
+          toggler.classList.toggle('active');
+        });
+        tree.display.update();
+
+        // Add cache invalidation after alignment changes
+        if (window.invalidateColumnCache) {
+          window.invalidateColumnCache();
+        }
       }
     });
   });
@@ -427,6 +459,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     cachedTreeHeight = null;
     console.log('Column position cache invalidated');
   }
+  window.invalidateColumnCache = invalidateColumnPositionCache;
   // Calculate maximum columns based on container width
   function calculateMaxColumns() {
     const container = document.getElementById('tree-container') || document.getElementById('tree');
@@ -1050,6 +1083,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   // Simplified resize handler
   window.addEventListener('resize', function () {
     const oldMaxColumns = maxColumns;
+
+    // Invalidate cache on resize
+    invalidateColumnPositionCache();
+
     calculateMaxColumns();
 
     if (maxColumns < oldMaxColumns) {
