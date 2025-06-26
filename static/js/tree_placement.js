@@ -133,15 +133,22 @@ async function main() {
             'node-styler': function (container, node) {
                 const annotation = node.data?.annotation;
                 const hasConfidence = bubbleData[annotation] !== undefined;
+                const isLeaf = !node.children || node.children.length === 0;
 
                 if (hasConfidence) {
-                    // High-confidence nodes
+                    // High-confidence nodes - apply styling to both leaf and internal nodes
                     container.classed("alternate", false);
                     container.classed("circle", true);
+
+                    // For internal nodes with bubbles, add a special class for additional styling
+                    if (!isLeaf) {
+                        container.classed("internal-bubble", true);
+                    }
                 } else {
                     // Low-confidence or no-confidence nodes
                     container.classed("alternate", true);
                     container.classed("circle", false);
+                    container.classed("internal-bubble", false);
                 }
             }
         };
@@ -185,13 +192,20 @@ async function main() {
         'node-styler': function (container, node) {
             const annotation = node.data?.annotation;
             const hasConfidence = initialBubbleData[annotation] !== undefined;
+            const isLeaf = !node.children || node.children.length === 0;
 
             if (hasConfidence) {
                 container.classed("alternate", false);
                 container.classed("circle", true);
+
+                // For internal nodes with bubbles, add a special class
+                if (!isLeaf) {
+                    container.classed("internal-bubble", true);
+                }
             } else {
                 container.classed("alternate", true);
                 container.classed("circle", false);
+                container.classed("internal-bubble", false);
             }
         }
     };
