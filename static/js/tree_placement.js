@@ -1,174 +1,225 @@
 async function main() {
 
     const { container, width, height } = getContainerDimensions();
-    
-    const {nwk: jplace_content, metadata, metadataListArray:metadataListArray2, datasetDescr } = getTreeData();
+
+    const { nwk: jplace_content, metadata, metadataListArray: metadataListArray2, datasetDescr } = getTreeData();
     console.log("jplace_content: ", jplace_content);
     console.log("metadata: ", metadata);
     console.log("metadataListArray2: ", metadataListArray2);
     console.log("datasetDescr: ", datasetDescr);
-    
+
     const jplace_content_obj = JSON.parse(jplace_content);
     const nwk = jplace_content_obj.tree;
     const placements = jplace_content_obj.placements;
     console.log("nwktree: ", nwk);
     console.log("placements: ", placements);
-    let extractedNumbers; 
+
+    // === PLACEMENT DATA PROCESSING ===
+    let allPlacements = [];
+    let highConfidencePlacements = [];
+    let currentDisplayPlacements = [];
+    let showingAllPlacements = false;
+    let bubbleSize; // Declare bubbleSize at module level
+    let currentTree; // Keep reference to current tree
+
     if (placements && Array.isArray(placements[0].p)) {
-        extractedNumbers = placements[0].p.map(subArray => [subArray[0], subArray[2]]);
-        console.log("extractedNumbers: ", extractedNumbers);
+        // Extract all placement data [edge_num, likelihood, like_weight_ratio, distal_length, pendant_length]
+        allPlacements = placements[0].p.map(subArray => [subArray[0], subArray[1], subArray[2], subArray[3], subArray[4]]);
+
+        // Filter high confidence placements (like_weight_ratio > 0.3)
+        highConfidencePlacements = allPlacements.filter(placement => placement[2] > 0.3);
+
+        // Determine what to display initially
+        if (highConfidencePlacements.length > 0) {
+            currentDisplayPlacements = highConfidencePlacements;
+            showingAllPlacements = false;
+            console.log(`Found ${highConfidencePlacements.length} high-confidence placements out of ${allPlacements.length} total`);
+        } else {
+            currentDisplayPlacements = allPlacements;
+            showingAllPlacements = true;
+            console.log(`No high-confidence placements found, showing all ${allPlacements.length} placements`);
+        }
     } else {
         console.log("placements or placements.p is not defined or not an array");
+        return;
     }
-    // const extractedNumbers = placements.p.map(subArray => [subArray[1], subArray[2]]);
-    // console.log("extractedNumbers: ", extractedNumbers);
-    // const { container, width, height } = getContainerDimensions();
-    // const jplace_file = document.getElementById('tree_data').getAttribute('nwk_data');
-    // console.log("nwk = " + jplace_tree);
-    // const jplace_stats = document.getElementById('tree_data').getAttribute('nwk_data');
-    // console.log("nwk = " + jplace_stats);
-    // const { metadata, metadataListArray:metadataListArray2, datasetDescr } = getTreeData();
-    // console.log("nwk: ", nwk);
-    // console.log("metadata: ", metadata);
-    // console.log("metadataListArray2: ", metadataListArray2);
-    // console.log("datasetDescr: ", datasetDescr);
+
+    // Create tree and setup
     const tree = createTree(nwk);
-    // displayNodeAnnotations(tree);
     setupEventListeners(tree);
     console.log("tree: ", tree);
-    customTreeOptions={};
 
-        // can draw the node of placement!!!
-    // for (const pair of extractedNumbers) {
-    //     const [num1, num2] = pair;
-    //     console.log("num1: ", num1, ", num2: ", num2);
-    // }
-    // bubbleSize = function (a) {
-    //     for (const pair of extractedNumbers) {
-    //         const [num1, num2] = pair;
-             
-    //         if (a.data.annotation == num1) {
-    //             return num2*10;
-    //             } 
-    //             // else if (a.data.annotation == "0") {
-    //             // return 30;
-    //             // } else {
-    //             // return null;
-    //             // }
-    //         console.log("num1: ", num1, ", num2: ", num2);
-    //     }
+    // === PLACEMENT DISPLAY AND VISUALIZATION ===
+    function updatePlacementDisplay(placementsToShow, showAll = false) {
+        // Update bubble data - convert to object for quick lookup [edge_num, like_weight_ratio]
+        const bubbleData = Object.fromEntries(
+            placementsToShow.map(placement => [placement[0], placement[2]])
+        );
 
-    // };
+        // Update bubble size function
+        bubbleSize = function (node) {
+            const annotation = node.data?.annotation;
+            const confidence = bubbleData[annotation];
 
-    // Convert extractedNumbers into an object
-    const extractedNumbersObj = Object.fromEntries(extractedNumbers);
+            if (confidence !== undefined) {
+                console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${confidence * 10}`);
+                return parseFloat(confidence) * 10;
+            } else {
+                console.log(`No matching annotation for node: ${annotation}`);
+                return 1;
+            }
+        };
 
-    if (placements && Array.isArray(placements[0].p)) {
-        placementNumbers = placements[0].p.map(subArray => [subArray[0], subArray[1], subArray[2], subArray[3], subArray[4]]);
+        // Update placement container display
+        updatePlacementContainer(placementsToShow, showAll);
+
+        // Update tree visualization
+        updateTreeVisualization(bubbleData);
     }
 
-    // Select the "placement-container" element
-    const placementContainer = document.getElementById('placement-container');
+    function updatePlacementContainer(placementsToShow, showAll) {
+        const placementContainer = document.getElementById('placement-container');
 
-    // Print the extracted numbers in the "placement-container"
-    if (placementNumbers) {
+        // Create toggle button if high confidence placements exist
+        let toggleButton = '';
+        if (highConfidencePlacements.length > 0 && highConfidencePlacements.length < allPlacements.length) {
+            const buttonText = showAll ?
+                `Show only high-confidence (${highConfidencePlacements.length})` :
+                `Show all placements (${allPlacements.length})`;
+            toggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button><br>`;
+        }
+
+        // Create status header
+        let statusHeader = '';
+        if (highConfidencePlacements.length > 0) {
+            if (showAll) {
+                statusHeader = `<strong>Showing all ${allPlacements.length} placements</strong><br>`;
+            } else {
+                statusHeader = `<strong>Showing ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > 0.3)</strong><br>`;
+            }
+        } else {
+            statusHeader = `<strong>Showing all ${allPlacements.length} placements (none with like_weight_ratio > 0.3)</strong><br>`;
+        }
+
+        // Create data rows
         const headers = ["edge_num", "likelihood", "like_weight_ratio", "distal_length", "pendant_length"];
-        const dataRows = placementNumbers.map((values, index) => {
+        const dataRows = placementsToShow.map((values, index) => {
             const formattedValues = values.map((val, i) => {
                 const formattedVal = typeof val === 'number' ? val.toExponential(3) : val;
                 return `${headers[i]}: ${formattedVal}`;
             });
             return `${index + 1}. ${formattedValues.join(' | ')}`;
         }).join('<br>');
-        placementContainer.innerHTML = dataRows;
-    } else {
-        placementContainer.innerHTML = 'No placements found.';
+
+        // Update container content
+        placementContainer.innerHTML = toggleButton + statusHeader + '<br>' + dataRows;
+
+        // Add event listener to toggle button
+        const toggleBtn = document.getElementById('toggle-placements-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                showingAllPlacements = !showingAllPlacements;
+                const newPlacements = showingAllPlacements ? allPlacements : highConfidencePlacements;
+                updatePlacementDisplay(newPlacements, showingAllPlacements);
+            });
+        }
     }
 
+    function updateTreeVisualization(bubbleData) {
+        // Update tree options for the existing tree
+        const customTreeOptions = {
+            'draw-size-bubbles': true,
+            'node-span': bubbleSize,
+            'node-styler': function (container, node) {
+                const annotation = node.data?.annotation;
+                const hasConfidence = bubbleData[annotation] !== undefined;
 
-    // bubbleSize = function (a) {
-    //     // console.log("Node type: ", isLeafNode(a) ? "Leaf" : "Inner Node");
-    //     const num2 = extractedNumbersObj[a.data.annotation];
-    //     if (num2 !== undefined) {
-    //         console.log("a.data.annotation: ", a.data.annotation);
-    //         console.log("num2: ", num2);
-    //         return parseFloat(num2)*10;
-    //         // return Math.sqrt(parseFloat(num2));
-    //     }   else {
-    //         console.log("No matching annotation for node: ", a.data.annotation);
-    //         return 1; // return a default value
-    //     }
-    //     // else if (a.data.annotation == "0") {
-    //     //     return 30;
-    //     // } else {
-    //     //     return null;
-    //     // }
-    // };
+                if (hasConfidence) {
+                    // High-confidence nodes
+                    container.classed("alternate", false);
+                    container.classed("circle", true);
+                } else {
+                    // Low-confidence or no-confidence nodes
+                    container.classed("alternate", true);
+                    container.classed("circle", false);
+                }
+            }
+        };
+
+        // Update the tree options directly
+        if (currentTree) {
+            // Apply new options to existing tree
+            Object.keys(customTreeOptions).forEach(key => {
+                currentTree.options[key] = customTreeOptions[key];
+            });
+
+            // Trigger tree update/redraw
+            currentTree.update();
+            console.log("Tree updated with new placements");
+        }
+    }
+
+    // === INITIAL SETUP ===
+    // Create initial bubble size function
+    const initialBubbleData = Object.fromEntries(
+        currentDisplayPlacements.map(placement => [placement[0], placement[2]])
+    );
+
     bubbleSize = function (node) {
-        const annotation = node.data?.annotation; // Safely access annotation
-        const num2 = extractedNumbersObj[annotation]; // Lookup annotation in extractedNumbersObj
-    
-        if (num2 !== undefined) {
-            console.log(`Node annotation: ${annotation}, Bubble size: ${num2 * 10}`);
-            return parseFloat(num2) * 10; // Scale the bubble size
+        const annotation = node.data?.annotation;
+        const confidence = initialBubbleData[annotation];
+
+        if (confidence !== undefined) {
+            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${confidence * 10}`);
+            return parseFloat(confidence) * 10;
         } else {
             console.log(`No matching annotation for node: ${annotation}`);
-            return 1; // Default sizes: larger for leaves, smaller for internal nodes
+            return 1;
         }
     };
 
-    // customTreeOptions = {
-    //     'draw-size-bubbles': true,
-    //     'node-span': bubbleSize,
-    //     'node-styler': function (container, node) {
-    //         const isAnnotated = extractedNumbersObj[node.data.annotation] !== undefined;
-    //         container.classed("alternate", !isAnnotated); // Apply "alternate" class for unannotated nodes
-    //     }
-    // };
-    customTreeOptions = {
+    // Render tree initially
+    const initialTreeOptions = {
         'draw-size-bubbles': true,
         'node-span': bubbleSize,
         'node-styler': function (container, node) {
-            // Use the same logic as bubbleSize to determine if the node is annotated
-            const annotation = node.data?.annotation; // Safely access annotation
-            const num2 = extractedNumbersObj[annotation]; // Lookup annotation in extractedNumbersObj
-    
-            if (num2 !== undefined) {
-                // Annotated nodes
-                container.classed("alternate", false); // Ensure "alternate" class is removed
-                container.classed("circle", true); // Add "circle" class for normal nodes
+            const annotation = node.data?.annotation;
+            const hasConfidence = initialBubbleData[annotation] !== undefined;
+
+            if (hasConfidence) {
+                container.classed("alternate", false);
+                container.classed("circle", true);
             } else {
-                // Non-annotated nodes
-                container.classed("alternate", true); // Add "alternate" class
-                container.classed("circle", false); // Ensure "circle" class is removed
+                container.classed("alternate", true);
+                container.classed("circle", false);
             }
         }
     };
-    let renderedTree = await renderTree(tree, width, height, customTreeOptions);
+
+    let renderedTree = await renderTree(tree, width, height, initialTreeOptions);
+    currentTree = renderedTree; // Store reference to the tree
     console.log("renderedTree: ", renderedTree);
-    // debugger;
+
+    // Display initial placements after tree is rendered
+    updatePlacementContainer(currentDisplayPlacements, showingAllPlacements);
+
+    // Complete setup
     addImagesAndMetadata(tree, metadata, metadataListArray2);
     setupSaveImageButton();
-    // setupSaveImageButton();
     setTreeSize(width, height);
-    // setTreeSizeWH(width, height);
     showTree(tree);
-    // // At the end of tree_rendering.js
-    selectedLeavesArray=getTerminalNodesArray(metadata)
-    // metadataSummary(selectedLeavesArray, metadata)
-    //test the clusters
+
+    selectedLeavesArray = getTerminalNodesArray(metadata);
     checkForClusters(tree);
-    // //make the tree panel apropiate size
-    $(document).ready(function() {
+
+    $(document).ready(function () {
         Split(['.tree-panel', '.details'], {
-        // Split(['.tree', '.details'], {
-        sizes: [75, 25],
-        minSize: 100,
-        gutterSize: 5,
-        cursor: 'col-resize'
+            sizes: [75, 25],
+            minSize: 100,
+            gutterSize: 5,
+            cursor: 'col-resize'
         });
     });
-
-    
 }
+
 main();
