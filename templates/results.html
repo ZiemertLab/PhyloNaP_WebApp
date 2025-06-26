@@ -58,9 +58,59 @@
       padding-top: 70px;
     }
 
-    /* Fix tooltip styling - remove conflicting styles */
+    /* Enhanced tooltip styling */
     .tooltip-header {
       cursor: help;
+      position: relative;
+      text-decoration: underline dotted;
+    }
+
+    /* Custom tooltip implementation */
+    [data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+
+    [data-tooltip]:before {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      pointer-events: none;
+      max-width: 250px;
+      white-space: normal;
+      line-height: 1.4;
+    }
+
+    [data-tooltip]:after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    [data-tooltip]:hover:before,
+    [data-tooltip]:hover:after {
+      opacity: 1;
+      visibility: visible;
     }
 
     /* Style the question mark icons in headers - make them bigger and properly sized */
@@ -93,6 +143,12 @@
       margin-left: 4px;
       cursor: help;
       font-weight: bold;
+    }
+
+    /* Change warning color to 50% transparent bright color */
+    .branch-warning {
+      background-color: rgba(123, 27, 56, 0.5) !important;
+      /* 50% transparent bright-color */
     }
 
     /* Add this to your existing styles */
@@ -157,12 +213,12 @@
                 <th>Tree ID</th>
                 <th>Superfamily</th>
                 <th>Family</th>
-                <th class="tooltip-header"
-                  title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+                <th
+                  data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
                   Confidence<span class="header-help-icon">?</span>
                 </th>
-                <th class="tooltip-header"
-                  title="Branch length connecting query to the reference tree. Values > 1.0 suggest distant relationships and weak functional predictions.">
+                <th
+                  data-tooltip="Branch length connecting query to the reference tree. Values > 1.0 suggest distant relationships and weak functional predictions.">
                   Branch Length<span class="header-help-icon">?</span>
                 </th>
                 <th>Description</th>
@@ -315,10 +371,10 @@
       const branchLength = item.pendant_length || 0;
       const isDistant = branchLength > 1;
 
-      // Branch length cell with pink background if > 1 - use simpler question mark
+      // Branch length cell with transparent bright color warning
       const branchLengthCell = `
-        <td style="${isDistant ? 'background-color: #ffb3ba;' : ''}" 
-            title="Branch length connecting query to the reference tree${isDistant ? '. Warning: High branch length suggests distant relationship - conclusions on the protein functionality are weak' : ''}">
+        <td class="${isDistant ? 'branch-warning' : ''}" 
+            data-tooltip="Branch length connecting query to the reference tree${isDistant ? '. Warning: High branch length suggests distant relationship - conclusions on the protein functionality are weak' : ''}">
           ${branchLength ? branchLength.toFixed(6) : 'N/A'}${isDistant ? '<span class="cell-help-icon">?</span>' : ''}
         </td>
       `;
@@ -335,7 +391,7 @@
           <td>${item.tree_id || "Unknown"}</td>
           <td>${item.superfamily || "Unknown"}</td>
           <td>${item.family || "Unknown"}</td>
-          <td title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+          <td data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
             ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
           </td>
           ${branchLengthCell}
@@ -356,8 +412,8 @@
         const isDistant = branchLength > 1;
 
         const branchLengthCell = `
-          <td style="${isDistant ? 'background-color: #ffb3ba;' : ''}" 
-              title="Branch length connecting query to the reference tree${isDistant ? '. Warning: High branch length suggests distant relationship.' : ''}">
+          <td class="${isDistant ? 'branch-warning' : ''}" 
+              data-tooltip="${isDistant ? '. Warning: High branch length suggests distant relationship.' : ''}">
             ${branchLength ? branchLength.toFixed(6) : 'N/A'}${isDistant ? '<span class="cell-help-icon">?</span>' : ''}
           </td>
         `;
@@ -368,7 +424,7 @@
             <td>${item.tree_id || "Unknown"}</td>
             <td>${item.superfamily || "Unknown"}</td>
             <td>${item.family || "Unknown"}</td>
-            <td title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+            <td data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
               ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
             </td>
             ${branchLengthCell}
