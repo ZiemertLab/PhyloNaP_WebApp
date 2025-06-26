@@ -1,150 +1,219 @@
 {% extends "base.html" %}
 {% block content %}
+
 <head>
-    <title>Waiting Room</title>
-    <!-- Add jQuery before socket.io -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
-    <style>
-        /* Your existing styles - unchanged */
-        .progress {
-            background-color: var(--background-light, #E0E0E0);
-        }
-        
-        .progress-bar {
-            background-color: var(--background-dark, #3D3D3D);
-            transition: background-color 0.5s ease;
-        }
-        
-        .progress-bar-complete {
-            background-color: var(--bright-color, #7B1B38);
-        }
-        
-        /* Existing styles */
-        #updates {
-            height: 50vh;
-            overflow: auto;
-        }
-        #results {
-            height: 50vh;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 100;
-        }
+  <title>Waiting Room</title>
+  <!-- Add jQuery before socket.io -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.socket.io/4.2.0/socket.io.min.js"></script>
+  <style>
+    /* Your existing styles - unchanged */
+    .progress {
+      background-color: var(--background-light, #E0E0E0);
+    }
 
-        body {
-            padding-top: 70px;
-        }
-        .tooltip-header {
-            cursor: help;
-            text-decoration: underline dotted;
-        }
+    .progress-bar {
+      background-color: var(--background-dark, #3D3D3D);
+      transition: background-color 0.5s ease;
+    }
 
-        /* Add this to your existing styles */
-        #log-container {
-            max-height: 300px;  /* Adjust this value to your preference */
-            overflow-y: auto;   /* Add scrollbar when content exceeds height */
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #dee2e6;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        
-        #log-container p {
-            margin-bottom: 5px;
-            line-height: 1.4;
-        }
-    </style>
+    .progress-bar-complete {
+      background-color: var(--bright-color, #7B1B38);
+    }
+
+    /* Existing styles */
+    #updates {
+      height: 50vh;
+      overflow: auto;
+    }
+
+    #results {
+      height: 50vh;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+    }
+
+    body {
+      padding-top: 70px;
+    }
+
+    /* Fix tooltip styling - remove conflicting styles */
+    .tooltip-header {
+      cursor: help;
+    }
+
+    /* Style the question mark icons in headers - make them bigger and properly sized */
+    .header-help-icon {
+      color: var(--background-dark, #3D3D3D);
+      font-size: 0.8em;
+      margin-left: 6px;
+      cursor: help;
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      line-height: 16px;
+      text-align: center;
+      border-radius: 50%;
+      background-color: var(--background-light, #E0E0E0);
+      border: 1px solid var(--background-dark, #3D3D3D);
+      font-weight: bold;
+      vertical-align: middle;
+    }
+
+    .header-help-icon:hover {
+      background-color: var(--background-dark, #3D3D3D);
+      color: var(--background-light, #E0E0E0);
+    }
+
+    /* Style for question marks in table cells */
+    .cell-help-icon {
+      color: var(--background-dark, #3D3D3D);
+      font-size: 0.9em;
+      margin-left: 4px;
+      cursor: help;
+      font-weight: bold;
+    }
+
+    /* Add this to your existing styles */
+    #log-container {
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    #log-container p {
+      margin-bottom: 5px;
+      line-height: 1.4;
+    }
+
+    /* Add column width control for More column */
+    #results-table th:nth-child(8),
+    #results-table td:nth-child(8) {
+      width: 150px;
+      min-width: 150px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container mt-4">
-      <h2>Processing Job: {{ job_id }}</h2>
-      
-      <div class="card mb-4">
-        <div class="card-header">
-          Status: <span id="status-text">{{ status }}</span>
-        </div>
-        <div class="card-body">
-          <div class="progress mb-3">
-            <div id="progress-bar" class="progress-bar" role="progressbar" 
-                 style="width: 0%" aria-valuenow="0" aria-valuemin="0" 
-                 aria-valuemax="100">0%</div>
-          </div>
-          
-          <h5>Processing Log:</h5>
-          <div id="log-container" class="p-2 bg-light">
-            {% for line in log_content %}
-              <p>{{ line }}</p>
-            {% endfor %}
-          </div>
-        </div>
+  <div class="container mt-4">
+    <h2>Processing Job: {{ job_id }}</h2>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        Status: <span id="status-text">{{ status }}</span>
       </div>
-      
-      <div id="results-section" style="display:none">
-        <div class="card">
-          <div class="card-header">
-            <h3>Results</h3>
-          </div>
-          <div class="card-body">
-            <table id="results-table" class="table table-striped">
-              <thead>
-                <tr>
-                  <th>Tree ID</th>
-                  <th>Family</th>
-                  <th>Superfamily</th>
-                  <th>Query</th>
-                  <th class="tooltip-header" title="Confidence level of placement (1.0 = maximum confidence)">Confidence</th>
-                  <th class="tooltip-header" title="Branch length connecting query to the reference tree">Branch Length</th>
-                  <th>Description</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <!-- Results will be populated by JavaScript -->
-              </tbody>
-            </table>
-          </div>
+      <div class="card-body">
+        <div class="progress mb-3">
+          <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0"
+            aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+
+        <h5>Processing Log:</h5>
+        <div id="log-container" class="p-2 bg-light">
+          {% for line in log_content %}
+          <p>{{ line }}</p>
+          {% endfor %}
         </div>
       </div>
     </div>
+
+    <div id="results-section" style="display:none">
+      <div class="card">
+        <div class="card-header">
+          <h3>Results</h3>
+        </div>
+        <div class="card-body">
+          <table id="results-table" class="table table-striped">
+            <thead>
+              <tr>
+                <th>Query</th>
+                <th>Tree ID</th>
+                <th>Superfamily</th>
+                <th>Family</th>
+                <th class="tooltip-header"
+                  title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+                  Confidence<span class="header-help-icon">?</span>
+                </th>
+                <th class="tooltip-header"
+                  title="Branch length connecting query to the reference tree. Values > 1.0 suggest distant relationships and weak functional predictions.">
+                  Branch Length<span class="header-help-icon">?</span>
+                </th>
+                <th>Description</th>
+                <th>More</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Results will be populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 <script>
-  $(document).ready(function() {
+  $(document).ready(function () {
     const jobId = "{{ job_id }}";
     let currentStatus = "{{ status }}";
     let polling;
-    
+
+    // Make toggleAlternatives function global
+    window.toggleAlternatives = function (query) {
+      const alternativeRows = $(`tr[data-query="${query}"][data-alternative="true"]`);
+      const toggleButton = $(`tr[data-query="${query}"][data-main="true"] .toggle-btn`);
+
+      if (alternativeRows.is(':visible')) {
+        alternativeRows.hide();
+        const hiddenCount = alternativeRows.length;
+        toggleButton.html(`Show ${hiddenCount} more placements`);
+      } else {
+        alternativeRows.show();
+        toggleButton.html(`Hide alternatives`);
+      }
+    };
+
     // Set initial progress based on status
     let initialProgress = 0;
     if (currentStatus === "queued") initialProgress = 10;
     else if (currentStatus === "running") initialProgress = 50;
     else if (currentStatus === "finished") initialProgress = 100;
-    
+
     if (initialProgress > 0) {
       updateProgress(initialProgress);
     }
-    
+
     // Show results section if status is finished
     if (currentStatus === "finished") {
       $("#results-section").show();
-      
+
       // Try to parse summary data if available
       try {
         const summaryData = JSON.parse('{{ summary|tojson|safe }}');
@@ -155,14 +224,14 @@
         console.error("Error parsing summary data:", e);
       }
     }
-    
+
     function updateProgress(progress) {
       // Update the width and text
       $("#progress-bar")
         .css("width", progress + "%")
         .attr("aria-valuenow", progress)
         .text(progress + "%");
-      
+
       // Add color change when complete
       if (progress >= 100) {
         $("#progress-bar").addClass("progress-bar-complete");
@@ -170,88 +239,165 @@
         $("#progress-bar").removeClass("progress-bar-complete");
       }
     }
-    
+
     function updateStatus(statusData) {
       // Update progress bar
       updateProgress(statusData.progress);
-      
+
       // Update status text
       $("#status-text").text(statusData.status);
       currentStatus = statusData.status;
-      
+
       // Update log lines
       if (statusData.log_lines && statusData.log_lines.length > 0) {
         const logHtml = statusData.log_lines.map(line => `<p>${line}</p>`).join('');
         $("#log-container").html(logHtml);
       }
-      
+
       // Show results if finished
       if (statusData.status === 'finished') {
         // Stop polling
         clearInterval(polling);
-        
+
         // Show results section
         $("#results-section").show();
-        
+
         // Populate results table if summary exists
         if (statusData.summary) {
           populateResultsTable(statusData.summary);
         }
       }
     }
-    
+
     function populateResultsTable(summary) {
       console.log("Populating table with:", summary);
-      
+
       // Clear existing table
       $("#results-table tbody").empty();
-      
+
       // Check if summary is an array (your actual structure)
       if (Array.isArray(summary)) {
-        // Array of results
+        // Group results by query name
+        const groupedResults = {};
         summary.forEach(item => {
-          // Get query name
           const query = item.query;
-          
-          // Create row with new fields
-          const row = `
-            <tr>
-              <td>${item.tree_id || "Unknown"}</td>
-              <td>${item.family || "Unknown"}</td>
-              <td>${item.superfamily || "Unknown"}</td>
-              <td>${query}</td>
-              <td>${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}</td>
-              <td>${item.pendant_length ? item.pendant_length.toFixed(6) : 'N/A'}</td>
-              <td>${item.description || 'No description'}</td>
-              <td>
-                <a href="/jplace_render.html?jobId=${jobId}&query=${encodeURIComponent(query)}&treeId=${item.tree_id}" 
-                   class="btn btn-primary btn-sm">View</a>
-              </td>
-            </tr>
-          `;
+          if (!groupedResults[query]) {
+            groupedResults[query] = [];
+          }
+          groupedResults[query].push(item);
+        });
+
+        // For each query, sort by branch length and show only the best one initially
+        Object.keys(groupedResults).forEach(query => {
+          const results = groupedResults[query];
+
+          // Sort by branch length (shortest first)
+          results.sort((a, b) => {
+            const lengthA = a.pendant_length || Infinity;
+            const lengthB = b.pendant_length || Infinity;
+            return lengthA - lengthB;
+          });
+
+          const bestResult = results[0];
+          const hasMultiple = results.length > 1;
+
+          // Create row for best result
+          const row = createResultRow(bestResult, hasMultiple, query, results);
           $("#results-table tbody").append(row);
         });
       } else {
         // Handle any other format (fallback)
-        $("#results-table tbody").append('<tr><td colspan="8">Invalid data format</td></tr>');
+        $("#results-table tbody").append('<tr><td colspan="9">Invalid data format</td></tr>');
       }
     }
-    
+
+    function createResultRow(item, hasMultiple, query, allResults) {
+      const branchLength = item.pendant_length || 0;
+      const isDistant = branchLength > 1;
+
+      // Branch length cell with pink background if > 1 - use simpler question mark
+      const branchLengthCell = `
+        <td style="${isDistant ? 'background-color: #ffb3ba;' : ''}" 
+            title="Branch length connecting query to the reference tree${isDistant ? '. Warning: High branch length suggests distant relationship - conclusions on the protein functionality are weak' : ''}">
+          ${branchLength ? branchLength.toFixed(6) : 'N/A'}${isDistant ? '<span class="cell-help-icon">?</span>' : ''}
+        </td>
+      `;
+
+      // Show More button using non-active-button class from overall.css
+      const showMoreCell = hasMultiple ?
+        `<td><button class="btn btn-sm non-active-button toggle-btn" onclick="toggleAlternatives('${query}')">
+          Show ${allResults.length - 1} more
+        </button></td>` : '<td></td>';
+
+      return `
+        <tr data-query="${query}" data-main="true">
+          <td>${query}</td>
+          <td>${item.tree_id || "Unknown"}</td>
+          <td>${item.superfamily || "Unknown"}</td>
+          <td>${item.family || "Unknown"}</td>
+          <td title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+            ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
+          </td>
+          ${branchLengthCell}
+          <td>${item.description || 'No description'}</td>
+          ${showMoreCell}
+          <td>
+            <a href="/jplace_render.html?jobId=${jobId}&query=${encodeURIComponent(query)}&treeId=${item.tree_id}" 
+               class="btn btn-sm active-button">Tree</a>
+          </td>
+        </tr>
+        ${hasMultiple ? createHiddenRows(allResults.slice(1), query) : ''}
+      `;
+    }
+
+    function createHiddenRows(alternativeResults, query) {
+      return alternativeResults.map(item => {
+        const branchLength = item.pendant_length || 0;
+        const isDistant = branchLength > 1;
+
+        const branchLengthCell = `
+          <td style="${isDistant ? 'background-color: #ffb3ba;' : ''}" 
+              title="Branch length connecting query to the reference tree${isDistant ? '. Warning: High branch length suggests distant relationship.' : ''}">
+            ${branchLength ? branchLength.toFixed(6) : 'N/A'}${isDistant ? '<span class="cell-help-icon">?</span>' : ''}
+          </td>
+        `;
+
+        return `
+          <tr data-query="${query}" data-alternative="true" style="display: none; background-color: #f8f9fa;">
+            <td style="padding-left: 20px;">↳ ${query}</td>
+            <td>${item.tree_id || "Unknown"}</td>
+            <td>${item.superfamily || "Unknown"}</td>
+            <td>${item.family || "Unknown"}</td>
+            <td title="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+              ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
+            </td>
+            ${branchLengthCell}
+            <td>${item.description || 'No description'}</td>
+            <td></td>
+            <td>
+              <a href="/jplace_render.html?jobId=${jobId}&query=${encodeURIComponent(query)}&treeId=${item.tree_id}" 
+                 class="btn btn-sm active-button">Tree</a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
     // Set up polling for updates - always start polling, but check status to stop it
-    polling = setInterval(function() {
+    polling = setInterval(function () {
       // If already finished, stop polling
       if (currentStatus === 'finished') {
         clearInterval(polling);
         return;
       }
-      
+
       $.ajax({
         url: "/job_status/" + jobId,
         type: "GET",
-        success: function(data) {
+        success: function (data) {
           updateStatus(data);
         },
-        error: function(xhr, status, error) {
+        error: function (xhr, status, error) {
           console.error("Error fetching job status:", error);
         }
       });
