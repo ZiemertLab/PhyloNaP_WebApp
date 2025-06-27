@@ -391,87 +391,109 @@
   console.log("phylotree_render.html content:");
   console.log(content);
 </script>
-<script src="static/js/tree_general.js"></script>
-<script src="static/js/tree_placement.js"></script>
-<!-- <script src="static/js/tree_rendering.js"></script> -->
-
 <script>
-  // Function to adjust tree name font size based on number of lines
-  function adjustTreeNameFontSize() {
-    const treeNameElement = document.getElementById('tree_name');
-    if (!treeNameElement) {
-      console.log('Tree name element not found');
-      return;
-    }
-
-    // Reset to default size first
-    treeNameElement.classList.remove('js-resized');
-    treeNameElement.style.removeProperty('--js-font-size');
-
-    // Force a reflow to get accurate measurements
-    treeNameElement.offsetHeight;
-
-    // Get the element's dimensions
-    const elementHeight = treeNameElement.offsetHeight;
-    const computedStyle = window.getComputedStyle(treeNameElement);
-    const lineHeight = parseFloat(computedStyle.lineHeight);
-    const fontSize = parseFloat(computedStyle.fontSize);
-    const numberOfLines = Math.round(elementHeight / lineHeight);
-
-    console.log(`Tree name measurement:`, {
-      elementHeight,
-      lineHeight,
-      fontSize,
-      numberOfLines,
-      text: treeNameElement.textContent.length
-    });
-
-    // If more than 3 lines, aggressively reduce font size
-    if (numberOfLines > 3) {
-      console.log(`Tree name has ${numberOfLines} lines, adjusting font size...`);
-      let newFontSize;
-
-      if (numberOfLines === 4) {
-        newFontSize = '16px';  // Much smaller - regular text size
-      } else if (numberOfLines === 5) {
-        newFontSize = '14px';  // Smaller
-      } else if (numberOfLines === 6) {
-        newFontSize = '12px';  // Even smaller
-      } else {
-        newFontSize = '8px';  // Very small but readable
+  // Metadata summary functionality
+  document.addEventListener('DOMContentLoaded', function () {
+    // Function to generate metadata summary
+    function generateMetadataSummary() {
+      var treeDataElement = document.getElementById('tree_data');
+      if (!treeDataElement) {
+        console.log('tree_data element not found');
+        return;
       }
 
-      // Set the custom property and add the class
-      treeNameElement.style.setProperty('--js-font-size', newFontSize);
-      treeNameElement.classList.add('js-resized');
-      treeNameElement.style.setProperty('line-height', '1.1', 'important');
-      treeNameElement.style.setProperty('font-weight', '600', 'important');
+      var metadata = treeDataElement.getAttribute('metadata');
+      var metadataList = treeDataElement.getAttribute('metadata_list');
 
-      console.log(`Adjusted tree name to: ${newFontSize}`);
+      if (!metadata || !metadataList) {
+        console.log('Metadata or metadata list not found');
+        return;
+      }
 
-      // Check again after adjustment
-      setTimeout(() => {
-        const newHeight = treeNameElement.offsetHeight;
-        const newLineHeight = parseFloat(window.getComputedStyle(treeNameElement).lineHeight);
-        const newLines = Math.round(newHeight / newLineHeight);
-        console.log(`After adjustment: ${newLines} lines`);
-      }, 50);
-    } else {
-      console.log('Tree name fits in 3 lines or less, no adjustment needed');
+      try {
+        // Parse the metadata
+        metadata = metadata.replace(/'/g, '"');
+        var metadataObj = JSON.parse(metadata);
+
+        // Parse the metadata list
+        metadataList = metadataList.replace(/'/g, '"');
+        var metadataListArray = JSON.parse(metadataList);
+
+        // Generate summary for each metadata column
+        var summaryContainer = document.getElementById('summary-container');
+        if (!summaryContainer) {
+          console.log('summary-container not found');
+          return;
+        }
+
+        summaryContainer.innerHTML = ''; // Clear existing content
+
+        metadataListArray.forEach(function (column) {
+          if (metadataObj[column]) {
+            // Count occurrences of each value
+            var valueCounts = {};
+
+            Object.values(metadataObj[column]).forEach(function (value) {
+              if (value && value !== '' && value !== 'N/A' && value !== 'null') {
+                valueCounts[value] = (valueCounts[value] || 0) + 1;
+              }
+            });
+
+            // Sort by count (descending)
+            var sortedValues = Object.entries(valueCounts)
+              .sort(function (a, b) { return b[1] - a[1]; })
+              .slice(0, 10); // Show top 10
+
+            if (sortedValues.length > 0) {
+              // Create summary section for this metadata column
+              var summarySection = document.createElement('div');
+              summarySection.style.marginBottom = '15px';
+              summarySection.style.padding = '10px';
+              summarySection.style.backgroundColor = '#f8f9fa';
+              summarySection.style.borderRadius = '4px';
+              summarySection.style.border = '1px solid #dee2e6';
+
+              var title = document.createElement('h6');
+              title.textContent = column.replace('_', ' ');
+              title.style.fontWeight = 'bold';
+              title.style.marginBottom = '8px';
+              title.style.color = '#495057';
+              summarySection.appendChild(title);
+
+              var list = document.createElement('ul');
+              list.style.margin = '0';
+              list.style.paddingLeft = '20px';
+              list.style.fontSize = '13px';
+
+              sortedValues.forEach(function (entry) {
+                var listItem = document.createElement('li');
+                listItem.style.marginBottom = '3px';
+                listItem.innerHTML = '<strong>' + entry[0] + '</strong>: ' + entry[1] + ' sequence' + (entry[1] > 1 ? 's' : '');
+                list.appendChild(listItem);
+              });
+
+              summarySection.appendChild(list);
+              summaryContainer.appendChild(summarySection);
+            }
+          }
+        });
+
+        if (summaryContainer.children.length === 0) {
+          summaryContainer.innerHTML = '<p style="color: #6c757d; font-style: italic;">No metadata summary available</p>';
+        }
+
+      } catch (error) {
+        console.error('Error generating metadata summary:', error);
+        document.getElementById('summary-container').innerHTML = '<p style="color: #dc3545;">Error loading metadata summary</p>';
+      }
     }
-  }
 
-  // Run when DOM is loaded
-  document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM loaded, adjusting tree name...');
-    setTimeout(adjustTreeNameFontSize, 200);
-  });
-
-  // Also run when window is resized
-  window.addEventListener('resize', function () {
-    console.log('Window resized, adjusting tree name...');
-    setTimeout(adjustTreeNameFontSize, 200);
+    // Generate summary after DOM loads
+    setTimeout(generateMetadataSummary, 100);
   });
 </script>
 
+<script src="static/js/tree_general.js"></script>
+<script src="static/js/tree_placement.js"></script>
+<!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}

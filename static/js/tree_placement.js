@@ -223,7 +223,7 @@ async function main() {
     setTreeSize(width, height);
     showTree(tree);
 
-    selectedLeavesArray = getTerminalNodesArray(metadata);
+    selectedLeavesArray = getTerminalNodesArray(tree, metadata);
     checkForClusters(tree);
 
     $(document).ready(function () {
