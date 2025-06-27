@@ -429,7 +429,7 @@ def register_routes(app):
             metadata_columns = dataset['metadata_columns']
             datasetDescr = dataset['description']
             source = dataset['source']
-            cite = dataset['cite']
+            cite = dataset.get('cite', None)
             
             app.logger.debug(f"Found dataset: {dataset['dataset_name']} (ID: {dataset['id']})")
             app.logger.debug(f"Tree file: {tree_link}")
@@ -712,7 +712,7 @@ def register_routes(app):
             metadata_columns = dataset['metadata_columns']
             datasetDescr = dataset['description']
             source = dataset['source']
-            cite = dataset['cite']
+            cite = dataset.get('cite', None)
             
             if not metadata_link:
                 app.logger.error("No metadata file path found in dataset")

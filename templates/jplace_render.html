@@ -180,6 +180,16 @@
       /* overflow: auto;  */
 
     }
+
+    #tree_name {
+      /* Remove the !important and let JavaScript control the font size */
+      font-size: 1.75rem;
+    }
+
+    /* Add a class for JavaScript-controlled sizing */
+    #tree_name.js-resized {
+      font-size: var(--js-font-size) !important;
+    }
   </style>
 </head>
 
@@ -384,5 +394,119 @@
 <script src="static/js/tree_general.js"></script>
 <script src="static/js/tree_placement.js"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
+
+<script>
+  // Function to adjust tree name font size based on number of lines
+  function adjustTreeNameFontSize() {
+    const treeNameElement = document.getElementById('tree_name');
+    if (!treeNameElement) {
+      console.log('Tree name element not found');
+      return;
+    }
+
+    // Reset to default size first
+    treeNameElement.classList.remove('js-resized');
+    treeNameElement.style.removeProperty('--js-font-size');
+
+    // Force a reflow to get accurate measurements
+    treeNameElement.offsetHeight;
+
+    // Get the element's dimensions
+    const elementHeight = treeNameElement.offsetHeight;
+    const computedStyle = window.getComputedStyle(treeNameElement);
+    const lineHeight = parseFloat(computedStyle.lineHeight);
+    const fontSize = parseFloat(computedStyle.fontSize);
+
+    // Try different line height calculations
+    const calculatedLines1 = Math.round(elementHeight / lineHeight);
+    const calculatedLines2 = Math.round(elementHeight / fontSize);
+    const calculatedLines3 = Math.round(elementHeight / (fontSize * 1.2)); // Default line-height multiplier
+
+    console.log(`Tree name detailed measurement:`, {
+      elementHeight,
+      lineHeight,
+      fontSize,
+      calculatedLines1: calculatedLines1,
+      calculatedLines2: calculatedLines2,
+      calculatedLines3: calculatedLines3,
+      textContent: treeNameElement.textContent,
+      textLength: treeNameElement.textContent.length
+    });
+
+    // Use a more reliable line count method
+    let numberOfLines;
+    if (lineHeight === fontSize) {
+      // Line height not explicitly set, use font size
+      numberOfLines = Math.round(elementHeight / (fontSize * 1.2));
+    } else {
+      numberOfLines = Math.round(elementHeight / lineHeight);
+    }
+
+    console.log(`Final calculated lines: ${numberOfLines}`);
+
+    // Alternative method: use character count as fallback
+    const textLength = treeNameElement.textContent.length;
+    const containerWidth = treeNameElement.offsetWidth;
+
+    console.log(`Container width: ${containerWidth}, Text length: ${textLength}`);
+
+    // If calculations seem wrong, use character-based estimation
+    if (numberOfLines <= 1 && textLength > 50) {
+      // Estimate based on character count and container width
+      const avgCharWidth = fontSize * 0.6; // Rough estimate
+      const charsPerLine = Math.floor(containerWidth / avgCharWidth);
+      numberOfLines = Math.ceil(textLength / charsPerLine);
+      console.log(`Using character-based estimation: ${numberOfLines} lines (${charsPerLine} chars per line)`);
+    }
+
+    // If more than 3 lines, aggressively reduce font size
+    if (numberOfLines > 3) {
+      console.log(`Tree name has ${numberOfLines} lines, adjusting font size...`);
+      let newFontSize;
+
+      if (numberOfLines === 4) {
+        newFontSize = '16px';  // Much smaller - regular text size
+      } else if (numberOfLines === 5) {
+        newFontSize = '14px';  // Smaller
+      } else if (numberOfLines === 6) {
+        newFontSize = '12px';  // Even smaller
+      } else {
+        newFontSize = '10px';  // Very small but readable
+      }
+
+      // Set the custom property and add the class
+      treeNameElement.style.setProperty('--js-font-size', newFontSize);
+      treeNameElement.classList.add('js-resized');
+      treeNameElement.style.setProperty('line-height', '1.1', 'important');
+      treeNameElement.style.setProperty('font-weight', '600', 'important');
+
+      console.log(`Adjusted tree name to: ${newFontSize}`);
+
+      // Check again after adjustment
+      setTimeout(() => {
+        const newHeight = treeNameElement.offsetHeight;
+        const newComputedStyle = window.getComputedStyle(treeNameElement);
+        const newLineHeight = parseFloat(newComputedStyle.lineHeight);
+        const newFontSize = parseFloat(newComputedStyle.fontSize);
+        const newLines = Math.round(newHeight / newLineHeight);
+        console.log(`After adjustment: ${newLines} lines (height: ${newHeight}, lineHeight: ${newLineHeight}, fontSize: ${newFontSize})`);
+      }, 50);
+    } else {
+      console.log('Tree name fits in 3 lines or less, no adjustment needed');
+    }
+  }
+
+  // Run when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded, adjusting tree name...');
+    setTimeout(adjustTreeNameFontSize, 500); // Increased delay
+  });
+
+  // Also run when window is resized
+  window.addEventListener('resize', function () {
+    console.log('Window resized, adjusting tree name...');
+    setTimeout(adjustTreeNameFontSize, 500);
+  });
+</script>
 
 {% endblock %}
