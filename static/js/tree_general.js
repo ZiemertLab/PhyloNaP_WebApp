@@ -51,7 +51,166 @@ window.getTreeData = function () {
   return { nwk, metadata, metadataListArray: metadataListArray1, datasetDescr };
 }
 
+// Add this at the end of tree_general.js, after the existing functions
 
+// === FONT ADJUSTMENT FUNCTIONALITY ===
+window.setupTreeNameFontAdjustment = function () {
+  // Function to adjust tree name font size based on number of lines
+  function adjustTreeNameFontSize() {
+    const treeNameElement = document.getElementById('tree_name');
+    if (!treeNameElement) {
+      console.log('Tree name element not found');
+      return;
+    }
+
+    // ALWAYS log that this function is running
+    console.log('=== adjustTreeNameFontSize STARTED ===');
+
+    // Reset to default size first
+    treeNameElement.classList.remove('js-resized');
+    treeNameElement.style.removeProperty('--js-font-size');
+
+    // Force a reflow to get accurate measurements
+    treeNameElement.offsetHeight;
+
+    // Get the element's dimensions
+    const elementHeight = treeNameElement.offsetHeight;
+    const computedStyle = window.getComputedStyle(treeNameElement);
+    const lineHeight = parseFloat(computedStyle.lineHeight);
+    const fontSize = parseFloat(computedStyle.fontSize);
+
+    // ALWAYS log these measurements
+    console.log(`MEASUREMENTS:`, {
+      elementHeight,
+      lineHeight,
+      fontSize,
+      textLength: treeNameElement.textContent.length,
+      containerWidth: treeNameElement.offsetWidth
+    });
+
+    // Try different line height calculations
+    const calculatedLines1 = Math.round(elementHeight / lineHeight);
+    const calculatedLines2 = Math.round(elementHeight / fontSize);
+    const calculatedLines3 = Math.round(elementHeight / (fontSize * 1.2));
+
+    console.log(`LINE CALCULATIONS:`, {
+      calculatedLines1,
+      calculatedLines2,
+      calculatedLines3
+    });
+
+    // Use character-based estimation as primary method
+    const textLength = treeNameElement.textContent.length;
+    const containerWidth = treeNameElement.offsetWidth;
+    const avgCharWidth = fontSize * 0.6; // Rough estimate
+    const charsPerLine = Math.floor(containerWidth / avgCharWidth);
+    const estimatedLines = Math.ceil(textLength / charsPerLine);
+
+    console.log(`CHARACTER-BASED ESTIMATION:`, {
+      textLength,
+      containerWidth,
+      avgCharWidth,
+      charsPerLine,
+      estimatedLines
+    });
+
+    // Use the character-based estimation if it seems more reliable
+    let numberOfLines = estimatedLines;
+
+    // Fallback to height-based calculation if character estimation seems off
+    if (estimatedLines <= 1 && calculatedLines1 > 1) {
+      numberOfLines = calculatedLines1;
+      console.log('Using height-based calculation as fallback');
+    }
+
+    console.log(`FINAL numberOfLines: ${numberOfLines}`);
+
+    // If more than 3 lines, aggressively reduce font size
+    if (numberOfLines > 3) {
+      console.log(`Tree name has ${numberOfLines} lines, adjusting font size...`);
+      let newFontSize;
+
+      if (numberOfLines === 4) {
+        newFontSize = '24px';  // Much smaller - regular text size
+      } else if (numberOfLines === 5) {
+        newFontSize = '22px';  // Smaller
+      } else if (numberOfLines === 6) {
+        newFontSize = '20px';  // Even smaller
+      } else {
+        newFontSize = '16px';  // Very small but readable
+      }
+
+      // Set the custom property and add the class
+      treeNameElement.style.setProperty('--js-font-size', newFontSize);
+      treeNameElement.classList.add('js-resized');
+      treeNameElement.style.setProperty('line-height', '1.1', 'important');
+      treeNameElement.style.setProperty('font-weight', '600', 'important');
+
+      console.log(`Adjusted tree name to: ${newFontSize}`);
+
+      // Check again after adjustment
+      setTimeout(() => {
+        const newHeight = treeNameElement.offsetHeight;
+        const newComputedStyle = window.getComputedStyle(treeNameElement);
+        const newLineHeight = parseFloat(newComputedStyle.lineHeight);
+        const newFontSize = parseFloat(newComputedStyle.fontSize);
+        const newLines = Math.round(newHeight / newLineHeight);
+        console.log(`After adjustment: ${newLines} lines (height: ${newHeight}, lineHeight: ${newLineHeight}, fontSize: ${newFontSize})`);
+      }, 50);
+    } else {
+      console.log('Tree name fits in 3 lines or less, no adjustment needed');
+    }
+
+    console.log('=== adjustTreeNameFontSize ENDED ===');
+  }
+
+  // Also check what other scripts might be affecting the element
+  function checkForOtherScripts() {
+    console.log('=== CHECKING FOR OTHER SCRIPTS ===');
+    const treeNameElement = document.getElementById('tree_name');
+    if (treeNameElement) {
+      // Monitor for any changes to the element
+      const observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+            console.log('STYLE CHANGED BY SOMETHING ELSE:', {
+              oldValue: mutation.oldValue,
+              newValue: treeNameElement.style.cssText,
+              target: mutation.target
+            });
+          }
+        });
+      });
+
+      observer.observe(treeNameElement, {
+        attributes: true,
+        attributeOldValue: true,
+        attributeFilter: ['style', 'class']
+      });
+
+      console.log('Style change monitor installed');
+    }
+  }
+
+  // Run when DOM is loaded
+  document.addEventListener('DOMContentLoaded', function () {
+    console.log('=== DOM LOADED (from tree_general.js) ===');
+    checkForOtherScripts();
+    setTimeout(adjustTreeNameFontSize, 500);
+  });
+
+  // Also run when window is resized
+  window.addEventListener('resize', function () {
+    console.log('=== WINDOW RESIZED (from tree_general.js) ===');
+    setTimeout(adjustTreeNameFontSize, 500);
+  });
+
+  // Expose the function globally so it can be called manually
+  window.adjustTreeNameFontSize = adjustTreeNameFontSize;
+};
+
+// Auto-initialize when the script loads
+window.setupTreeNameFontAdjustment();
 
 window.createTree = function (nwk) {
   return new phylotree.phylotree(nwk);

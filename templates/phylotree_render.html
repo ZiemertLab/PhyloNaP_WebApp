@@ -181,10 +181,16 @@
       width: 100%;
       height: 100%;
       /* Adjust this value as needed */
+    }
 
+    /* overflow: auto; Add scrollbars if the content is larger than the container */
+    #tree_name {
+      font-size: 1.75rem;
+    }
 
-      /* overflow: auto; Add scrollbars if the content is larger than the container */
-
+    /* Add a class for JavaScript-controlled sizing */
+    #tree_name.js-resized {
+      font-size: var(--js-font-size) !important;
     }
   </style>
 </head>
@@ -279,7 +285,9 @@
     <div style="display: flex; justify-content: flex-end;">
       <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
         <div style="display: flex; justify-content: center;">
-          <h3 id="tree_name">{{ superfamily_name }}{% if source == 'curated' %} - {{ dataset_name }}{% endif %}</h3>
+          <div style="display: flex; justify-content: center;">
+            <h3 id="tree_name">{{ superfamily_name }}{% if source == 'curated' %} - {{ dataset_name }}{% endif %}</h3>
+          </div>
         </div>
         <h10 id="description">The descripton of the treeThe descripton of the treeThe descripton of the treeThe
           descripton of the tree</h10>
@@ -290,7 +298,7 @@
             <i class="fa fa-quote-left" style="margin-right: 5px; color: #3D3D3D; font-size: 12px;"></i>
             Citation
           </h5>
-          <div style="margin-left: 15px; font-size: 14px; line-height: 1.4;">
+          <div style="margin-left: 15px, font-size: 14px, line-height: 1.4;">
             {% if cite.name %}
             <div style="margin-bottom: 6px;">
               <span style="font-weight: 500; color: #495057;">Authors:</span>
@@ -382,8 +390,6 @@
       <img id="enlarged-image" src="" />
     </div>
   </div>
-</div>
-
 </div>
 
 
