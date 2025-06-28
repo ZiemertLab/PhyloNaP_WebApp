@@ -115,7 +115,7 @@ def create_app():
         flask_app.job_queue = queue.Queue()
         flask_app.active_jobs = {}
         flask_app.queued_jobs = []
-        flask_app.max_concurrent_jobs = 2
+        flask_app.max_concurrent_jobs = 1
         flask_app.queue_lock = threading.Lock()
         flask_app.cache = {}
         
@@ -806,6 +806,86 @@ def register_routes(app):
                 'status': 'error',
                 'error': str(e)
             }), 500
+    @app.route('/admin/clear_all_jobs')
+    def clear_all_jobs():
+        """Manually clear all active and queued jobs"""
+        try:
+            with app.queue_lock:
+                active_count = len(app.active_jobs)
+                queued_count = len(app.queued_jobs)
+                
+                # Clear all jobs
+                app.active_jobs.clear()
+                app.queued_jobs.clear()
+                
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Cleared {active_count} active jobs and {queued_count} queued jobs',
+                    'active_jobs_cleared': active_count,
+                    'queued_jobs_cleared': queued_count,
+                    'current_active': len(app.active_jobs),
+                    'current_queued': len(app.queued_jobs)
+                })
+                
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f'Error clearing jobs: {str(e)}'
+            }), 500
+
+    @app.route('/admin/job_status')
+    def admin_job_status():
+        """Check current job status"""
+        with app.queue_lock:
+            return jsonify({
+                'active_jobs': len(app.active_jobs),
+                'active_job_ids': list(app.active_jobs.keys()),
+                'queued_jobs': len(app.queued_jobs),
+                'queued_job_ids': [job[0] for job in app.queued_jobs],
+                'max_concurrent': app.max_concurrent_jobs
+            })
+    @app.route('/admin/fix_stuck_jobs')
+    def fix_stuck_jobs():
+        """Mark all active jobs as failed and clear the queue"""
+        try:
+            tmp_directory = app.config['TMP_DIR']
+            fixed_jobs = []
+            
+            with app.queue_lock:
+                # Fix active jobs
+                for job_id in list(app.active_jobs.keys()):
+                    # Update status file
+                    status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
+                    log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+                    
+                    if os.path.exists(os.path.dirname(status_file)):
+                        with open(status_file, 'w') as f:
+                            f.write('failed')
+                        
+                        with open(log_file, 'a') as f:
+                            f.write(f"ERROR: Job manually marked as failed due to stuck container at {datetime.now()}\n")
+                        
+                        fixed_jobs.append(job_id)
+                
+                # Clear all jobs from memory
+                active_count = len(app.active_jobs)
+                queued_count = len(app.queued_jobs)
+                app.active_jobs.clear()
+                app.queued_jobs.clear()
+                
+                return jsonify({
+                    'status': 'success',
+                    'message': f'Fixed {len(fixed_jobs)} stuck jobs, cleared {active_count} active and {queued_count} queued jobs',
+                    'fixed_job_ids': fixed_jobs,
+                    'active_jobs_cleared': active_count,
+                    'queued_jobs_cleared': queued_count
+                })
+                
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f'Error fixing jobs: {str(e)}'
+            }), 500
 
 def register_socketio_events(socketio, app):
     """Register SocketIO events"""
@@ -927,6 +1007,7 @@ def process_job(job_id, filename, app):
         
         process = subprocess.Popen(
             ['docker', 'run', '--rm', '--user', f"{os.getuid()}:{os.getgid()}",
+            '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
             'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
