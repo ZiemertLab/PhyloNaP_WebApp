@@ -127,25 +127,76 @@
 
                 <div class="row mb-4">
                     <div class="col-md-8">
-                        <h4>Data Sources & Accumulation</h4>
-                        <p>PhyloNaP's database contains phylogenetic trees for various enzyme families involved in
-                            natural product biosynthesis. The data is accumulated from:</p>
+                        <h4>What's in the Database</h4>
+                        <p>PhyloNaP's database contains comprehensive phylogenetic datasets for enzyme families involved
+                            in natural product biosynthesis. Each dataset includes:</p>
                         <ul>
-                            <li><strong>Curated datasets:</strong> Manually reviewed enzyme families with experimental
-                                validation</li>
-                            <li><strong>Automated collections:</strong> Computationally generated trees from sequence
-                                databases</li>
-                            <li><strong>Literature mining:</strong> Enzyme functions extracted from published research
-                            </li>
+                            <li><strong>Phylogenetic tree</strong> with evolutionary model</li>
+                            <li><strong>Sequence files</strong> in FASTA format</li>
+                            <li><strong>Multiple sequence alignments</strong></li>
+                            <li><strong>Annotation files</strong> with functional data</li>
+                            <li><strong>Optional elements:</strong> descriptions, superfamily classifications, reaction
+                                pathway images, and natural product structures</li>
                         </ul>
                     </div>
-                    <div class="col-md-4">
+                </div>
+
+                <h4>Database Composition</h4>
+                <div class="row mb-4">
+                    <div class="col-md-6">
                         <div class="card">
-                            <img src="/static/images/help/database_overview.png" class="card-img-top"
-                                alt="Database Overview">
-                            <div class="card-body">
-                                <small class="text-muted">Database content visualization</small>
+                            <div class="card-header card-header-custom">
+                                <h6><i class="fa fa-check-circle"></i> Curated Datasets (10)</h6>
                             </div>
+                            <div class="card-body">
+                                <p class="small">High-quality, manually reviewed datasets from:</p>
+                                <ul class="small">
+                                    <li>Supplementary data or metadata from published articles</li>
+                                    <li>Directly obtained from authors</li>
+                                    <li>Provided by collaborators</li>
+
+                                </ul>
+                                <p class="small"><strong>Features:</strong> Full citation information, manually curated
+                                    annotations</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header card-header-custom">
+                                <h6><i class="fa fa-cogs"></i> Automated Datasets (~18,500)</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small">Computationally generated phylogenetic trees covering:</p>
+                                <ul class="small">
+                                    <li>Broad enzyme family coverage</li>
+                                    <li>Standardized quality control</li>
+                                    <li>Consistent annotation pipeline</li>
+                                </ul>
+                                <p class="small"><strong>Features:</strong> Large-scale coverage, systematic processing,
+                                    regular updates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4>Database Navigation</h4>
+                <div class="highlight-box">
+                    <p>Users can efficiently explore the database using multiple filtering and sorting options:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul>
+                                <li><strong>Superfamily filtering:</strong> Focus on specific enzyme families</li>
+                                <li><strong>Validation level:</strong> Prioritize experimentally validated proteins</li>
+                                <li><strong>Natural product data:</strong> Browse datasets with known products</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul>
+                                <li><strong>Dataset size:</strong> Filter by number of sequences</li>
+                                <li><strong>Quality metrics:</strong> Sort by various quality indicators</li>
+                                <li><strong>Publication status:</strong> Focus on literature-supported data</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -153,26 +204,79 @@
                 <h4>Automatic Generation Pipeline</h4>
                 <div class="row">
                     <div class="col-12">
+                        <div class="card mb-3">
+                            <div class="card-body text-center">
+                                <img src="/static/images/help/pipeline_flow.png" class="img-fluid"
+                                    alt="Database Generation Pipeline" style="max-height: 400px;">
+                                <p class="small text-muted mt-2">Comprehensive pipeline for automatic dataset generation
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <div class="row align-items-center">
-                                    <div class="col-md-8">
-                                        <ol>
-                                            <li><strong>Sequence Collection:</strong> Gather homologous sequences from
-                                                public databases</li>
-                                            <li><strong>Multiple Sequence Alignment:</strong> Align sequences using
-                                                MAFFT/MUSCLE</li>
-                                            <li><strong>Phylogenetic Reconstruction:</strong> Build trees using maximum
-                                                likelihood methods</li>
-                                            <li><strong>Annotation Integration:</strong> Add functional annotations and
-                                                metadata</li>
-                                            <li><strong>Quality Control:</strong> Validate tree topology and bootstrap
-                                                support</li>
-                                        </ol>
+                                <h5 class="card-title">Pipeline Steps</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6><strong>A) Data Collection</strong></h6>
+                                        <p class="small">Protein sequences and annotations gathered from multiple
+                                            high-quality databases:</p>
+                                        <ul class="small">
+                                            <li><strong>MiBIG:</strong> Characterized biosynthetic gene clusters</li>
+                                            <li><strong>MITE:</strong> Tailoring enzymes with experimentally proven
+                                                reactions</li>
+                                            <li><strong>antiSMASH DB:</strong> Predicted biosynthetic gene clusters</li>
+                                            <li><strong>UniProt SwissProt:</strong> Curated protein annotations</li>
+                                        </ul>
+                                        <p class="small">Collected data includes taxonomic information, BGC types,
+                                            functional annotations, and structural data (SMILES) when available.</p>
+
+                                        <h6><strong>B) Sequence Clustering</strong></h6>
+                                        <p class="small">Sequences clustered using <code>mmseqs easy-linclust</code>
+                                            with default parameters (E-value: 1.000E-03) to group related proteins.</p>
+
+                                        <h6><strong>C) Quality Filtering</strong></h6>
+                                        <p class="small">Clusters are filtered to remove:</p>
+                                        <ul class="small">
+                                            <li>Explicitly eukaryotic proteins or SwissProt-only clusters</li>
+                                            <li>Small clusters (&lt;20 sequences)</li>
+                                            <li>Sequences with unusual lengths (&lt;150 or &gt;1000 amino acids)</li>
+                                            <li>NRPS/PKS sequences (require domain-level analysis)</li>
+                                        </ul>
                                     </div>
-                                    <div class="col-md-4">
-                                        <img src="/static/images/help/pipeline_flow.png" class="img-fluid"
-                                            alt="Generation Pipeline">
+                                    <div class="col-md-6">
+                                        <h6><strong>D) Phylogenetic Analysis</strong></h6>
+                                        <ol class="small">
+                                            <li><strong>Alignment:</strong> Sequences aligned with
+                                                <code>MAFFT auto</code>
+                                            </li>
+                                            <li><strong>Trimming:</strong> Alignments trimmed with
+                                                <code>TrimAl auto</code>
+                                            </li>
+                                            <li><strong>Deduplication:</strong> Identical sequences removed (annotations
+                                                preserved)</li>
+                                            <li><strong>Tree construction:</strong> Phylogenetic trees built with
+                                                <code>FastTree</code>
+                                            </li>
+                                            <li><strong>Rooting:</strong> Trees rooted using <code>MAD-root</code></li>
+                                        </ol>
+
+                                        <h6><strong>E) Functional Classification</strong></h6>
+                                        <p class="small">All sequences classified into superfamilies using
+                                            <code>HMMER</code> with superfamilies_1.75 profiles for consistent
+                                            functional annotation.
+                                        </p>
+
+                                        <div class="custom-alert alert mt-3">
+                                            <h6><i class="fa fa-info-circle"></i> Quality Assurance</h6>
+                                            <p class="small mb-0">Each step includes quality control measures to ensure
+                                                reliable phylogenetic reconstructions and meaningful functional
+                                                predictions.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -185,6 +289,13 @@
             <section id="phylogenetic-trees" class="mb-5">
                 <h2 class="border-bottom pb-2 section-header">2. Examining Phylogenetic Tree Pages</h2>
 
+                <div class="custom-alert alert mb-4">
+                    <h5><i class="fa fa-tree"></i> Interactive Tree Visualization</h5>
+                    <p>PhyloNaP provides powerful interactive tools for exploring phylogenetic relationships and
+                        functional annotations. Each tree page combines evolutionary context with biochemical
+                        information to facilitate enzyme function prediction.</p>
+                </div>
+
                 <h4>Tree Visualization Features</h4>
                 <div class="row mb-4">
                     <div class="col-md-6">
@@ -193,10 +304,11 @@
                             <div class="card-body">
                                 <h6 class="card-header-custom p-2 mb-2">Interactive Tree Controls</h6>
                                 <ul class="small">
-                                    <li>Zoom and pan functionality</li>
-                                    <li>Layout switching (radial/linear)</li>
-                                    <li>Branch spacing adjustment</li>
-                                    <li>Tip alignment options</li>
+                                    <li><strong>Zoom & Pan:</strong> Navigate large trees with mouse controls</li>
+                                    <li><strong>Layout Options:</strong> Switch between radial and linear views</li>
+                                    <li><strong>Branch Spacing:</strong> Adjust vertical and horizontal spacing</li>
+                                    <li><strong>Tip Alignment:</strong> Align leaf nodes for better comparison</li>
+                                    <li><strong>Node Selection:</strong> Click branches to highlight clades</li>
                                 </ul>
                             </div>
                         </div>
@@ -208,37 +320,97 @@
                             <div class="card-body">
                                 <h6 class="card-header-custom p-2 mb-2">Annotation Columns</h6>
                                 <ul class="small">
-                                    <li>BGC product visualization</li>
-                                    <li>Reaction pathway images</li>
-                                    <li>Metadata display</li>
-                                    <li>Functional annotations</li>
+                                    <li><strong>BGC Products:</strong> Visual representations of natural products</li>
+                                    <li><strong>Reaction Pathways:</strong> Chemical transformation images</li>
+                                    <li><strong>Metadata Display:</strong> Taxonomic and functional information</li>
+                                    <li><strong>Custom Annotations:</strong> Toggle different data types</li>
+                                    <li><strong>Dynamic Positioning:</strong> Columns adjust with tree layout</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <h4>How Tree Navigation Works</h4>
+                <h4>Tree Navigation Guide</h4>
                 <div class="highlight-box">
                     <div class="row">
                         <div class="col-md-8">
-                            <p><strong>Tree Interaction:</strong></p>
+                            <p><strong>Basic Tree Interaction:</strong></p>
                             <ul>
-                                <li>Click and drag to pan around large trees</li>
-                                <li>Use mouse wheel to zoom in/out</li>
-                                <li>Click on nodes to select branches</li>
-                                <li>Use spacing controls to adjust tree layout</li>
+                                <li><strong>Pan:</strong> Click and drag to move around large phylogenetic trees</li>
+                                <li><strong>Zoom:</strong> Use mouse wheel to zoom in/out on specific regions</li>
+                                <li><strong>Select:</strong> Click on nodes or branches to highlight evolutionary clades
+                                </li>
+                                <li><strong>Spacing:</strong> Use control buttons to adjust tree layout for optimal
+                                    viewing</li>
                             </ul>
-                            <p><strong>Annotation Panels:</strong></p>
+                            <p><strong>Annotation Panel Usage:</strong></p>
                             <ul>
-                                <li>Toggle different annotation types using buttons</li>
-                                <li>Click on images to view enlarged versions</li>
-                                <li>Columns automatically reposition with tree changes</li>
+                                <li><strong>Toggle Annotations:</strong> Use sidebar buttons to show/hide different data
+                                    types</li>
+                                <li><strong>Image Viewing:</strong> Click on chemical structure images for enlarged
+                                    views</li>
+                                <li><strong>Responsive Layout:</strong> Annotation columns automatically reposition as
+                                    you modify tree spacing</li>
+                                <li><strong>Data Integration:</strong> Combine phylogenetic and biochemical information
+                                    for comprehensive analysis</li>
                             </ul>
                         </div>
                         <div class="col-md-4">
                             <img src="/static/images/help/tree_controls.png" class="img-fluid border"
                                 alt="Tree Controls">
+                            <p class="small text-muted mt-2">Tree control interface</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header card-header-custom">
+                                <h6>Curated Trees</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small">High-quality trees with:</p>
+                                <ul class="small">
+                                    <li>Literature citations</li>
+                                    <li>Experimental validation</li>
+                                    <li>Author contributions</li>
+                                    <li>Detailed descriptions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header card-header-custom">
+                                <h6>Automated Trees</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small">Systematically generated with:</p>
+                                <ul class="small">
+                                    <li>Standardized methods</li>
+                                    <li>Quality control filters</li>
+                                    <li>Consistent annotations</li>
+                                    <li>Regular updates</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header card-header-custom">
+                                <h6>Annotation Types</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small">Available data includes:</p>
+                                <ul class="small">
+                                    <li>Chemical structures</li>
+                                    <li>Reaction mechanisms</li>
+                                    <li>Taxonomic information</li>
+                                    <li>Functional classifications</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
