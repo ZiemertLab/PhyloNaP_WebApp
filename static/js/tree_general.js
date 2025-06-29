@@ -461,9 +461,9 @@ window.renderTree = function (tree, height, width, customOptions) {
 
 // Add this function to get tree positioning information
 window.getTreePositionInfo = function (tree) {
-  console.log('=== Checking tree object ===');
-  console.log('Tree:', tree);
-  console.log('Tree.display:', tree ? tree.display : 'tree is null/undefined');
+  // console.log('=== Checking tree object ===');
+  // console.log('Tree:', tree);
+  // console.log('Tree.display:', tree ? tree.display : 'tree is null/undefined');
 
   if (!tree.display) {
     console.warn('Tree display not available');
@@ -533,8 +533,6 @@ window.drawBootstrapValues = function (tree) {
 // });
 //d3.select('#tree svg')
 //  .call(d3.drag().on("drag", null));
-
-
 
 window.checkSVGSize = function () {
   // Create a new MutationObserver
@@ -770,33 +768,86 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   }
   // Add the checkImagesExist function after createWarningContainer:
   async function checkImagesExist(metadata, imageType) {
+    console.log('=== checkImagesExist STARTED ===');
+    console.log('metadata:', metadata);
+    console.log('metadata length:', metadata ? metadata.length : 'metadata is null/undefined');
+    console.log('imageType:', imageType);
+
     if (!metadata || metadata.length === 0) {
+      console.warn('No metadata available for image check');
       return false;
     }
 
-    const sampleSize = Math.min(5, metadata.length);
-    const sampleEntries = metadata.slice(0, sampleSize);
+    // For BGC_product, scan the entire dataset until we find a BGC
+    if (imageType === 'BGC_product') {
+      console.log('Scanning entire dataset for BGC entries...');
 
-    for (let item of sampleEntries) {
-      if (imageType === 'BGC_product') {
+      let bgcCount = 0;
+      for (let i = 0; i < metadata.length; i++) {
+        const item = metadata[i];
+
         if (item.hasOwnProperty('Cluster') && item.Cluster && item.Cluster.startsWith("BGC")) {
+          bgcCount++;
+          console.log(`*** FOUND BGC entry ${bgcCount} at index ${i}: ${item.Cluster} ***`);
+
+          // Test this BGC entry for images
           let bgc = item.Cluster;
           let bgc1 = bgc.split('.')[0];
-          let image1 = "static/images/" + bgc + "_1.png";
-          let image2 = "static/images/" + bgc1 + "_1.png";
+          let image1 = "/static/images/" + bgc + "_1.png";
+          let image2 = "/static/images/" + bgc1 + "_1.png";
+
+          console.log('Testing BGC:', bgc);
+          console.log('BGC1 (split):', bgc1);
+          console.log('Image1 path:', image1);
+          console.log('Image2 path:', image2);
 
           try {
             const response1 = await fetch(image1, { method: 'HEAD' });
             const response2 = await fetch(image2, { method: 'HEAD' });
+
+            console.log('Response1 status:', response1.status, response1.ok);
+            console.log('Response2 status:', response2.status, response2.ok);
+
             if (response1.ok || response2.ok) {
+              console.log('*** FOUND WORKING BGC IMAGE! ***');
               return true;
             }
           } catch (error) {
-            continue;
+            console.log('Fetch error for BGC:', error);
+          }
+
+          // Stop after testing first 10 BGC entries to avoid too many requests
+          if (bgcCount >= 10) {
+            console.log('Tested 10 BGC entries, stopping search');
+            break;
           }
         }
-      } else if (imageType === 'Reaction') {
-        let image = "static/images_reactions/" + item.ID + ".png";
+
+        // Log progress every 50 items to see scan progress
+        if (i % 50 === 0) {
+          console.log(`Scanned ${i} items, found ${bgcCount} BGC entries so far`);
+        }
+      }
+
+      console.log(`Finished scanning. Total BGC entries found: ${bgcCount}`);
+      if (bgcCount === 0) {
+        console.log('No BGC entries found in entire dataset');
+      }
+      return false;
+    }
+
+    // For other image types (Reaction), use the original logic with sample
+    const sampleSize = Math.min(10, metadata.length);
+    const sampleEntries = metadata.slice(0, sampleSize);
+
+    console.log('sampleSize:', sampleSize);
+    console.log('sampleEntries:', sampleEntries);
+
+    for (let item of sampleEntries) {
+      console.log('Processing item:', item);
+
+      if (imageType === 'Reaction') {
+        let image = "/static/images_reactions/" + item.ID + ".png";
         try {
           const response = await fetch(image, { method: 'HEAD' });
           if (response.ok) {
@@ -807,8 +858,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         }
       }
     }
+
+    console.log('No images found for imageType:', imageType);
+    console.log('=== checkImagesExist END ===');
     return false;
   }
+
   // Initialize on first call
   calculateMaxColumns();
 
