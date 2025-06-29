@@ -1712,7 +1712,6 @@ const displayMetadataSummary = function (summary) {
     validColumns.sort((a, b) => a.diversityScore - b.diversityScore);
 
     // Determine which columns to show expanded by default
-    // Show first 2-3 columns (most interesting) expanded, or columns with <= 3 unique values
     const maxAutoExpanded = 3;
     let autoExpandedCount = 0;
 
@@ -1721,18 +1720,102 @@ const displayMetadataSummary = function (summary) {
 
       const columnDiv = document.createElement('div');
       columnDiv.classList.add('summary-column');
-      columnDiv.style.marginBottom = '15px';
-      columnDiv.style.borderLeft = '3px solid #7B1B38';
-      columnDiv.style.paddingLeft = '10px';
+      columnDiv.setAttribute('draggable', 'true');
+      columnDiv.setAttribute('data-column-key', key);
+      columnDiv.style.cssText = `
+        margin-bottom: 15px;
+        border-left: 3px solid #7B1B38;
+        padding-left: 10px;
+        background-color: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+        cursor: grab;
+        position: relative;
+      `;
 
-      // Create header with statistics
+      // Add drag & drop styling and functionality
+      let draggedElement = null;
+
+      columnDiv.addEventListener('dragstart', (e) => {
+        draggedElement = columnDiv;
+        columnDiv.style.opacity = '0.6';
+        columnDiv.style.cursor = 'grabbing';
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', columnDiv.outerHTML);
+      });
+
+      columnDiv.addEventListener('dragend', (e) => {
+        columnDiv.style.opacity = '1';
+        columnDiv.style.cursor = 'grab';
+        columnDiv.style.transform = 'none';
+        // Remove all drag indicators
+        document.querySelectorAll('.summary-column').forEach(col => {
+          col.style.borderTop = '';
+          col.style.borderBottom = '';
+        });
+      });
+
+      columnDiv.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (draggedElement && draggedElement !== columnDiv) {
+          const rect = columnDiv.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+
+          // Show drop indicator
+          if (e.clientY < midpoint) {
+            columnDiv.style.borderTop = '3px solid #7B1B38';
+            columnDiv.style.borderBottom = '';
+          } else {
+            columnDiv.style.borderBottom = '3px solid #7B1B38';
+            columnDiv.style.borderTop = '';
+          }
+        }
+      });
+
+      columnDiv.addEventListener('dragleave', (e) => {
+        // Only remove borders if we're really leaving the element
+        const rect = columnDiv.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right ||
+          e.clientY < rect.top || e.clientY > rect.bottom) {
+          columnDiv.style.borderTop = '';
+          columnDiv.style.borderBottom = '';
+        }
+      });
+
+      columnDiv.addEventListener('drop', (e) => {
+        e.preventDefault();
+
+        if (draggedElement && draggedElement !== columnDiv) {
+          const rect = columnDiv.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+
+          // Insert the dragged element
+          if (e.clientY < midpoint) {
+            summaryContainer.insertBefore(draggedElement, columnDiv);
+          } else {
+            summaryContainer.insertBefore(draggedElement, columnDiv.nextSibling);
+          }
+        }
+
+        // Clean up styles
+        columnDiv.style.borderTop = '';
+        columnDiv.style.borderBottom = '';
+      });
+
+      // Create header with statistics and move controls
       const headerDiv = document.createElement('div');
-      headerDiv.style.display = 'flex';
-      headerDiv.style.alignItems = 'center';
-      headerDiv.style.cursor = 'pointer';
-      headerDiv.style.padding = '8px 0';
-      headerDiv.style.borderRadius = '4px';
-      headerDiv.style.transition = 'background-color 0.2s';
+      headerDiv.style.cssText = `
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 8px 0;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        position: relative;
+      `;
 
       // Add hover effect
       headerDiv.addEventListener('mouseenter', () => {
@@ -1742,20 +1825,44 @@ const displayMetadataSummary = function (summary) {
         headerDiv.style.backgroundColor = 'transparent';
       });
 
+      // Add drag handle icon
+      const dragHandle = document.createElement('span');
+      dragHandle.innerHTML = '⋮⋮'; // Vertical dots
+      dragHandle.style.cssText = `
+        color: #999;
+        font-size: 16px;
+        margin-right: 8px;
+        cursor: grab;
+        user-select: none;
+        line-height: 1;
+        letter-spacing: -2px;
+      `;
+      dragHandle.addEventListener('mousedown', () => {
+        dragHandle.style.cursor = 'grabbing';
+      });
+      dragHandle.addEventListener('mouseup', () => {
+        dragHandle.style.cursor = 'grab';
+      });
+
       const columnTitle = document.createElement('h3');
       columnTitle.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      columnTitle.style.fontSize = '16px';
-      columnTitle.style.margin = '0';
-      columnTitle.style.fontWeight = '600';
-      columnTitle.style.color = '#333';
+      columnTitle.style.cssText = `
+        font-size: 16px;
+        margin: 0;
+        font-weight: 600;
+        color: #333;
+        flex: 1;
+      `;
 
       // Add statistics badge
       const statsSpan = document.createElement('span');
       statsSpan.textContent = `(${uniqueValues} ${uniqueValues === 1 ? 'value' : 'values'})`;
-      statsSpan.style.fontSize = '12px';
-      statsSpan.style.color = '#666';
-      statsSpan.style.marginLeft = '8px';
-      statsSpan.style.fontWeight = 'normal';
+      statsSpan.style.cssText = `
+        font-size: 12px;
+        color: #666;
+        margin-left: 8px;
+        font-weight: normal;
+      `;
 
       // Color code based on diversity
       if (uniqueValues <= 2) {
@@ -1765,6 +1872,64 @@ const displayMetadataSummary = function (summary) {
         statsSpan.style.color = '#f57c00'; // Orange for moderately interesting
       }
 
+      // Add arrow buttons for manual reordering
+      const arrowContainer = document.createElement('div');
+      arrowContainer.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        margin-left: 8px;
+        gap: 2px;
+      `;
+
+      const upArrow = document.createElement('button');
+      upArrow.innerHTML = '▲';
+      upArrow.style.cssText = `
+        background: none;
+        border: none;
+        color: #7B1B38;
+        cursor: pointer;
+        font-size: 10px;
+        padding: 1px 4px;
+        border-radius: 2px;
+        transition: background-color 0.2s;
+        line-height: 1;
+      `;
+      upArrow.addEventListener('mouseenter', () => upArrow.style.backgroundColor = '#e8e8e8');
+      upArrow.addEventListener('mouseleave', () => upArrow.style.backgroundColor = 'transparent');
+      upArrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const prevSibling = columnDiv.previousElementSibling;
+        if (prevSibling && prevSibling.classList.contains('summary-column')) {
+          summaryContainer.insertBefore(columnDiv, prevSibling);
+        }
+      });
+
+      const downArrow = document.createElement('button');
+      downArrow.innerHTML = '▼';
+      downArrow.style.cssText = `
+        background: none;
+        border: none;
+        color: #7B1B38;
+        cursor: pointer;
+        font-size: 10px;
+        padding: 1px 4px;
+        border-radius: 2px;
+        transition: background-color 0.2s;
+        line-height: 1;
+      `;
+      downArrow.addEventListener('mouseenter', () => downArrow.style.backgroundColor = '#e8e8e8');
+      downArrow.addEventListener('mouseleave', () => downArrow.style.backgroundColor = 'transparent');
+      downArrow.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nextSibling = columnDiv.nextElementSibling;
+        if (nextSibling && nextSibling.classList.contains('summary-column')) {
+          summaryContainer.insertBefore(nextSibling, columnDiv);
+        }
+      });
+
+      arrowContainer.appendChild(upArrow);
+      arrowContainer.appendChild(downArrow);
+
       // Create toggle button
       const shouldExpand = (autoExpandedCount < maxAutoExpanded && uniqueValues <= 4) || uniqueValues <= 2;
       if (shouldExpand) autoExpandedCount++;
@@ -1773,7 +1938,6 @@ const displayMetadataSummary = function (summary) {
       toggleButton.innerHTML = shouldExpand ? '&#9660;' : '&#9654;'; // Down or right arrow
       toggleButton.classList.add('toggle-button');
       toggleButton.style.cssText = `
-        margin-left: auto;
         background: none;
         border: none;
         font-size: 14px;
@@ -1782,6 +1946,7 @@ const displayMetadataSummary = function (summary) {
         padding: 4px 8px;
         border-radius: 3px;
         transition: background-color 0.2s;
+        margin-left: 8px;
       `;
 
       // Toggle button hover effect
@@ -1793,8 +1958,10 @@ const displayMetadataSummary = function (summary) {
       });
 
       // Assemble header
+      headerDiv.appendChild(dragHandle);
       headerDiv.appendChild(columnTitle);
       headerDiv.appendChild(statsSpan);
+      headerDiv.appendChild(arrowContainer);
       headerDiv.appendChild(toggleButton);
       columnDiv.appendChild(headerDiv);
 
@@ -1855,7 +2022,14 @@ const displayMetadataSummary = function (summary) {
         }
       };
 
-      headerDiv.addEventListener('click', toggleContent);
+      headerDiv.addEventListener('click', (e) => {
+        // Don't toggle if clicking on drag handle or arrow buttons
+        if (e.target === dragHandle || e.target === upArrow || e.target === downArrow) {
+          return;
+        }
+        toggleContent();
+      });
+
       toggleButton.addEventListener('click', (e) => {
         e.stopPropagation(); // Prevent double toggle
         toggleContent();
@@ -1877,13 +2051,14 @@ const displayMetadataSummary = function (summary) {
         color: #666;
         text-align: center;
       `;
-      footerDiv.textContent = `Showing ${validColumns.length} metadata columns • Most diverse columns shown first`;
+      footerDiv.textContent = `Showing ${validColumns.length} metadata columns • Drag cards to reorder or use ▲▼ arrows`;
       summaryContainer.appendChild(footerDiv);
     }
   } else {
     console.error('summaryContainer element not found');
   }
 }
+
 // Add this function to clear the metadata summary
 const clearMetadataSummary = function () {
   const summaryContainer = document.getElementById('summary-container');
@@ -1897,6 +2072,7 @@ const clearMetadataSummary = function () {
     metadataHeading.style.display = 'none'; // Hide heading
   }
 }
+
 // const displayMetadataSummary = function(summary) {
 //   const summaryContainer = document.getElementById('summary-container');
 //   if (summaryContainer) {
