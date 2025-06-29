@@ -50,10 +50,19 @@
         background-color: var(--background-dark, #3D3D3D) !important;
     }
 
-    .card-header-custom {
-        background-color: var(--background-dark, #3D3D3D);
-        color: var(--background-light, #E0E0E0);
-        font-weight: 500;
+    /* Simplified card styling */
+    .simple-card {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .simple-card h6 {
+        color: var(--background-dark, #3D3D3D);
+        font-weight: 600;
+        margin-bottom: 10px;
     }
 
     .highlight-box {
@@ -77,6 +86,14 @@
         color: var(--background-dark, #3D3D3D);
         text-decoration: underline;
     }
+
+    /* Remove card overhead for cleaner look */
+    .clean-section {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 20px;
+        margin: 15px 0;
+    }
 </style>
 {% endblock %}
 
@@ -97,7 +114,7 @@
                             Trees</a>
                         <a href="#classification" class="list-group-item list-group-item-action">Enzyme
                             Classification</a>
-                        <a href="#submission" class="list-group-item list-group-item-action">Submission Portal</a>
+                        <a href="#submission" class="list-group-item list-group-item-action">Data contribution</a>
                         <a href="#contact" class="list-group-item list-group-item-action">Contact & Legal</a>
                     </div>
                 </div>
@@ -108,16 +125,32 @@
         <div class="col-md-9">
             <!-- Introduction -->
             <div class="mb-5">
-                <h1 class="mb-4 section-header">PhyloNaP Help Center</h1>
                 <div class="alert custom-alert">
+                    <h5 class="mt-2"></h5>
                     <h5><i class="fa fa-info-circle"></i> About PhyloNaP</h5>
-                    <p>Natural products (NPs), many of which act as antibiotics, are small molecules synthesized by
-                        living organisms. With the rise of antibiotic resistance, discovering new antibiotics is
-                        essential. Genome mining is a powerful method that explores an organism's biosynthetic potential
-                        based on its genetic sequence, identifying biosynthetic gene clusters (BGCs) involved in the
-                        production of novel antibiotics.</p>
-                    <p>PhyloNaP is a tool designed to facilitate the prediction of tailoring enzyme functions, enhancing
-                        our ability to discover new antibiotics crucial in combating antibiotic resistance.</p>
+                    <p>Natural products are a major source of novel drugs, and with the rise of antibiotic resistance,
+                        there is an urgent need
+                        to discover new compounds. Genome mining enables the rapid identification of biosynthetic gene
+                        clusters (BGCs)
+                        responsible for natural product biosynthesis. Predicting the structures of the synthesized
+                        compounds is key to guiding
+                        their targeted discovery, but this requires detailed knowledge of the enzymatic reactions at
+                        each step of the
+                        biosynthetic pathway. While the core scaffold of many natural products can often be predicted
+                        from the initial
+                        biosynthetic steps, later tailoring modifications remain difficult to model due to the limited
+                        characterization of the
+                        enzymes involved. Reliable reaction prediction requires first gathering functional annotations
+                        and performing
+                        evolutionary analysis of these enzymes—only then can accurate computational predictions be made.
+                        In the absence of
+                        automated tools, this process becomes time-consuming. Although phylogenetic trees with
+                        functional annotations are
+                        occasionally published, reusing them directly is labor-intensive and technically challenging.
+                    </p>
+                    <p>PhyloNaP addresses this gap by providing a centralized collection of annotated phylogenetic trees
+                        for enzymes involved
+                        in natural product biosynthesis.</p>
                 </div>
             </div>
 
@@ -128,7 +161,8 @@
                 <div class="row mb-4">
                     <div class="col-md-8">
                         <h4>What's in the Database</h4>
-                        <p>PhyloNaP's database contains comprehensive phylogenetic datasets for enzyme families involved
+                        <p>PhyloNaP's database contains comprehensive phylogenetic datasets for protein families
+                            involved
                             in natural product biosynthesis. Each dataset includes:</p>
                         <ul>
                             <li><strong>Phylogenetic tree</strong> with evolutionary model</li>
@@ -144,38 +178,29 @@
                 <h4>Database Composition</h4>
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6><i class="fa fa-check-circle"></i> Curated Datasets (10)</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="small">High-quality, manually reviewed datasets from:</p>
-                                <ul class="small">
-                                    <li>Supplementary data or metadata from published articles</li>
-                                    <li>Directly obtained from authors</li>
-                                    <li>Provided by collaborators</li>
-
-                                </ul>
-                                <p class="small"><strong>Features:</strong> Full citation information, manually curated
-                                    annotations</p>
-                            </div>
+                        <div class="simple-card">
+                            <h6><i class="fa fa-check-circle"></i> Curated Datasets (10)</h6>
+                            <p class="small">High-quality, manually reviewed datasets from:</p>
+                            <ul class="small">
+                                <li>Supplementary data or metadata from published articles</li>
+                                <li>Directly obtained from authors</li>
+                                <li>Provided by collaborators</li>
+                            </ul>
+                            <p class="small"><strong>Features:</strong> Full citation information, manually curated
+                                annotations</p>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6><i class="fa fa-cogs"></i> Automated Datasets (~18,500)</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="small">Computationally generated phylogenetic trees covering:</p>
-                                <ul class="small">
-                                    <li>Broad enzyme family coverage</li>
-                                    <li>Standardized quality control</li>
-                                    <li>Consistent annotation pipeline</li>
-                                </ul>
-                                <p class="small"><strong>Features:</strong> Large-scale coverage, systematic processing,
-                                    regular updates</p>
-                            </div>
+                        <div class="simple-card">
+                            <h6><i class="fa fa-cogs"></i> Automated Datasets (~18,500)</h6>
+                            <p class="small">Computationally generated phylogenetic trees covering:</p>
+                            <ul class="small">
+                                <li>Broad enzyme family coverage</li>
+                                <li>Standardized quality control</li>
+                                <li>Consistent annotation pipeline</li>
+                            </ul>
+                            <p class="small"><strong>Features:</strong> Large-scale coverage, systematic processing,
+                                regular updates</p>
                         </div>
                     </div>
                 </div>
@@ -201,84 +226,67 @@
                     </div>
                 </div>
 
-                <h4>Automatic Generation Pipeline</h4>
+                <h4>Database Generation Pipeline</h4>
                 <div class="row">
                     <div class="col-12">
-                        <div class="card mb-3">
-                            <div class="card-body text-center">
-                                <img src="/static/images/help/pipeline_flow.png" class="img-fluid"
-                                    alt="Database Generation Pipeline" style="max-height: 400px;">
-                                <p class="small text-muted mt-2">Comprehensive pipeline for automatic dataset generation
-                                </p>
-                            </div>
+                        <div class="text-center mb-3">
+                            <img src="/static/images/help/pipeline_flow.png" class="img-fluid"
+                                alt="Database Generation Pipeline" style="max-height: 400px;">
+                            <p class="small text-muted mt-2">Comprehensive pipeline for automatic dataset generation</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">Pipeline Steps</h5>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6><strong>A) Data Collection</strong></h6>
-                                        <p class="small">Protein sequences and annotations gathered from multiple
-                                            high-quality databases:</p>
-                                        <ul class="small">
-                                            <li><strong>MiBIG:</strong> Characterized biosynthetic gene clusters</li>
-                                            <li><strong>MITE:</strong> Tailoring enzymes with experimentally proven
-                                                reactions</li>
-                                            <li><strong>antiSMASH DB:</strong> Predicted biosynthetic gene clusters</li>
-                                            <li><strong>UniProt SwissProt:</strong> Curated protein annotations</li>
-                                        </ul>
-                                        <p class="small">Collected data includes taxonomic information, BGC types,
-                                            functional annotations, and structural data (SMILES) when available.</p>
+                <div class="clean-section">
+                    <h5>Pipeline Steps</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><strong>A) Data Collection</strong></h6>
+                            <p class="small">Protein sequences and annotations gathered from multiple high-quality
+                                databases:</p>
+                            <ul class="small">
+                                <li><strong>MiBIG:</strong> Characterized biosynthetic gene clusters</li>
+                                <li><strong>MITE:</strong> Tailoring enzymes with experimentally proven reactions</li>
+                                <li><strong>antiSMASH DB:</strong> Predicted biosynthetic gene clusters</li>
+                                <li><strong>UniProt SwissProt:</strong> Curated protein annotations</li>
+                            </ul>
+                            <p class="small">Collected data includes taxonomic information, BGC types, functional
+                                annotations, and structural data (SMILES) when available.</p>
 
-                                        <h6><strong>B) Sequence Clustering</strong></h6>
-                                        <p class="small">Sequences clustered using <code>mmseqs easy-linclust</code>
-                                            with default parameters (E-value: 1.000E-03) to group related proteins.</p>
+                            <h6><strong>B) Sequence Clustering</strong></h6>
+                            <p class="small">Sequences clustered using <code>mmseqs easy-linclust</code> with default
+                                parameters (E-value: 1.000E-03) to group related proteins.</p>
 
-                                        <h6><strong>C) Quality Filtering</strong></h6>
-                                        <p class="small">Clusters are filtered to remove:</p>
-                                        <ul class="small">
-                                            <li>Explicitly eukaryotic proteins or SwissProt-only clusters</li>
-                                            <li>Small clusters (&lt;20 sequences)</li>
-                                            <li>Sequences with unusual lengths (&lt;150 or &gt;1000 amino acids)</li>
-                                            <li>NRPS/PKS sequences (require domain-level analysis)</li>
-                                        </ul>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6><strong>D) Phylogenetic Analysis</strong></h6>
-                                        <ol class="small">
-                                            <li><strong>Alignment:</strong> Sequences aligned with
-                                                <code>MAFFT auto</code>
-                                            </li>
-                                            <li><strong>Trimming:</strong> Alignments trimmed with
-                                                <code>TrimAl auto</code>
-                                            </li>
-                                            <li><strong>Deduplication:</strong> Identical sequences removed (annotations
-                                                preserved)</li>
-                                            <li><strong>Tree construction:</strong> Phylogenetic trees built with
-                                                <code>FastTree</code>
-                                            </li>
-                                            <li><strong>Rooting:</strong> Trees rooted using <code>MAD-root</code></li>
-                                        </ol>
+                            <h6><strong>C) Quality Filtering</strong></h6>
+                            <p class="small">Clusters are filtered to remove:</p>
+                            <ul class="small">
+                                <li>Explicitly eukaryotic proteins or SwissProt-only clusters</li>
+                                <li>Small clusters (&lt;20 sequences)</li>
+                                <li>Sequences with unusual lengths (&lt;150 or &gt;1000 amino acids)</li>
+                                <li>NRPS/PKS sequences (require domain-level analysis)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><strong>D) Phylogenetic Analysis</strong></h6>
+                            <ol class="small">
+                                <li><strong>Alignment:</strong> Sequences aligned with <code>MAFFT auto</code></li>
+                                <li><strong>Trimming:</strong> Alignments trimmed with <code>TrimAl auto</code></li>
+                                <li><strong>Deduplication:</strong> Identical sequences removed (annotations preserved)
+                                </li>
+                                <li><strong>Tree construction:</strong> Phylogenetic trees built with
+                                    <code>FastTree</code>
+                                </li>
+                                <li><strong>Rooting:</strong> Trees rooted using <code>MAD-root</code></li>
+                            </ol>
 
-                                        <h6><strong>E) Functional Classification</strong></h6>
-                                        <p class="small">All sequences classified into superfamilies using
-                                            <code>HMMER</code> with superfamilies_1.75 profiles for consistent
-                                            functional annotation.
-                                        </p>
+                            <h6><strong>E) Functional Classification</strong></h6>
+                            <p class="small">All sequences classified into superfamilies using <code>HMMER</code> with
+                                superfamilies_1.75 profiles for consistent functional annotation.</p>
 
-                                        <div class="custom-alert alert mt-3">
-                                            <h6><i class="fa fa-info-circle"></i> Quality Assurance</h6>
-                                            <p class="small mb-0">Each step includes quality control measures to ensure
-                                                reliable phylogenetic reconstructions and meaningful functional
-                                                predictions.</p>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="custom-alert alert mt-3">
+                                <h6><i class="fa fa-info-circle"></i> Quality Assurance</h6>
+                                <p class="small mb-0">Each step includes quality control measures to ensure reliable
+                                    phylogenetic reconstructions and meaningful functional predictions.</p>
                             </div>
                         </div>
                     </div>
@@ -299,34 +307,30 @@
                 <h4>Tree Visualization Features</h4>
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <div class="card">
-                            <img src="/static/images/help/tree_features.png" class="card-img-top" alt="Tree Features">
-                            <div class="card-body">
-                                <h6 class="card-header-custom p-2 mb-2">Interactive Tree Controls</h6>
-                                <ul class="small">
-                                    <li><strong>Zoom & Pan:</strong> Navigate large trees with mouse controls</li>
-                                    <li><strong>Layout Options:</strong> Switch between radial and linear views</li>
-                                    <li><strong>Branch Spacing:</strong> Adjust vertical and horizontal spacing</li>
-                                    <li><strong>Tip Alignment:</strong> Align leaf nodes for better comparison</li>
-                                    <li><strong>Node Selection:</strong> Click branches to highlight clades</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card">
+                            <img src="/static/images/help/tree_features.png" class="img-fluid mb-2" alt="Tree Features">
+                            <h6>Interactive Tree Controls</h6>
+                            <ul class="small">
+                                <li><strong>Zoom & Pan:</strong> Navigate large trees with mouse controls</li>
+                                <li><strong>Layout Options:</strong> Switch between radial and linear views</li>
+                                <li><strong>Branch Spacing:</strong> Adjust vertical and horizontal spacing</li>
+                                <li><strong>Tip Alignment:</strong> Align leaf nodes for better comparison</li>
+                                <li><strong>Node Selection:</strong> Click branches to highlight clades</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card">
-                            <img src="/static/images/help/annotation_columns.png" class="card-img-top"
+                        <div class="simple-card">
+                            <img src="/static/images/help/annotation_columns.png" class="img-fluid mb-2"
                                 alt="Annotation Columns">
-                            <div class="card-body">
-                                <h6 class="card-header-custom p-2 mb-2">Annotation Columns</h6>
-                                <ul class="small">
-                                    <li><strong>BGC Products:</strong> Visual representations of natural products</li>
-                                    <li><strong>Reaction Pathways:</strong> Chemical transformation images</li>
-                                    <li><strong>Metadata Display:</strong> Taxonomic and functional information</li>
-                                    <li><strong>Custom Annotations:</strong> Toggle different data types</li>
-                                    <li><strong>Dynamic Positioning:</strong> Columns adjust with tree layout</li>
-                                </ul>
-                            </div>
+                            <h6>Annotation Columns</h6>
+                            <ul class="small">
+                                <li><strong>BGC Products:</strong> Visual representations of natural products</li>
+                                <li><strong>Reaction Pathways:</strong> Chemical transformation images</li>
+                                <li><strong>Metadata Display:</strong> Taxonomic and functional information</li>
+                                <li><strong>Custom Annotations:</strong> Toggle different data types</li>
+                                <li><strong>Dynamic Positioning:</strong> Columns adjust with tree layout</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -366,51 +370,39 @@
 
                 <div class="row mt-4">
                     <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6>Curated Trees</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="small">High-quality trees with:</p>
-                                <ul class="small">
-                                    <li>Literature citations</li>
-                                    <li>Experimental validation</li>
-                                    <li>Author contributions</li>
-                                    <li>Detailed descriptions</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card text-center">
+                            <h6>Curated Trees</h6>
+                            <p class="small">High-quality trees with:</p>
+                            <ul class="small text-left">
+                                <li>Literature citations</li>
+                                <li>Experimental validation</li>
+                                <li>Author contributions</li>
+                                <li>Detailed descriptions</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6>Automated Trees</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="small">Systematically generated with:</p>
-                                <ul class="small">
-                                    <li>Standardized methods</li>
-                                    <li>Quality control filters</li>
-                                    <li>Consistent annotations</li>
-                                    <li>Regular updates</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card text-center">
+                            <h6>Automated Trees</h6>
+                            <p class="small">Systematically generated with:</p>
+                            <ul class="small text-left">
+                                <li>Standardized methods</li>
+                                <li>Quality control filters</li>
+                                <li>Consistent annotations</li>
+                                <li>Regular updates</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6>Annotation Types</h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="small">Available data includes:</p>
-                                <ul class="small">
-                                    <li>Chemical structures</li>
-                                    <li>Reaction mechanisms</li>
-                                    <li>Taxonomic information</li>
-                                    <li>Functional classifications</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card text-center">
+                            <h6>Annotation Types</h6>
+                            <p class="small">Available data includes:</p>
+                            <ul class="small text-left">
+                                <li>Chemical structures</li>
+                                <li>Reaction mechanisms</li>
+                                <li>Taxonomic information</li>
+                                <li>Functional classifications</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -459,37 +451,28 @@
                 <h4>Understanding Result Pages</h4>
                 <div class="row mb-4">
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6><i class="fa fa-table"></i> Results Table</h6>
-                            </div>
-                            <div class="card-body">
-                                <img src="/static/images/help/results_table.png" class="img-fluid mb-2"
-                                    alt="Results Table">
-                                <ul class="small">
-                                    <li><strong>Query:</strong> Your input sequence identifier</li>
-                                    <li><strong>Confidence:</strong> Placement reliability (0-1)</li>
-                                    <li><strong>Branch Length:</strong> Evolutionary distance</li>
-                                    <li><strong>Family/Superfamily:</strong> Functional classification</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card">
+                            <h6><i class="fa fa-table"></i> Results Table</h6>
+                            <img src="/static/images/help/results_table.png" class="img-fluid mb-2" alt="Results Table">
+                            <ul class="small">
+                                <li><strong>Query:</strong> Your input sequence identifier</li>
+                                <li><strong>Confidence:</strong> Placement reliability (0-1)</li>
+                                <li><strong>Branch Length:</strong> Evolutionary distance</li>
+                                <li><strong>Family/Superfamily:</strong> Functional classification</li>
+                            </ul>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6><i class="fa fa-tree"></i> Tree Placement View</h6>
-                            </div>
-                            <div class="card-body">
-                                <img src="/static/images/help/tree_placement.png" class="img-fluid mb-2"
-                                    alt="Tree Placement">
-                                <ul class="small">
-                                    <li><strong>Query Position:</strong> Shows where your sequence fits</li>
-                                    <li><strong>Colored Branches:</strong> Highlight placement confidence</li>
-                                    <li><strong>Annotations:</strong> Display functional context</li>
-                                    <li><strong>Interactive Exploration:</strong> Navigate and analyze</li>
-                                </ul>
-                            </div>
+                        <div class="simple-card">
+                            <h6><i class="fa fa-tree"></i> Tree Placement View</h6>
+                            <img src="/static/images/help/tree_placement.png" class="img-fluid mb-2"
+                                alt="Tree Placement">
+                            <ul class="small">
+                                <li><strong>Query Position:</strong> Shows where your sequence fits</li>
+                                <li><strong>Colored Branches:</strong> Highlight placement confidence</li>
+                                <li><strong>Annotations:</strong> Display functional context</li>
+                                <li><strong>Interactive Exploration:</strong> Navigate and analyze</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -519,56 +502,49 @@
 
             <!-- 4. Submission Portal -->
             <section id="submission" class="mb-5">
-                <h2 class="border-bottom pb-2 section-header">4. Submission Portal</h2>
+                <h2 class="border-bottom pb-2 section-header">4. Data contribution</h2>
 
                 <div class="row">
                     <div class="col-md-8">
                         <h4>How to Submit Sequences</h4>
-                        <div class="card">
-                            <div class="card-body">
-                                <ol>
-                                    <li><strong>Prepare Your Data:</strong>
-                                        <ul>
-                                            <li>Protein sequences in FASTA format</li>
-                                            <li>One or multiple sequences per submission</li>
-                                            <li>Include descriptive sequence names</li>
-                                        </ul>
-                                    </li>
-                                    <li><strong>Upload Options:</strong>
-                                        <ul>
-                                            <li>Paste sequences directly into text area</li>
-                                            <li>Upload FASTA file from your computer</li>
-                                            <li>Maximum file size: 10MB</li>
-                                        </ul>
-                                    </li>
-                                    <li><strong>Job Configuration:</strong>
-                                        <ul>
-                                            <li>Provide email for notification (optional)</li>
-                                            <li>Set job description for easy identification</li>
-                                            <li>Choose analysis parameters if needed</li>
-                                        </ul>
-                                    </li>
-                                    <li><strong>Submit & Track:</strong>
-                                        <ul>
-                                            <li>Receive unique job ID for tracking</li>
-                                            <li>Monitor progress on results page</li>
-                                            <li>Results typically ready in 5-30 minutes</li>
-                                        </ul>
-                                    </li>
-                                </ol>
-                            </div>
+                        <div class="simple-card">
+                            <ol>
+                                <li><strong>Prepare Your Data:</strong>
+                                    <ul>
+                                        <li>Protein sequences in FASTA format</li>
+                                        <li>One or multiple sequences per submission</li>
+                                        <li>Include descriptive sequence names</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Upload Options:</strong>
+                                    <ul>
+                                        <li>Paste sequences directly into text area</li>
+                                        <li>Upload FASTA file from your computer</li>
+                                        <li>Maximum file size: 10MB</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Job Configuration:</strong>
+                                    <ul>
+                                        <li>Provide email for notification (optional)</li>
+                                        <li>Set job description for easy identification</li>
+                                        <li>Choose analysis parameters if needed</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Submit & Track:</strong>
+                                    <ul>
+                                        <li>Receive unique job ID for tracking</li>
+                                        <li>Monitor progress on results page</li>
+                                        <li>Results typically ready in 5-30 minutes</li>
+                                    </ul>
+                                </li>
+                            </ol>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h6>Supported Formats</h6>
-                            </div>
-                            <div class="card-body">
-                                <img src="/static/images/help/fasta_example.png" class="img-fluid mb-2"
-                                    alt="FASTA Example">
-                                <small class="text-muted">Example FASTA format</small>
-                            </div>
+                        <div class="simple-card">
+                            <h6>Supported Formats</h6>
+                            <img src="/static/images/help/fasta_example.png" class="img-fluid mb-2" alt="FASTA Example">
+                            <small class="text-muted">Example FASTA format</small>
                         </div>
                     </div>
                 </div>
@@ -580,63 +556,52 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h5><i class="fa fa-envelope"></i> Contact Information</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Development Team:</strong></p>
-                                <ul>
-                                    <li>Principal Investigator: [Name]</li>
-                                    <li>Email: <a href="mailto:contact@phylonap.org"
-                                            class="link-custom">contact@phylonap.org</a></li>
-                                    <li>Institution: [Your Institution]</li>
-                                    <li>GitHub: <a href="https://github.com/your-repo" target="_blank"
-                                            class="link-custom">PhyloNaP Repository</a></li>
-                                </ul>
-
+                        <div class="simple-card">
+                            <h5><i class="fa fa-envelope"></i> Contact Information</h5>
+                            <p><strong>Development Team:</strong></p>
+                            <ul>
+                                <li>Principal Investigator: [Name]</li>
+                                <li>Email: <a href="mailto:contact@phylonap.org"
+                                        class="link-custom">contact@phylonap.org</a></li>
+                                <li>Institution: [Your Institution]</li>
+                                <!-- <li>GitHub: <a href="https://github.com/your-repo" target="_blank"
+                                            class="link-custom">PhyloNaP Repository</a></li> -->
+                            </ul>
+                            <!-- 
                                 <p><strong>Bug Reports & Feature Requests:</strong></p>
                                 <p>Please use our <a href="https://github.com/your-repo/issues" target="_blank"
                                         class="link-custom">GitHub Issues</a> page for technical problems and feature
-                                    suggestions.</p>
-                            </div>
+                                    suggestions.</p> -->
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
-                                <h5><i class="fa fa-shield"></i> Data Usage & Privacy</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>License:</strong></p>
-                                <p>PhyloNaP is released under the <a href="https://opensource.org/licenses/MIT"
-                                        target="_blank" class="link-custom">MIT License</a>. The software is free to use
-                                    for academic and commercial purposes.</p>
+                        <div class="simple-card">
+                            <h5><i class="fa fa-shield"></i> Data Usage & Privacy</h5>
+                            <p><strong>License:</strong></p>
+                            <p>PhyloNaP is released under the <a href="https://opensource.org/licenses/MIT"
+                                    target="_blank" class="link-custom">MIT License</a>. The software is free to use for
+                                academic and commercial purposes.</p>
 
-                                <p><strong>Data Privacy:</strong></p>
-                                <ul>
-                                    <li>Submitted sequences are processed temporarily</li>
-                                    <li>No sequences are permanently stored</li>
-                                    <li>Job results are kept for 30 days</li>
-                                    <li>No personal data is collected beyond optional email</li>
-                                </ul>
+                            <p><strong>Data Privacy:</strong></p>
+                            <ul>
+                                <li>Submitted sequences are processed temporarily</li>
+                                <li>No sequences are permanently stored</li>
+                                <li>Job results are kept for 30 days</li>
+                                <li>No personal data is collected beyond optional email</li>
+                            </ul>
 
-                                <p><strong>Cookies:</strong></p>
-                                <p>This site uses minimal functional cookies to maintain session state. No tracking or
-                                    analytics cookies are used.</p>
-                            </div>
+                            <p><strong>Cookies:</strong></p>
+                            <p>This site uses minimal functional cookies to maintain session state. No tracking or
+                                analytics cookies are used.</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="row mt-4">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header card-header-custom">
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="simple-card">
                                 <h5><i class="fa fa-quote-left"></i> Citation</h5>
-                            </div>
-                            <div class="card-body">
                                 <p>If you use PhyloNaP in your research, please cite:</p>
                                 <div class="highlight-box">
                                     <code>[Your Name], et al. "PhyloNaP: Phylogenetic Analysis for Natural Product Biosynthesis Enzyme Function Prediction." [Journal] [Year]. DOI: [DOI]</code>
