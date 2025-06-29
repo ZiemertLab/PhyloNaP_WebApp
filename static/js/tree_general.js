@@ -1010,7 +1010,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
     nodes.each(function (d) {
       let transformValue = d3.select(this).attr('transform');
-      let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
+      // Fix: Use the same approach as metadata
+      let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
+      let translateValues = parseFloat(match[1]);
+
       let bgc = annot[d.data.name];
       if (bgc && bgc.startsWith("BGC")) {
         let bgc1 = bgc.split('.')[0];
@@ -1045,10 +1048,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
           let img = d3.select(this).append("image")
             .attr('xlink:href', image)
-            // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex instead of activeColumns
             .attr('x', (d) => {
-
-              return getColumnStartX() + slotIndex * 200 - translateValues;
+              return getColumnStartX() + slotIndex * 200 - translateValues; // Now translateValues is a number
             })
             .attr('y', -50)
             .attr('width', 100)
@@ -1089,7 +1090,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     let nodes = d3.selectAll('.node').filter(d => !d.data.name.startsWith("AS0"));
     nodes.each(function (d) {
       let transformValue = d3.select(this).attr('transform');
-      let translateValues = transformValue.match(/translate\(([^)]+)\)/)[1].split(',').map(Number);
+      // Fix: Use the same approach as metadata
+      let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
+      let translateValues = parseFloat(match[1]);
+
       let id = d.data.name;
       let image = "static/images_reactions/" + id + ".png";
       if (image) {
@@ -1098,16 +1102,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             if (response.ok) {
               let img = d3.select(this).append("image")
                 .attr('xlink:href', image)
-                // .attr('x', 200 + slotIndex * 200 - translateValues[0]) // Use slotIndex
                 .attr('x', (d) => {
-
-                  return getColumnStartX() + slotIndex * 200 - translateValues;
+                  return getColumnStartX() + slotIndex * 200 - translateValues; // Now translateValues is a number
                 })
                 .attr('y', -50)
                 .attr('width', 100)
                 .attr('height', 100)
                 .attr('class', "Reaction")
-                .attr('data-slot', slotIndex); // Add slot tracking
+                .attr('data-slot', slotIndex);
 
               img.on('click', function () {
                 d3.select('#enlarged-image').attr('src', image);
