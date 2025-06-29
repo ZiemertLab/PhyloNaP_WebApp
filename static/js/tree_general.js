@@ -1624,7 +1624,6 @@ window.addEventListener("terminalNodesSelected", function (event) {
 });
 
 
-
 const getMetadataSubset = function (nodeNames, metadata) {
   const filteredTable = metadata.filter(row => nodeNames.includes(row.ID));
   //console.log('Filtered metadata table:', filteredTable);
@@ -1674,8 +1673,15 @@ const getMetadataSummary = function (filteredTable) {
 
 const displayMetadataSummary = function (summary) {
   const summaryContainer = document.getElementById('summary-container');
+  const metadataHeading = document.getElementById('metadata-summary-heading');
+
   if (summaryContainer) {
     summaryContainer.innerHTML = ''; // Clear previous content
+
+    // Show the heading when we have content to display
+    if (metadataHeading && Object.keys(summary).length > 0) {
+      metadataHeading.style.display = 'block';
+    }
 
     for (const [key, values] of Object.entries(summary)) {
       const columnDiv = document.createElement('div');
@@ -1725,7 +1731,19 @@ const displayMetadataSummary = function (summary) {
     console.error('summaryContainer element not found');
   }
 }
+// Add this function to clear the metadata summary
+const clearMetadataSummary = function () {
+  const summaryContainer = document.getElementById('summary-container');
+  const metadataHeading = document.getElementById('metadata-summary-heading');
 
+  if (summaryContainer) {
+    summaryContainer.innerHTML = ''; // Clear content
+  }
+
+  if (metadataHeading) {
+    metadataHeading.style.display = 'none'; // Hide heading
+  }
+}
 // const displayMetadataSummary = function(summary) {
 //   const summaryContainer = document.getElementById('summary-container');
 //   if (summaryContainer) {
