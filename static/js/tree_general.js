@@ -1808,6 +1808,11 @@ window.getTerminalNodesArray = function (tree, metadata) {
     // Clear all previous selections
 
     const terminal_nodes = event.detail;
+    // If no nodes selected, clear the summary
+    if (!terminal_nodes || terminal_nodes.length === 0) {
+      clearMetadataSummary();
+      return;
+    }
     // Clear all previous selections except the new selection
     phylotree.clearAllSelections(tree, terminal_nodes);
     terminal_nodes.forEach(node => {
