@@ -1678,27 +1678,174 @@ const displayMetadataSummary = function (summary) {
   if (summaryContainer) {
     summaryContainer.innerHTML = ''; // Clear previous content
 
-    // Show the heading when we have content to display
-    if (metadataHeading && Object.keys(summary).length > 0) {
-      metadataHeading.style.display = 'block';
+    // Filter out empty columns and calculate diversity scores
+    const validColumns = [];
+    for (const [key, values] of Object.entries(summary)) {
+      const valueEntries = Object.entries(values).filter(([value, count]) => value !== null && value !== undefined && value !== '');
+
+      if (valueEntries.length > 0) {
+        const totalCount = valueEntries.reduce((sum, [, count]) => sum + count, 0);
+        const uniqueValues = valueEntries.length;
+
+        // Calculate diversity score (fewer unique values = more interesting)
+        const diversityScore = uniqueValues / totalCount;
+
+        validColumns.push({
+          key,
+          values: Object.fromEntries(valueEntries),
+          uniqueValues,
+          totalCount,
+          diversityScore
+        });
+      }
     }
 
-    for (const [key, values] of Object.entries(summary)) {
+    // Show the heading only if we have valid content
+    if (metadataHeading && validColumns.length > 0) {
+      metadataHeading.style.display = 'block';
+    } else if (metadataHeading) {
+      metadataHeading.style.display = 'none';
+      return; // Exit early if no valid columns
+    }
+
+    // Sort columns by diversity score (ascending - least diverse first)
+    validColumns.sort((a, b) => a.diversityScore - b.diversityScore);
+
+    // Determine which columns to show expanded by default
+    // Show first 2-3 columns (most interesting) expanded, or columns with <= 3 unique values
+    const maxAutoExpanded = 3;
+    let autoExpandedCount = 0;
+
+    validColumns.forEach((column, index) => {
+      const { key, values, uniqueValues, totalCount } = column;
+
       const columnDiv = document.createElement('div');
       columnDiv.classList.add('summary-column');
+      columnDiv.style.marginBottom = '15px';
+      columnDiv.style.borderLeft = '3px solid #7B1B38';
+      columnDiv.style.paddingLeft = '10px';
+
+      // Create header with statistics
+      const headerDiv = document.createElement('div');
+      headerDiv.style.display = 'flex';
+      headerDiv.style.alignItems = 'center';
+      headerDiv.style.cursor = 'pointer';
+      headerDiv.style.padding = '8px 0';
+      headerDiv.style.borderRadius = '4px';
+      headerDiv.style.transition = 'background-color 0.2s';
+
+      // Add hover effect
+      headerDiv.addEventListener('mouseenter', () => {
+        headerDiv.style.backgroundColor = '#f5f5f5';
+      });
+      headerDiv.addEventListener('mouseleave', () => {
+        headerDiv.style.backgroundColor = 'transparent';
+      });
 
       const columnTitle = document.createElement('h3');
-      columnTitle.textContent = key;
-      columnTitle.style.fontSize = '18px'; // Make the title smaller
+      columnTitle.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      columnTitle.style.fontSize = '16px';
+      columnTitle.style.margin = '0';
+      columnTitle.style.fontWeight = '600';
+      columnTitle.style.color = '#333';
 
-      // Create a toggle button
+      // Add statistics badge
+      const statsSpan = document.createElement('span');
+      statsSpan.textContent = `(${uniqueValues} ${uniqueValues === 1 ? 'value' : 'values'})`;
+      statsSpan.style.fontSize = '12px';
+      statsSpan.style.color = '#666';
+      statsSpan.style.marginLeft = '8px';
+      statsSpan.style.fontWeight = 'normal';
+
+      // Color code based on diversity
+      if (uniqueValues <= 2) {
+        statsSpan.style.color = '#d73502'; // Red for most interesting (least diverse)
+        statsSpan.style.fontWeight = '500';
+      } else if (uniqueValues <= 4) {
+        statsSpan.style.color = '#f57c00'; // Orange for moderately interesting
+      }
+
+      // Create toggle button
+      const shouldExpand = (autoExpandedCount < maxAutoExpanded && uniqueValues <= 4) || uniqueValues <= 2;
+      if (shouldExpand) autoExpandedCount++;
+
       const toggleButton = document.createElement('button');
-      toggleButton.innerHTML = '&#9654;'; // Right arrow
+      toggleButton.innerHTML = shouldExpand ? '&#9660;' : '&#9654;'; // Down or right arrow
       toggleButton.classList.add('toggle-button');
-      toggleButton.style.marginLeft = '5px'; // Add space between title and arrow
-      toggleButton.style.fontSize = '10px'; // Make the arrow smaller
-      toggleButton.onclick = () => {
-        const contentDiv = columnDiv.querySelector('.content');
+      toggleButton.style.cssText = `
+        margin-left: auto;
+        background: none;
+        border: none;
+        font-size: 14px;
+        color: #7B1B38;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 3px;
+        transition: background-color 0.2s;
+      `;
+
+      // Toggle button hover effect
+      toggleButton.addEventListener('mouseenter', () => {
+        toggleButton.style.backgroundColor = '#e8e8e8';
+      });
+      toggleButton.addEventListener('mouseleave', () => {
+        toggleButton.style.backgroundColor = 'transparent';
+      });
+
+      // Assemble header
+      headerDiv.appendChild(columnTitle);
+      headerDiv.appendChild(statsSpan);
+      headerDiv.appendChild(toggleButton);
+      columnDiv.appendChild(headerDiv);
+
+      // Create content div
+      const contentDiv = document.createElement('div');
+      contentDiv.classList.add('content');
+      contentDiv.style.display = shouldExpand ? 'block' : 'none';
+      contentDiv.style.marginTop = '8px';
+
+      // Sort values by count (descending) for better readability
+      const sortedValues = Object.entries(values).sort(([, a], [, b]) => b - a);
+
+      sortedValues.forEach(([value, count]) => {
+        const valueDiv = document.createElement('div');
+        valueDiv.classList.add('value-entry');
+        valueDiv.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 4px 8px;
+          margin: 2px 0;
+          background-color: #f8f9fa;
+          border-radius: 4px;
+          font-size: 13px;
+        `;
+
+        const valueSpan = document.createElement('span');
+        valueSpan.textContent = value || '(empty)';
+        valueSpan.style.color = '#333';
+        valueSpan.style.fontWeight = '500';
+
+        const countSpan = document.createElement('span');
+        countSpan.textContent = count;
+        countSpan.style.cssText = `
+          background-color: #7B1B38;
+          color: white;
+          padding: 2px 6px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 600;
+          min-width: 20px;
+          text-align: center;
+        `;
+
+        valueDiv.appendChild(valueSpan);
+        valueDiv.appendChild(countSpan);
+        contentDiv.appendChild(valueDiv);
+      });
+
+      // Toggle functionality
+      const toggleContent = () => {
         if (contentDiv.style.display === 'none') {
           contentDiv.style.display = 'block';
           toggleButton.innerHTML = '&#9660;'; // Down arrow
@@ -1708,24 +1855,30 @@ const displayMetadataSummary = function (summary) {
         }
       };
 
-      // Append the toggle button to the column title
-      columnTitle.appendChild(toggleButton);
-
-      columnDiv.appendChild(columnTitle);
-
-      const contentDiv = document.createElement('div');
-      contentDiv.classList.add('content');
-      contentDiv.style.display = 'none'; // Initially hide the content
-
-      for (const [value, count] of Object.entries(values)) {
-        const valueDiv = document.createElement('div');
-        valueDiv.classList.add('value-entry');
-        valueDiv.textContent = `${value}: ${count}`;
-        contentDiv.appendChild(valueDiv);
-      }
+      headerDiv.addEventListener('click', toggleContent);
+      toggleButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent double toggle
+        toggleContent();
+      });
 
       columnDiv.appendChild(contentDiv);
       summaryContainer.appendChild(columnDiv);
+    });
+
+    // Add a summary footer if there are many columns
+    if (validColumns.length > 5) {
+      const footerDiv = document.createElement('div');
+      footerDiv.style.cssText = `
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 6px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      `;
+      footerDiv.textContent = `Showing ${validColumns.length} metadata columns • Most diverse columns shown first`;
+      summaryContainer.appendChild(footerDiv);
     }
   } else {
     console.error('summaryContainer element not found');
@@ -1834,89 +1987,6 @@ window.downloadSequences = function (tree, metadata) {
     // Clear all previous selections
 
     const terminal_nodes = summaryEvent.detail;
-    // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree, terminal_nodes);
-    terminal_nodes.forEach(node => {
-      nodeNames.push(node.data.name);
-    });
-    console.log('Node names:', nodeNames);
-    // Send the node names to the backend to retrieve sequences
-
-    try {
-      // Prompt the user to enter a file name
-      const fileName = prompt('Enter a name for the file (default: nodeSequences.fasta):', 'nodeSequences.fasta') || 'nodeSequences.fasta';
-
-      (async function () {
-        const response = await fetch('/api/download_sequences', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ nodeNames }),
-        });
-      })();
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch sequences: ${response.statusText}`);
-      }
-
-      // Get the file blob from the response
-      const blob = await(async () => await response.blob())();
-
-      // Create a download link for the file
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName; // Use the user-provided file name
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      console.log('File downloaded successfully');
-    } catch (error) {
-      console.error('Error downloading sequences:', error);
-    }
-  });
-  return nodeNames;
-}
-window.displayNodeAnnotations = function (tree) {
-  console.log("Displaying annotations for all nodes:");
-
-  // Check if the tree has a `getNodes` method (phylotree-specific)
-  const nodes = tree.getNodes ? tree.getNodes() : tree.nodes || [];
-
-  // Traverse all nodes
-  nodes.forEach(node => {
-    const annotation = node.data?.annotation || "No annotation"; // Get annotation or fallback
-    const isLeaf = !node.children || node.children.length === 0; // Check if the node is a leaf
-    const nodeType = isLeaf ? "Leaf" : "Internal Node";
-
-    // Log the node's annotation and type
-    console.log(`Node: ${node.data?.name || "Unnamed"}, Type: ${nodeType}, Annotation: ${annotation}`);
-  });
-
-  console.log("Finished displaying annotations.");
-};
-// window.displayNodeAnnotations=function(tree) {
-//   console.log("Displaying annotations for all nodes:");
-//   let nodes = d3.selectAll('.node');
-//   nodes.each(node => {
-//       const annotation = node.data.annotation || "No annotation"; // Get annotation or fallback
-
-//       // Log the node's annotation and status
-//       console.log(`Node: ${node.data.name || "Unnamed"}, Annotation: ${annotation}`);
-//   });
-
-//   console.log("Finished displaying annotations.");
-// }
-window.downloadSequences = function (tree, metadata) {
-  let nodeNames = [];
-  document.addEventListener('nodesForDownloadSelected', seqDownloadEvent => {
-    nodeNames = [];
-    // Clear all previous selections
-
-    const terminal_nodes = seqDownloadEvent.detail;
     // Clear all previous selections except the new selection
     phylotree.clearAllSelections(tree, terminal_nodes);
     terminal_nodes.forEach(node => {
