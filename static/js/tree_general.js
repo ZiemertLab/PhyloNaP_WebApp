@@ -51,6 +51,82 @@ window.getTreeData = function () {
   return { nwk, metadata, metadataListArray: metadataListArray1, datasetDescr };
 }
 
+
+// Add download dataset functionality
+window.setupDownloadDataset = function (nwk, metadata) {
+
+  // Download tree file (.nwk)
+  window.downloadTreeFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the tree file (default: phylogenetic_tree.nwk):', 'phylogenetic_tree.nwk') || 'phylogenetic_tree.nwk';
+      if (!nwk) throw new Error('Tree data not found');
+      const blob = new Blob([nwk], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Failed to download tree file: ' + error.message);
+    }
+  };
+
+  // Download metadata file (.tsv)
+  window.downloadMetadataFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the metadata file (default: metadata.tsv):', 'metadata.tsv') || 'metadata.tsv';
+      if (!metadata || metadata.length === 0) throw new Error('No metadata available');
+      const headers = Object.keys(metadata[0]);
+      const tsvContent = [
+        headers.join('\t'),
+        ...metadata.map(row =>
+          headers.map(header => {
+            const value = row[header];
+            return value == null ? '' : String(value).replace(/\t/g, ' ');
+          }).join('\t')
+        )
+      ].join('\n');
+      const blob = new Blob([tsvContent], { type: 'text/tab-separated-values' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Failed to download metadata file: ' + error.message);
+    }
+  };
+
+  // Helper to attach listeners (can be called multiple times safely)
+  function attachDownloadListeners() {
+    const downloadTreeBtn = document.getElementById('download-tree-btn');
+    if (downloadTreeBtn && !downloadTreeBtn._listenerAttached) {
+      downloadTreeBtn.addEventListener('click', window.downloadTreeFile);
+      downloadTreeBtn._listenerAttached = true;
+    }
+    const downloadMetadataBtn = document.getElementById('download-metadata-btn');
+    if (downloadMetadataBtn && !downloadMetadataBtn._listenerAttached) {
+      downloadMetadataBtn.addEventListener('click', window.downloadMetadataFile);
+      downloadMetadataBtn._listenerAttached = true;
+    }
+  }
+
+  // Attach listeners after DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', attachDownloadListeners);
+  } else {
+    attachDownloadListeners();
+  }
+
+  // Also, if you render buttons dynamically, call this again after rendering.
+};
+
 // Add this at the end of tree_general.js, after the existing functions
 
 // === FONT ADJUSTMENT FUNCTIONALITY ===
@@ -1895,6 +1971,7 @@ const displayMetadataSummary = function (summary) {
         line-height: 1;
       `;
       upArrow.addEventListener('mouseenter', () => upArrow.style.backgroundColor = '#e8e8e8');
+
       upArrow.addEventListener('mouseleave', () => upArrow.style.backgroundColor = 'transparent');
       upArrow.addEventListener('click', (e) => {
         e.stopPropagation();

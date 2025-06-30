@@ -1,7 +1,7 @@
 async function main() {
     const { container, width, height } = getContainerDimensions();
 
-    const { nwk, metadata, metadataListArray:metadataListArray2, datasetDescr } = getTreeData();
+    const { nwk, metadata, metadataListArray: metadataListArray2, datasetDescr } = getTreeData();
     console.log("nwk: ", nwk);
     console.log("metadata: ", metadata);
     console.log("metadataListArray2: ", metadataListArray2);
@@ -9,12 +9,12 @@ async function main() {
     const tree = createTree(nwk);
     setupEventListeners(tree);
     console.log("tree: ", tree);
-    customTreeOptions={
+    customTreeOptions = {
         'draw-size-bubbles': true,
         'node-styler': function (container, node) {
-        // Non-annotated nodes
-        container.classed("alternate", true); // Add "alternate" class
-        container.classed("circle", false); // Ensure "circle" class is removed
+            // Non-annotated nodes
+            container.classed("alternate", true); // Add "alternate" class
+            container.classed("circle", false); // Ensure "circle" class is removed
         }
     };
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
@@ -23,9 +23,12 @@ async function main() {
     setupSaveImageButton();
     setTreeSize(width, height);
     showTree(tree);
+
+    // Initialize download functionality
+    setupDownloadDataset(nwk, metadata);
     // At the end of tree_rendering.js
 
-    selectedLeavesArray=getTerminalNodesArray(tree,metadata)
+    selectedLeavesArray = getTerminalNodesArray(tree, metadata)
     console.log("selectedLeavesArray: ", selectedLeavesArray);
     // metadataSummary(selectedLeavesArray, metadata)
 
@@ -33,14 +36,14 @@ async function main() {
     checkForClusters(tree);
 
     //make the tree panel apropiate size
-    $(document).ready(function() {
+    $(document).ready(function () {
         Split(['.tree-panel', '.details'], {
-        // Split(['.tree', '.details'], {
-        sizes: [75, 25],
-        minSize: 100,
-        gutterSize: 5,
-        cursor: 'col-resize'
+            // Split(['.tree', '.details'], {
+            sizes: [75, 25],
+            minSize: 100,
+            gutterSize: 5,
+            cursor: 'col-resize'
         });
-    });  
+    });
 }
 main();
