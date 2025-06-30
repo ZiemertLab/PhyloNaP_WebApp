@@ -115,7 +115,7 @@
                             Trees</a>
                         <a href="#classification" class="list-group-item list-group-item-action">Enzyme
                             Classification</a>
-                        <a href="#submission" class="list-group-item list-group-item-action">Data contribution</a>
+                        <!-- <a href="#submission" class="list-group-item list-group-item-action">Data contribution</a> -->
                         <a href="#contact" class="list-group-item list-group-item-action">Contact & Legal</a>
                     </div>
                 </div>
@@ -209,7 +209,7 @@
 
 
                 <h4>Database Generation Pipeline</h4>
-                <div class="row">
+                <!-- <div class="row">
                     <div class="col-12">
                         <div class="text-center mb-3">
                             <img src="/static/images/help/pipeline_flow.png" class="img-fluid"
@@ -217,7 +217,7 @@
                             <p class="small text-muted mt-2">Comprehensive pipeline for automatic dataset generation</p>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <div class="clean-section">
                     <h5>Pipeline Steps</h5>
@@ -333,131 +333,176 @@
                 <img src="{{ url_for('static', filename='pictures/metadata.png') }}"
                     style="width: 100%; height: 100%; object-fit: cover;">
 
+
+
+
+            </section>
+
+            <!-- 3. Enzyme Classification & Protein Placement -->
+            <section id="classification" class="mb-5">
+                <h2 class="border-bottom pb-2 section-header">3. Enzyme Classification & Protein Placement </h2>
+                <h4>Protein Placement Pipeline Overview</h4>
+                <div class="custom-alert alert mb-4">
+                    <p>
+                        PhyloNaP enables users to classify their protein sequences by placing them onto curated
+                        phylogenetic
+                        trees using a robust, multi-step computational pipeline.
+                    </p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="simple-card">
+                            <h6><i class="fa fa-upload"></i> Input Format</h6>
+                            <ul class="small">
+                                <li>Submit one or multiple protein sequences in <strong>FASTA</strong> format.</li>
+                            </ul>
+                            <h6><i class="fa fa-search"></i> Similarity Search</h6>
+                            <ul class="small">
+                                <li>Each query is searched against a non-redundant PhyloNaP protein database using
+                                    <strong>MMseqs2</strong>.
+                                </li>
+                                <li>The non-redundant set is built by aggregating all proteins and filtering out those
+                                    with
+                                    &gt;70%
+                                    similarity.</li>
+                                <li>Search thresholds:
+                                    <ul>
+                                        <li>&ge; 30% sequence identity</li>
+                                        <li>&ge; 50% alignment coverage</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <h6><i class="fa fa-random"></i> Placement Procedure</h6>
+                            <ul class="small">
+                                <li>For each query with hits, the associated dataset is retrieved.</li>
+                                <li>The query is aligned to the reference multiple sequence alignment used for the tree.
+                                </li>
+                                <li>The combined alignment is submitted to <strong>EPA-ng</strong> for placement onto
+                                    the
+                                    existing
+                                    phylogenetic tree.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="simple-card">
+                            <h6><i class="fa fa-sitemap"></i> EPA-ng Placement Details</h6>
+                            <ul class="small">
+                                <li>EPA-ng uses the reference tree’s evolutionary model to generate a new tree from the
+                                    extended
+                                    alignment.</li>
+                                <li>It compares the new topology with the original to determine the most likely
+                                    placement(s).</li>
+                                <li>Each placement includes:
+                                    <ul>
+                                        <li>Placement position (clade or node)</li>
+                                        <li>Branch lengths</li>
+                                        <li>Likelihood weight ratio (LWR, 0–1; sum of all LWRs is 1)</li>
+                                    </ul>
+                                </li>
+                                <li>If a dominant placement is found (highest LWR), only this is shown by default;
+                                    others
+                                    can be
+                                    toggled.</li>
+                                <li>
+                                    <strong>Note:</strong> A query may be placed in multiple locations, especially if it
+                                    is
+                                    distant
+                                    from known clades or tree topology changes significantly, indicating higher
+                                    uncertainty.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box mb-4">
+                    <h6><i class="fa fa-exclamation-triangle"></i> Understanding Branch Length & Placement Quality</h6>
+                    <p class="small mb-1">
+                        Each placement features a <strong>pendant length</strong>—the branch connecting the query to the
+                        placement
+                        node/leaf.
+                    </p>
+                    <ul class="small mb-1">
+                        <li>A long pendant length suggests greater evolutionary distance from the placement clade.</li>
+                        <li>This may indicate the query is not well represented by the clade’s features; interpret with
+                            caution.
+                        </li>
+                        <li>Datasets are <span style="color:#7B1B38;font-weight:600;">highlighted in red</span> when the
+                            best
+                            placement has a pendant length &gt; 1.</li>
+                    </ul>
+                </div>
+
+                <div class="simple-card mb-4">
+                    <h6><i class="fa fa-table"></i> Results Table</h6>
+                    <img src="{{ url_for('static', filename='pictures/results.png') }}" class="img-fluid my-2"
+                        alt="Results Table"
+                        style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
+                    <ul class="small mt-2">
+                        <li>Displays all matching datasets.</li>
+                        <li>Shows the LWR of the best placement for each.</li>
+                        <li>If a query matches multiple trees, only the placement with the shortest pendant length
+                            is shown by default.</li>
+                        <li>You can toggle to display all alternative placements.</li>
+                    </ul>
+                </div>
+                <div class="simple-card">
+                    <h6><i class="fa fa-tree"></i> Tree Visualization</h6>
+                    <img src="{{ url_for('static', filename='pictures/placement.png') }}" alt="Tree Placement"
+                        class="img-fluid my-2"
+                        style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
+                    <ul class="small mt-2">
+                        <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">red circles</span>
+                            on the phylogenetic tree.</li>
+                        <li>Circle size reflects the relative likelihood of each placement.</li>
+                        <li>If there is one dominant placement, only that is shown by default; others can be
+                            revealed by clicking “Show all placements”.</li>
+                    </ul>
+                </div>
+            </section>
         </div>
-
-
-        </section>
-
-        <!-- 3. Enzyme Classification & Protein Placement -->
-        <section id="classification" class="mb-5">
-            <h2 class="border-bottom pb-2 section-header">3. Enzyme Classification & Protein Placement </h2>
-            <h4>Protein Placement Pipeline Overview</h4>
-            <div class="custom-alert alert mb-4">
-                <p>
-                    PhyloNaP enables users to classify their protein sequences by placing them onto curated phylogenetic
-                    trees using a robust, multi-step computational pipeline.
-                </p>
-            </div>
-
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="simple-card">
-                        <h6><i class="fa fa-upload"></i> Input Format</h6>
-                        <ul class="small">
-                            <li>Submit one or multiple protein sequences in <strong>FASTA</strong> format.</li>
-                        </ul>
-                        <h6><i class="fa fa-search"></i> Similarity Search</h6>
-                        <ul class="small">
-                            <li>Each query is searched against a non-redundant PhyloNaP protein database using
-                                <strong>MMseqs2</strong>.
-                            </li>
-                            <li>The non-redundant set is built by aggregating all proteins and filtering out those with
-                                &gt;70%
-                                similarity.</li>
-                            <li>Search thresholds:
-                                <ul>
-                                    <li>&ge; 30% sequence identity</li>
-                                    <li>&ge; 50% alignment coverage</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        <h6><i class="fa fa-random"></i> Placement Procedure</h6>
-                        <ul class="small">
-                            <li>For each query with hits, the associated dataset is retrieved.</li>
-                            <li>The query is aligned to the reference multiple sequence alignment used for the tree.
-                            </li>
-                            <li>The combined alignment is submitted to <strong>EPA-ng</strong> for placement onto the
-                                existing
-                                phylogenetic tree.</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="simple-card">
-                        <h6><i class="fa fa-sitemap"></i> EPA-ng Placement Details</h6>
-                        <ul class="small">
-                            <li>EPA-ng uses the reference tree’s evolutionary model to generate a new tree from the
-                                extended
-                                alignment.</li>
-                            <li>It compares the new topology with the original to determine the most likely
-                                placement(s).</li>
-                            <li>Each placement includes:
-                                <ul>
-                                    <li>Placement position (clade or node)</li>
-                                    <li>Branch lengths</li>
-                                    <li>Likelihood weight ratio (LWR, 0–1; sum of all LWRs is 1)</li>
-                                </ul>
-                            </li>
-                            <li>If a dominant placement is found (highest LWR), only this is shown by default; others
-                                can be
-                                toggled.</li>
-                            <li>
-                                <strong>Note:</strong> A query may be placed in multiple locations, especially if it is
-                                distant
-                                from known clades or tree topology changes significantly, indicating higher uncertainty.
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div class="highlight-box mb-4">
-                <h6><i class="fa fa-exclamation-triangle"></i> Understanding Branch Length & Placement Quality</h6>
-                <p class="small mb-1">
-                    Each placement features a <strong>pendant length</strong>—the branch connecting the query to the
-                    placement
-                    node/leaf.
-                </p>
-                <ul class="small mb-1">
-                    <li>A long pendant length suggests greater evolutionary distance from the placement clade.</li>
-                    <li>This may indicate the query is not well represented by the clade’s features; interpret with
-                        caution.
-                    </li>
-                    <li>Datasets are <span style="color:#7B1B38;font-weight:600;">highlighted in red</span> when the
-                        best
-                        placement has a pendant length &gt; 1.</li>
-                </ul>
-            </div>
-
-            <div class="simple-card mb-4">
-                <h6><i class="fa fa-table"></i> Results Table</h6>
-                <img src="{{ url_for('static', filename='pictures/results.png') }}" class="img-fluid my-2"
-                    alt="Results Table"
-                    style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
-                <ul class="small mt-2">
-                    <li>Displays all matching datasets.</li>
-                    <li>Shows the LWR of the best placement for each.</li>
-                    <li>If a query matches multiple trees, only the placement with the shortest pendant length
-                        is shown by default.</li>
-                    <li>You can toggle to display all alternative placements.</li>
-                </ul>
-            </div>
-            <div class="simple-card">
-                <h6><i class="fa fa-tree"></i> Tree Visualization</h6>
-                <img src="{{ url_for('static', filename='pictures/tree_placement.png') }}" alt="Tree Placement"
-                    class="img-fluid my-2"
-                    style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
-                <ul class="small mt-2">
-                    <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">red circles</span>
-                        on the phylogenetic tree.</li>
-                    <li>Circle size reflects the relative likelihood of each placement.</li>
-                    <li>If there is one dominant placement, only that is shown by default; others can be
-                        revealed by clicking “Show all placements”.</li>
-                </ul>
-            </div>
-        </section>
     </div>
+
+
 </div>
+<section id="contact" class="mb-5">
+    <h2 class="border-bottom pb-2 section-header">Contact and legal</h2>
+    <h4 class="mt-4">Contact</h4>
+    <div class="px-2 py-3" style="background: #f8f9fa; border-radius: 6px; max-width: 600px;">
+        <p class="mb-2">
+            <strong>Mail:</strong>
+            For any questions or feedback, please contact us at
+            <a href="mailto:aleksandra.korenskaiai@uni-tuebingen.de" class="link-custom">
+                aleksandra.korenskaiai@uni-tuebingen.de
+            </a>
+        </p>
+        <p class="mb-0">
+            Ziemert Lab, University of Tübingen, Germany
+        </p>
+    </div>
+    <h4 class="mt-4">Legal</h4>
+    <div class="simple-card">
+        <h5><i class="fa fa-shield"></i> Data Usage & Privacy</h5>
+        <p><strong>License:</strong></p>
+        <p>PhyloNaP is released under the <a href="https://opensource.org/licenses/MIT" target="_blank"
+                class="link-custom">MIT License</a>. The software is free to use for
+            academic and commercial purposes.</p>
+
+        <p><strong>Data Privacy:</strong></p>
+        <ul>
+            <li>Submitted sequences are processed temporarily</li>
+            <li>No sequences are permanently stored</li>
+            <li>Job results are kept for 30 days</li>
+            <li>No personal data is collected beyond optional email</li>
+        </ul>
+
+        <p><strong>Cookies:</strong></p>
+        <p>This site uses minimal functional cookies to maintain session state. No tracking or
+            analytics cookies are used.</p>
+    </div>
+</section>
 <!-- Smooth scrolling for navigation -->
 <script>
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -487,5 +532,6 @@
         });
     });
 </script>
+<hr class="my-4">
 
 {% endblock %}
