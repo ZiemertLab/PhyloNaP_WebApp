@@ -1007,7 +1007,7 @@ def process_job(job_id, filename, app):
         
         process = subprocess.Popen(
             ['docker', 'run', '--rm', '--user', f"{os.getuid()}:{os.getgid()}",
-            '--memory','8g', '--cpus','4', \
+            # '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
             'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
