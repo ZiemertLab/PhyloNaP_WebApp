@@ -339,10 +339,9 @@
         </section>
 
         <section id="classification" class="mb-5">
-            <h2 class="border-bottom pb-2 section-header">3. Enzyme Classification & Protein Placement Pipeline</h2>
-
+            <h2 class="border-bottom pb-2 section-header">3. Enzyme Classification & Protein Placement </h2>
+            <h4>Protein Placement Pipeline Overview</h4>
             <div class="custom-alert alert mb-4">
-                <h5><i class="fa fa-flask"></i> Protein Placement Pipeline Overview</h5>
                 <p>
                     PhyloNaP enables users to classify their protein sequences by placing them onto curated phylogenetic
                     trees
@@ -432,34 +431,35 @@
 
 
 
-            <h6><i class="fa fa-table"></i> Results Table</h6>
-            <img src="{{ url_for('static', filename='pictures/results.png') }}" class="img-fluid my-2"
-                alt="Results Table" style="max-width: 700px; display: block; margin-left: auto; margin-right: auto;">
-
-            <li>Displays all matching datasets.</li>
-            <li>Shows the LWR of the best placement for each.</li>
-            <li>If a query matches multiple trees, only the placement with the shortest pendant length
-                is shown
-                by default.</li>
-            <li>You can toggle to display all alternative placements.</li>
 
 
-
-
-
+            <div class="simple-card">
+                <h6><i class="fa fa-table"></i> Results Table</h6>
+                <img src="{{ url_for('static', filename='pictures/results.png') }}" class="img-fluid my-2"
+                    alt="Results Table"
+                    style="max-width: 700px; display: block; margin-left: auto; margin-right: auto;">
+                <ul class="small mt-2">
+                    <li>Displays all matching datasets.</li>
+                    <li>Shows the LWR of the best placement for each.</li>
+                    <li>If a query matches multiple trees, only the placement with the shortest pendant length
+                        is shown by default.</li>
+                    <li>You can toggle to display all alternative placements.</li>
+                </ul>
+            </div>
+    </div>
+    <div class="col-md-6">
+        <div class="simple-card">
             <h6><i class="fa fa-tree"></i> Tree Visualization</h6>
-            <ul class="small">
+            <img src="{{ url_for('static', filename='pictures/tree_placement.png') }}" alt="Tree Placement"
+                class="img-fluid my-2" style="max-width: 700px; display: block; margin-left: auto; margin-right: auto;">
+            <ul class="small mt-2">
                 <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">red circles</span>
-                    on the
-                    phylogenetic tree.</li>
+                    on the phylogenetic tree.</li>
                 <li>Circle size reflects the relative likelihood of each placement.</li>
                 <li>If there is one dominant placement, only that is shown by default; others can be
-                    revealed by
-                    clicking “Show all placements”.</li>
+                    revealed by clicking “Show all placements”.</li>
             </ul>
-            <img src="{{ url_for('static', filename='pictures/tree_placement.png') }}" alt="Tree Placement"
-                class="img-fluid my-2">
-
+        </div>
         </section>
     </div>
 </div>
