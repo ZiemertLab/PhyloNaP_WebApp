@@ -433,8 +433,213 @@
             </div>
         </div> -->
         </section>
+
+        <!-- 3. Classification Pipeline -->
+        <section id="classification" class="mb-5">
+            <h2 class="border-bottom pb-2 section-header">3. Classifying an Enzyme</h2>
+
+            <h4>Classification Pipeline</h4>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <div class="pipeline-step text-white rounded p-3 mb-2 pipeline-icon">
+                                <i class="fa fa-upload fa-2x"></i>
+                            </div>
+                            <strong>1. Sequence Input</strong>
+                            <p class="small">Submit protein sequences in FASTA format</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="pipeline-step text-white rounded p-3 mb-2 pipeline-icon">
+                                <i class="fa fa-search fa-2x"></i>
+                            </div>
+                            <strong>2. Homology Search</strong>
+                            <p class="small">BLAST against reference database</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="pipeline-step text-white rounded p-3 mb-2 pipeline-icon">
+                                <i class="fa fa-tree fa-2x"></i>
+                            </div>
+                            <strong>3. Tree Placement</strong>
+                            <p class="small">Place sequences in phylogenetic context</p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="pipeline-step text-white rounded p-3 mb-2 pipeline-icon">
+                                <i class="fa fa-check-circle fa-2x"></i>
+                            </div>
+                            <strong>4. Function Prediction</strong>
+                            <p class="small">Infer function from phylogenetic position</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h4>Understanding Result Pages</h4>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h6><i class="fa fa-table"></i> Results Table</h6>
+                        <img src="/static/images/help/results_table.png" class="img-fluid mb-2" alt="Results Table">
+                        <ul class="small">
+                            <li><strong>Query:</strong> Your input sequence identifier</li>
+                            <li><strong>Confidence:</strong> Placement reliability (0-1)</li>
+                            <li><strong>Branch Length:</strong> Evolutionary distance</li>
+                            <li><strong>Family/Superfamily:</strong> Functional classification</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h6><i class="fa fa-tree"></i> Tree Placement View</h6>
+                        <img src="/static/images/help/tree_placement.png" class="img-fluid mb-2" alt="Tree Placement">
+                        <ul class="small">
+                            <li><strong>Query Position:</strong> Shows where your sequence fits</li>
+                            <li><strong>Colored Branches:</strong> Highlight placement confidence</li>
+                            <li><strong>Annotations:</strong> Display functional context</li>
+                            <li><strong>Interactive Exploration:</strong> Navigate and analyze</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="custom-alert alert">
+                <h6><i class="fa fa-lightbulb"></i> Interpreting Results</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Confidence Levels:</strong>
+                        <ul>
+                            <li>0.8-1.0: High confidence placement</li>
+                            <li>0.5-0.8: Moderate confidence</li>
+                            <li>&lt;0.5: Low confidence, interpret carefully</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Branch Length:</strong>
+                        <ul>
+                            <li>&lt;0.5: Close homolog, reliable function</li>
+                            <li>0.5-1.0: Moderate distance</li>
+                            <li>&gt;1.0: Distant relationship <span class="badge custom-badge">Caution</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Submission Portal -->
+        <section id="submission" class="mb-5">
+            <h2 class="border-bottom pb-2 section-header">4. Data contribution</h2>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <h4>How to Submit Sequences</h4>
+                    <div class="simple-card">
+                        <ol>
+                            <li><strong>Prepare Your Data:</strong>
+                                <ul>
+                                    <li>Protein sequences in FASTA format</li>
+                                    <li>One or multiple sequences per submission</li>
+                                    <li>Include descriptive sequence names</li>
+                                </ul>
+                            </li>
+                            <li><strong>Upload Options:</strong>
+                                <ul>
+                                    <li>Paste sequences directly into text area</li>
+                                    <li>Upload FASTA file from your computer</li>
+                                    <li>Maximum file size: 10MB</li>
+                                </ul>
+                            </li>
+                            <li><strong>Job Configuration:</strong>
+                                <ul>
+                                    <li>Provide email for notification (optional)</li>
+                                    <li>Set job description for easy identification</li>
+                                    <li>Choose analysis parameters if needed</li>
+                                </ul>
+                            </li>
+                            <li><strong>Submit & Track:</strong>
+                                <ul>
+                                    <li>Receive unique job ID for tracking</li>
+                                    <li>Monitor progress on results page</li>
+                                    <li>Results typically ready in 5-30 minutes</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <!-- <div class="col-md-4">
+                    <div class="simple-card">
+                        <h6>Supported Formats</h6>
+                        <img src="/static/images/help/fasta_example.png" class="img-fluid mb-2" alt="FASTA Example">
+                        <small class="text-muted">Example FASTA format</small>
+                    </div>
+                </div> -->
+            </div>
+        </section>
+
+        <!-- 5. Contact & Legal -->
+        <section id="contact" class="mb-5">
+            <h2 class="border-bottom pb-2 section-header">5. Contact & Legal Information</h2>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h5><i class="fa fa-envelope"></i> Contact Information</h5>
+                        <p><strong>Development Team:</strong></p>
+                        <ul>
+                            <li>Principal Investigator: [Name]</li>
+                            <li>Email: <a href="mailto:contact@phylonap.org"
+                                    class="link-custom">contact@phylonap.org</a></li>
+                            <li>Institution: [Your Institution]</li>
+                            <!-- <li>GitHub: <a href="https://github.com/your-repo" target="_blank"
+                                            class="link-custom">PhyloNaP Repository</a></li> -->
+                        </ul>
+                        <!-- 
+                                <p><strong>Bug Reports & Feature Requests:</strong></p>
+                                <p>Please use our <a href="https://github.com/your-repo/issues" target="_blank"
+                                        class="link-custom">GitHub Issues</a> page for technical problems and feature
+                                    suggestions.</p> -->
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h5><i class="fa fa-shield"></i> Data Usage & Privacy</h5>
+                        <p><strong>License:</strong></p>
+                        <p>PhyloNaP is released under the <a href="https://opensource.org/licenses/MIT" target="_blank"
+                                class="link-custom">MIT License</a>. The software is free to use for
+                            academic and commercial purposes.</p>
+
+                        <p><strong>Data Privacy:</strong></p>
+                        <ul>
+                            <li>Submitted sequences are processed temporarily</li>
+                            <li>No sequences are permanently stored</li>
+                            <li>Job results are kept for 30 days</li>
+                            <li>No personal data is collected beyond optional email</li>
+                        </ul>
+
+                        <p><strong>Cookies:</strong></p>
+                        <p>This site uses minimal functional cookies to maintain session state. No tracking or
+                            analytics cookies are used.</p>
+                    </div>
+                </div>
+
+
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="simple-card">
+                            <h5><i class="fa fa-quote-left"></i> Citation</h5>
+                            <p>If you use PhyloNaP in your research, please cite:</p>
+                            <div class="highlight-box">
+                                <code>[Your Name], et al. "PhyloNaP: Phylogenetic Analysis for Natural Product Biosynthesis Enzyme Function Prediction." [Journal] [Year]. DOI: [DOI]</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 </div>
+</div>
+
 <!-- Smooth scrolling for navigation -->
 <script>
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
