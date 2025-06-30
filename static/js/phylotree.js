@@ -2545,20 +2545,21 @@
         }
 
         // add the option for characterizing the node
-        if (options["collapsible"]) {
-          menu_object
-            .append("a")
-            .attr("class", "dropdown-item")
-            .attr("tabindex", "-1")
-            .text("Download the sequences of the clade")
-            .on("click", mouseEvent => {
-              // TO DO: implement the download of the sequences
-              const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
-              const seqDownloadEvent = new CustomEvent("nodesForDownloadSelected", { detail: terminal_nodes });
-              document.dispatchEvent(seqDownloadEvent);
-              console.log(seqDownloadEvent)
-            });
-        }
+        // retutn it as soon as possible!
+        // if (options["collapsible"]) {
+        //   menu_object
+        //     .append("a")
+        //     .attr("class", "dropdown-item")
+        //     .attr("tabindex", "-1")
+        //     .text("Download the sequences of the clade")
+        //     .on("click", mouseEvent => {
+        //       // TO DO: implement the download of the sequences
+        //       const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
+        //       const seqDownloadEvent = new CustomEvent("nodesForDownloadSelected", { detail: terminal_nodes });
+        //       document.dispatchEvent(seqDownloadEvent);
+        //       console.log(seqDownloadEvent)
+        //     });
+        // }
 
         // if (options["selectable"]) {
         //   menu_object
