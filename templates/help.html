@@ -332,106 +332,134 @@
                     :</p>
                 <img src="{{ url_for('static', filename='pictures/metadata.png') }}"
                     style="width: 100%; height: 100%; object-fit: cover;">
-                <!-- <div class="row mb-4">
-                    <div class="col-md-6">
-                        <div class="simple-card">
-                            <img src="/static/images/help/tree_features.png" class="img-fluid mb-2" alt="Tree Features">
-                            <h6>Interactive Tree Controls</h6>
-                            <ul class="small">
-                                <li><strong>Zoom & Pan:</strong> Navigate large trees with mouse controls</li>
-                                <li><strong>Layout Options:</strong> Switch between radial and linear views</li>
-                                <li><strong>Branch Spacing:</strong> Adjust vertical and horizontal spacing</li>
-                                <li><strong>Tip Alignment:</strong> Align leaf nodes for better comparison</li>
-                                <li><strong>Node Selection:</strong> Click branches to highlight clades</li>
-                            </ul>
-                        </div>
-                    </div> -->
-                <!-- <div class="col-md-6">
-                    <div class="simple-card">
-                        <img src="/static/images/help/annotation_columns.png" class="img-fluid mb-2"
-                            alt="Annotation Columns">
-                        <h6>Annotation Columns</h6>
-                        <ul class="small">
-                            <li><strong>BGC Products:</strong> Visual representations of natural products</li>
-                            <li><strong>Reaction Pathways:</strong> Chemical transformation images</li>
-                            <li><strong>Metadata Display:</strong> Taxonomic and functional information</li>
-                            <li><strong>Custom Annotations:</strong> Toggle different data types</li>
-                            <li><strong>Dynamic Positioning:</strong> Columns adjust with tree layout</li>
-                        </ul>
-                    </div>
-                </div> -->
+
         </div>
 
-        <!-- <h4>Tree Navigation Guide</h4>
-        <div class="highlight-box">
-            <div class="row">
-                <div class="col-md-8">
-                    <p><strong>Basic Tree Interaction:</strong></p>
-                    <ul>
-                        <li><strong>Pan:</strong> Click and drag to move around large phylogenetic trees</li>
-                        <li><strong>Zoom:</strong> Use mouse wheel to zoom in/out on specific regions</li>
-                        <li><strong>Select:</strong> Click on nodes or branches to highlight evolutionary clades
-                        </li>
-                        <li><strong>Spacing:</strong> Use control buttons to adjust tree layout for optimal
-                            viewing</li>
-                    </ul>
-                    <p><strong>Annotation Panel Usage:</strong></p>
-                    <ul>
-                        <li><strong>Toggle Annotations:</strong> Use sidebar buttons to show/hide different data
-                            types</li>
-                        <li><strong>Image Viewing:</strong> Click on chemical structure images for enlarged
-                            views</li>
-                        <li><strong>Responsive Layout:</strong> Annotation columns automatically reposition as
-                            you modify tree spacing</li>
-                        <li><strong>Data Integration:</strong> Combine phylogenetic and biochemical information
-                            for comprehensive analysis</li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <img src="/static/images/help/tree_controls.png" class="img-fluid border" alt="Tree Controls">
-                    <p class="small text-muted mt-2">Tree control interface</p>
-                </div>
-            </div>
-        </div> -->
 
-        <!-- <div class="row mt-4">
-            <div class="col-md-4">
-                <div class="simple-card text-center">
-                    <h6>Curated Trees</h6>
-                    <p class="small">High-quality trees with:</p>
-                    <ul class="small text-left">
-                        <li>Literature citations</li>
-                        <li>Experimental validation</li>
-                        <li>Author contributions</li>
-                        <li>Detailed descriptions</li>
-                    </ul>
+        </section>
+
+        <section id="classification" class="mb-5">
+            <h2 class="border-bottom pb-2 section-header">3. Enzyme Classification & Protein Placement Pipeline</h2>
+
+            <div class="custom-alert alert mb-4">
+                <h5><i class="fa fa-flask"></i> Protein Placement Pipeline Overview</h5>
+                <p>
+                    PhyloNaP enables users to classify their protein sequences by placing them onto curated phylogenetic
+                    trees
+                    using a robust, multi-step computational pipeline.
+                </p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h6><i class="fa fa-upload"></i> Input Format</h6>
+                        <ul class="small">
+                            <li>Submit one or multiple protein sequences in <strong>FASTA</strong> format.</li>
+                        </ul>
+                        <h6><i class="fa fa-search"></i> Similarity Search</h6>
+                        <ul class="small">
+                            <li>Each query is searched against a non-redundant PhyloNaP protein database using
+                                <strong>MMseqs2</strong>.
+                            </li>
+                            <li>The non-redundant set is built by aggregating all proteins and filtering out those with
+                                &gt;70%
+                                similarity.</li>
+                            <li>Search thresholds:
+                                <ul>
+                                    <li>&ge; 30% sequence identity</li>
+                                    <li>&ge; 50% alignment coverage</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <h6><i class="fa fa-random"></i> Placement Procedure</h6>
+                        <ul class="small">
+                            <li>For each query with hits, the associated dataset is retrieved.</li>
+                            <li>The query is aligned to the reference multiple sequence alignment used for the tree.
+                            </li>
+                            <li>The combined alignment is submitted to <strong>EPA-ng</strong> for placement onto the
+                                existing
+                                phylogenetic tree.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="simple-card">
+                        <h6><i class="fa fa-sitemap"></i> EPA-ng Placement Details</h6>
+                        <ul class="small">
+                            <li>EPA-ng uses the reference tree’s evolutionary model to generate a new tree from the
+                                extended
+                                alignment.</li>
+                            <li>It compares the new topology with the original to determine the most likely
+                                placement(s).</li>
+                            <li>Each placement includes:
+                                <ul>
+                                    <li>Placement position (clade or node)</li>
+                                    <li>Branch lengths</li>
+                                    <li>Likelihood weight ratio (LWR, 0–1; sum of all LWRs is 1)</li>
+                                </ul>
+                            </li>
+                            <li>If a dominant placement is found (highest LWR), only this is shown by default; others
+                                can be
+                                toggled.</li>
+                            <li>
+                                <strong>Note:</strong> A query may be placed in multiple locations, especially if it is
+                                distant
+                                from known clades or tree topology changes significantly, indicating higher uncertainty.
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="simple-card text-center">
-                    <h6>Automated Trees</h6>
-                    <p class="small">Systematically generated with:</p>
-                    <ul class="small text-left">
-                        <li>Standardized methods</li>
-                        <li>Quality control filters</li>
-                        <li>Consistent annotations</li>
-                        <li>Regular updates</li>
-                    </ul>
-                </div>
-            </div> -->
-        <!-- <div class="col-md-4">
-                <div class="simple-card text-center">
-                    <h6>Annotation Types</h6>
-                    <p class="small">Available data includes:</p>
-                    <ul class="small text-left">
-                        <li>Chemical structures</li>
-                        <li>Reaction mechanisms</li>
-                        <li>Taxonomic information</li>
-                        <li>Functional classifications</li>
-                    </ul>
-                </div>
+
+            <div class="highlight-box mb-4">
+                <h6><i class="fa fa-exclamation-triangle"></i> Understanding Branch Length & Placement Quality</h6>
+                <p class="small mb-1">
+                    Each placement features a <strong>pendant length</strong>—the branch connecting the query to the
+                    placement
+                    node/leaf.
+                </p>
+                <ul class="small mb-1">
+                    <li>A long pendant length suggests greater evolutionary distance from the placement clade.</li>
+                    <li>This may indicate the query is not well represented by the clade’s features; interpret with
+                        caution.
+                    </li>
+                    <li>Datasets are <span style="color:#7B1B38;font-weight:600;">highlighted in red</span> when the
+                        best
+                        placement has a pendant length &gt; 1.</li>
+                </ul>
             </div>
-        </div> -->
+
+
+
+            <h6><i class="fa fa-table"></i> Results Table</h6>
+            <img src="{{ url_for('static', filename='pictures/results.png') }}" class="img-fluid my-2"
+                alt="Results Table" style="max-width: 700px; display: block; margin-left: auto; margin-right: auto;">
+
+            <li>Displays all matching datasets.</li>
+            <li>Shows the LWR of the best placement for each.</li>
+            <li>If a query matches multiple trees, only the placement with the shortest pendant length
+                is shown
+                by default.</li>
+            <li>You can toggle to display all alternative placements.</li>
+
+
+
+
+
+            <h6><i class="fa fa-tree"></i> Tree Visualization</h6>
+            <ul class="small">
+                <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">red circles</span>
+                    on the
+                    phylogenetic tree.</li>
+                <li>Circle size reflects the relative likelihood of each placement.</li>
+                <li>If there is one dominant placement, only that is shown by default; others can be
+                    revealed by
+                    clicking “Show all placements”.</li>
+            </ul>
+            <img src="{{ url_for('static', filename='pictures/tree_placement.png') }}" alt="Tree Placement"
+                class="img-fluid my-2">
+
         </section>
     </div>
 </div>
