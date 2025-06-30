@@ -2,30 +2,96 @@
 {% extends "base.html" %}
 {% block content %}
 <style>
+    .centered-page-container {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
     .form-container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 20px; /* Add space between the header and the form */
+        margin-top: 20px;
+        text-align: center;
     }
+
     .form-container textarea,
     .form-container input[type="file"],
     .form-container input[type="email"],
     .form-container input[type="submit"] {
-        margin-bottom: 10px; /* Add space between form elements */
-        width: 80%; /* Make the form elements wider */
+        margin-bottom: 10px;
+        width: 600px;
+        max-width: 90vw;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .example-btn {
+        margin-top: 10px;
+        margin-bottom: 20px;
+        background-color: var(--bright-color, #7B1B38);
+        color: var(--background-light, #E0E0E0);
+        border: none;
+        border-radius: 5px;
+        padding: 6px 18px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .example-btn:hover {
+        background-color: #a61e37;
+    }
+
+    .explanation {
+        max-width: 600px;
+        margin: 30px auto 10px auto;
+        text-align: center;
+        color: #333;
+        font-size: 1.08em;
+    }
+
+    .warning-message {
+        background-color: rgba(123, 27, 56, 0.08);
+        border-left: 4px solid #7B1B38;
+        color: #7B1B38;
+        padding: 12px 18px;
+        margin: 20px auto 10px auto;
+        max-width: 600px;
+        border-radius: 6px;
+        font-size: 1em;
+        text-align: center;
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
-<div class="form-container">
-    <form action="/submit" method="post" enctype="multipart/form-data">
-        <!-- <textarea name="sequence" rows="4" cols="50"></textarea>
-        <input type="submit" value="Submit" class="btn btn-primary"> -->
-        <textarea name="sequence" placeholder="Paste FASTA protein sequence here" rows="4" cols="50"></textarea>></textarea><br>
-        <input type="file" name="file" placeholder="Upload FASTA file"><br>
-        <input type="email" name="email" placeholder="Optional: Enter your email"><br>
-        <input type="submit" value="Submit" class="active-button">
-    </form>
+<div class="centered-page-container">
+    <div class="warning-message">
+        <strong>Notice:</strong> Due to current server issues, analysis runs may be extremely slow. We are working to
+        resolve this as soon as possible. Thank you for your patience!
+    </div>
+    <div class="explanation">
+        Upload one or multiple protein sequences in FASTA format to run them against the PhyloNaP database and classify
+        them on phylogenetic trees.
+    </div>
+    <div style="display: flex; justify-content: center;">
+        <a href="https://phylonap.cs.uni-tuebingen.de/results/9ad3def7-b155-4a66-aa12-3fddc0973851" target="_blank"
+            class="example-btn">
+            Example result
+        </a>
+    </div>
+    <div class="form-container">
+        <form action="/submit" method="post" enctype="multipart/form-data">
+            <textarea name="sequence" placeholder="Paste FASTA protein sequence here" rows="4" cols="50"></textarea><br>
+            <input type="file" name="file" placeholder="Upload FASTA file" multiple><br>
+            <input type="email" name="email" placeholder="Optional: Enter your email"><br>
+            <input type="submit" value="Submit" class="active-button">
+        </form>
+    </div>
 </div>
 {% endblock %}
