@@ -21,7 +21,7 @@ async function main() {
     let showingAllPlacements = false;
     let bubbleSize; // Declare bubbleSize at module level
     let currentTree; // Keep reference to current tree
-    let treshold_to_display = 0.3
+    let treshold_to_display = 0.5; // Set threshold for high-confidence placements
 
     if (placements && Array.isArray(placements[0].p)) {
 
