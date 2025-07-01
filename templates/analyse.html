@@ -87,7 +87,20 @@
     </div>
     <div class="form-container">
         <form action="/submit" method="post" enctype="multipart/form-data">
-            <textarea name="sequence" placeholder="Paste FASTA protein sequence here" rows="4" cols="50"></textarea><br>
+            <button type="button" class="example-btn" style="margin-bottom:10px;" onclick="document.getElementById('example-seq').value = `>PE0000338596
+MMIRDVVIVGGGTAGWMTATYLKTAFQDRISVTLVESAAVGTIGVGEATFSTIRHFFDYL
+GLDEREWMPQCSGSYKLAIKYDNWRGDGSHFFHPFERLRTSDGFTAAEWNLALGDPTESF
+DRGSFITPYLCEAQRSPRMLDGSLFTASLDGELGRSTLDEQRAQFPYAYHFDAALMARYL
+TKLGVAQGVRHVVDDVVGVGQDERGWITHVSTRDQGDVTGDLFVDCTGFRGLLINQTLKE
+KFVSFTDVLPNNRAVALRVPRDMAEHGIAPYTRATAKDAGWIWTIPLYGRIGTGYVYSDE
+FCEPEEAERTLREFAAPGQDDLQANHIRMRIGRNERSWVNNCVAVGLSSGFVEPLESTGI
+FFIQHAIEQLVKHFPDNTWDETLIRGYNDKVARVIDGVKEFLVLHYVASPRQDTDYWRET
+KVRAIPDGLAERLETAAVRLLDESTIYPYYHGFEVYSWITICLGMGLAPKSPRPALAHID
+PTRASAELAAIRADAERLVSTLPSAYEYLSTIQPAAEG`;">
+                Load example sequence
+            </button>
+            <textarea id="example-seq" name="sequence" placeholder="Paste FASTA protein sequence here" rows="4"
+                cols="50"></textarea><br>
             <input type="file" name="file" placeholder="Upload FASTA file" multiple><br>
             <input type="email" name="email" placeholder="Optional: Enter your email"><br>
             <input type="submit" value="Submit" class="active-button">
