@@ -21,13 +21,15 @@ async function main() {
     let showingAllPlacements = false;
     let bubbleSize; // Declare bubbleSize at module level
     let currentTree; // Keep reference to current tree
+    let treshold_to_display = 0.3
 
     if (placements && Array.isArray(placements[0].p)) {
+
         // Extract all placement data [edge_num, likelihood, like_weight_ratio, distal_length, pendant_length]
         allPlacements = placements[0].p.map(subArray => [subArray[0], subArray[1], subArray[2], subArray[3], subArray[4]]);
 
         // Filter high confidence placements (like_weight_ratio > 0.3)
-        highConfidencePlacements = allPlacements.filter(placement => placement[2] > 0.3);
+        highConfidencePlacements = allPlacements.filter(placement => placement[2] > treshold_to_display);
 
         // Determine what to display initially
         if (highConfidencePlacements.length > 0) {
@@ -72,6 +74,7 @@ async function main() {
 
         // Update placement container display
         updatePlacementContainer(placementsToShow, showAll);
+        //displayPlacementSummary(placements);
 
         // Update tree visualization
         updateTreeVisualization(bubbleData);
@@ -95,24 +98,43 @@ async function main() {
             if (showAll) {
                 statusHeader = `<strong>Showing all ${allPlacements.length} placements</strong><br>`;
             } else {
-                statusHeader = `<strong>Showing ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > 0.3)</strong><br>`;
+                statusHeader = `<strong>Showing ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})</strong><br>`;
             }
         } else {
-            statusHeader = `<strong>Showing all ${allPlacements.length} placements (none with like_weight_ratio > 0.3)</strong><br>`;
+            statusHeader = `<strong>Showing all ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})</strong><br>`;
         }
 
-        // Create data rows
-        const headers = ["edge_num", "likelihood", "like_weight_ratio", "distal_length", "pendant_length"];
+        // Helper for formatting numbers
+        function formatNumber(val) {
+            if (Math.abs(val) < 0.001 && val !== 0) {
+                return Number(val).toExponential(2);
+            } else {
+                return Number(val).toFixed(4).replace(/\.?0+$/, '');
+            }
+        }
+
+        // Add numbering to each row
         const dataRows = placementsToShow.map((values, index) => {
-            const formattedValues = values.map((val, i) => {
-                const formattedVal = typeof val === 'number' ? val.toExponential(3) : val;
-                return `${headers[i]}: ${formattedVal}`;
-            });
-            return `${index + 1}. ${formattedValues.join(' | ')}`;
-        }).join('<br>');
+            const likeWeight = formatNumber(values[2]);
+            const pendantLen = formatNumber(values[4]);
+            return `
+                <li style="margin-bottom: 4px;">
+                    <span style="font-weight:600; color:#7B1B38;">${index + 1}.</span>
+                    <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
+                    <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+                </li>
+            `;
+        }).join('');
+
+        // Wrap in a styled box similar to Metadata summary
+        const summaryBox = `
+            <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
+                ${dataRows}
+            </ul>
+        `;
 
         // Update container content
-        placementContainer.innerHTML = toggleButton + statusHeader + '<br>' + dataRows;
+        placementContainer.innerHTML = toggleButton + statusHeader + summaryBox;
 
         // Add event listener to toggle button
         const toggleBtn = document.getElementById('toggle-placements-btn');
@@ -235,5 +257,59 @@ async function main() {
         });
     });
 }
+
+function displayPlacementSummary(placements) {
+    const placementContainer = document.getElementById('placement-container');
+    if (!placementContainer) return;
+
+    placementContainer.innerHTML = ''; // Clear previous
+
+    if (!placements || placements.length === 0) {
+        placementContainer.innerHTML = '<p style="color: #6c757d; font-style: italic;">No placements available</p>';
+        return;
+    }
+
+    // Helper for formatting numbers
+    function formatNumber(val) {
+        if (Math.abs(val) < 0.001 && val !== 0) {
+            return Number(val).toExponential(2);
+        } else {
+            return Number(val).toFixed(4).replace(/\.?0+$/, '');
+        }
+    }
+
+    // Build the summary box
+    const summarySection = document.createElement('div');
+    summarySection.style.marginBottom = '15px';
+    summarySection.style.padding = '10px 18px';
+    summarySection.style.backgroundColor = '#f8f9fa';
+    summarySection.style.borderRadius = '6px';
+    summarySection.style.border = '1px solid #dee2e6';
+
+    const list = document.createElement('ul');
+    list.style.margin = '0';
+    list.style.paddingLeft = '20px';
+    list.style.fontSize = '13px';
+    list.style.lineHeight = '1.5';
+
+    placements.forEach((placement) => {
+        const likeWeight = formatNumber(placement[2]);
+        const pendantLen = formatNumber(placement[4]);
+
+        const listItem = document.createElement('li');
+        listItem.style.marginBottom = '4px';
+
+        listItem.innerHTML = `
+      <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
+      <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+    `;
+
+        list.appendChild(listItem);
+    });
+
+    summarySection.appendChild(list);
+    placementContainer.appendChild(summarySection);
+}
+
 
 main();
