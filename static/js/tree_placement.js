@@ -294,26 +294,26 @@ function updatePlacementContainer(placementsToShow, showAll) {
         const buttonText = showAll ?
             `Show only high-confidence (${highConfidencePlacements.length})` :
             `Show all placements (${allPlacements.length})`;
-        confidenceToggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button>`;
+        confidenceToggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button><br>`;
     }
 
-    // Create toggle button for best vs all placements
-    const placementToggleText = showAllPlacements ?
-        `Show best only` :
-        `Show all ${placementsToShow.length} placements`;
-    const placementToggleButton = `<button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-primary mb-2 ml-2">${placementToggleText}</button><br>`;
-
-    // Create status header
+    // Create status header (smaller font)
     let statusHeader = '';
     if (highConfidencePlacements.length > 0) {
         if (showAll) {
-            statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} total placements</strong><br>`;
+            statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} total placements${!showAllPlacements ? ' (best placement has the biggest circle on the tree)' : ''}</strong></div>`;
         } else {
-            statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})</strong><br>`;
+            statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})${!showAllPlacements ? ' - best placement has the biggest circle on the tree' : ''}</strong></div>`;
         }
     } else {
-        statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})</strong><br>`;
+        statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})${!showAllPlacements ? ' - best placement has the biggest circle on the tree' : ''}</strong></div>`;
     }
+
+    // Create toggle button for best vs all placements (styled as non-active/muted)
+    const placementToggleText = showAllPlacements ?
+        `Show best only` :
+        `Show all ${placementsToShow.length} placements`;
+    const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #6c757d; border-color: #dee2e6; background-color: transparent;">${placementToggleText}</button></div>`;
 
     // Helper for formatting numbers
     function formatNumber(val) {
@@ -364,8 +364,8 @@ function updatePlacementContainer(placementsToShow, showAll) {
         `;
     }
 
-    // Update container content
-    placementContainer.innerHTML = confidenceToggleButton + placementToggleButton + statusHeader + summaryBox;
+    // Update container content (button moved under statusHeader)
+    placementContainer.innerHTML = confidenceToggleButton + statusHeader + placementToggleButton + summaryBox;
 
     // Add event listener to confidence toggle button
     const toggleBtn = document.getElementById('toggle-placements-btn');
