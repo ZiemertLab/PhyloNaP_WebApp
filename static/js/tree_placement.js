@@ -527,7 +527,7 @@ function MRSA_summury(displayedPlacements, placements, tree, metadata) {
 
         const filteredTable = getMetadataSubset(mrcaLeafNames, metadata);
         const metadataSummaryResult = getMetadataSummary(filteredTable);
-        displayMetadataSummary(metadataSummaryResult);
+        displayMetadataSummary(metadataSummaryResult, true);
         // ...display or use metadataSummaryResult as needed...
     } else {
         console.log("No MRCA node found for edge numbers:", displayedEdgeNums);

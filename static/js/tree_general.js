@@ -1747,7 +1747,7 @@ const getMetadataSummary = function (filteredTable) {
 //   }
 // }
 
-const displayMetadataSummary = function (summary) {
+const displayMetadataSummary = function (summary, showPlacementHeader = false) {
   const summaryContainer = document.getElementById('summary-container');
   const metadataHeading = document.getElementById('metadata-summary-heading');
 
@@ -1782,6 +1782,18 @@ const displayMetadataSummary = function (summary) {
     } else if (metadataHeading) {
       metadataHeading.style.display = 'none';
       return; // Exit early if no valid columns
+    }
+
+    // Add Placement status header if requested
+    if (showPlacementHeader && validColumns.length > 0) {
+      const statusHeader = document.createElement('div');
+      statusHeader.style.cssText = `
+            font-size: 12px; 
+            color: #6c757d; 
+            margin-bottom: 8px;
+          `;
+      statusHeader.innerHTML = '<strong>For the clade of placements</strong>';
+      summaryContainer.appendChild(statusHeader);
     }
 
     // Sort columns by diversity score (ascending - least diverse first)
