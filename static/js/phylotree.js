@@ -360,7 +360,7 @@
     getNodeByName: getNodeByName,
     assignAttributes: assignAttributes,
     isLeafNode: isLeafNode,
-    updateKeyName: updateKeyName,
+    modifySelection: modifySelection,
     clearInternalNodes: clearInternalNodes,
     selectAllDescendants: selectAllDescendants$1
   });
@@ -2024,6 +2024,7 @@
     updateHasHiddenNodes: updateHasHiddenNodes,
     showInternalName: showInternalName,
     nodeSpan: nodeSpan,
+    modifySelection: modifySelection,
     reclassNode: reclassNode,
     nodeVisible: nodeVisible,
     nodeNotshown: nodeNotshown,
@@ -2151,7 +2152,8 @@
   var clades = /*#__PURE__*/Object.freeze({
     __proto__: null,
     cladeCssSelectors: cladeCssSelectors,
-    updateCollapsedClades: updateCollapsedClades
+    updateCollapsedClades: updateCollapsedClades,
+    modifySelection: modifySelection
   });
 
   function drawEdge(container, edge, transition) {
@@ -2290,6 +2292,7 @@
     drawEdge: drawEdge,
     reclassEdge: reclassEdge,
     initializeEdgeLabels: initializeEdgeLabels,
+    modifySelection: modifySelection,
     syncEdgeLabels: syncEdgeLabels,
     edgeVisible: edgeVisible,
     edgeCssSelectors: edgeCssSelectors,
@@ -2472,6 +2475,7 @@
     d3PhylotreeTriggerLayout: d3PhylotreeTriggerLayout,
     d3PhylotreeEventListener: d3PhylotreeEventListener,
     d3PhylotreeAddEventListener: d3PhylotreeAddEventListener,
+    modifySelection: modifySelection,
     d3PhylotreeSvgTranslate: d3PhylotreeSvgTranslate,
     d3PhylotreeSvgRotate: d3PhylotreeSvgRotate
   });
@@ -2991,6 +2995,7 @@
     getSelection: getSelection,
     selectAllDescendants: selectAllDescendants,
     selectionCallback: selectionCallback,
+    getSelection: getSelection,
     clearAllSelections: clearAllSelections // Export the function here
   });
 
@@ -3127,6 +3132,10 @@
       this.initializeEdgeLabels();
       this.update();
       d3PhylotreeAddEventListener();
+
+      // Bind modifySelection properly with all required context
+      // Bind modifySelection with correct context and default parameters
+      this.modifySelection = modifySelection.bind(this);
     }
 
     pad_height() {
