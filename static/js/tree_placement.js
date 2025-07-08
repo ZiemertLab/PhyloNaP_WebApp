@@ -311,10 +311,11 @@ function updatePlacementContainer(placementsToShow, showAll) {
 
     // Create toggle button for best vs all placements (styled as non-active/muted)
     const placementToggleText = showAllPlacements ?
-        `Show best only` :
+        `Show the best only` :
         `Show all ${placementsToShow.length} placements`;
-    const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #6c757d; border-color: #dee2e6; background-color: transparent;">${placementToggleText}</button></div>`;
+    // const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #6c757d; border-color: #dee2e6; background-color: transparent;">${placementToggleText}</button></div>`;
 
+    const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #495057; border-color: #6c757d; background-color: #f8f9fa; padding: 6px 12px; font-weight: 500;">${placementToggleText}</button></div>`;
     // Helper for formatting numbers
     function formatNumber(val) {
         if (Math.abs(val) < 0.001 && val !== 0) {
@@ -366,6 +367,7 @@ function updatePlacementContainer(placementsToShow, showAll) {
 
     // Update container content (button moved under statusHeader)
     placementContainer.innerHTML = confidenceToggleButton + statusHeader + placementToggleButton + summaryBox;
+
 
     // Add event listener to confidence toggle button
     const toggleBtn = document.getElementById('toggle-placements-btn');
