@@ -6,6 +6,7 @@ let showingAllPlacements = false;
 let bubbleSize;
 let currentTree;
 let treshold_to_display = 0.5;
+let treshold_to_summary = 0.8;
 
 async function main() {
 
@@ -279,25 +280,39 @@ function updatePlacementDisplay(placementsToShow, showAll = false) {
 function updatePlacementContainer(placementsToShow, showAll) {
     const placementContainer = document.getElementById('placement-container');
 
-    // Create toggle button if high confidence placements exist
-    let toggleButton = '';
+    // Add state for showing best vs all placements
+    const showAllPlacements = placementContainer.dataset.showAllPlacements === 'true';
+
+    // Find the best placement (highest like_weight_ratio)
+    const bestPlacement = placementsToShow.reduce((best, current) =>
+        current[2] > best[2] ? current : best
+    );
+
+    // Create toggle button for high/all confidence placements
+    let confidenceToggleButton = '';
     if (highConfidencePlacements.length > 0 && highConfidencePlacements.length < allPlacements.length) {
         const buttonText = showAll ?
             `Show only high-confidence (${highConfidencePlacements.length})` :
             `Show all placements (${allPlacements.length})`;
-        toggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button><br>`;
+        confidenceToggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button>`;
     }
+
+    // Create toggle button for best vs all placements
+    const placementToggleText = showAllPlacements ?
+        `Show best only` :
+        `Show all ${placementsToShow.length} placements`;
+    const placementToggleButton = `<button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-primary mb-2 ml-2">${placementToggleText}</button><br>`;
 
     // Create status header
     let statusHeader = '';
     if (highConfidencePlacements.length > 0) {
         if (showAll) {
-            statusHeader = `<strong>Showing all ${allPlacements.length} placements</strong><br>`;
+            statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} total placements</strong><br>`;
         } else {
-            statusHeader = `<strong>Showing ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})</strong><br>`;
+            statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})</strong><br>`;
         }
     } else {
-        statusHeader = `<strong>Showing all ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})</strong><br>`;
+        statusHeader = `<strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})</strong><br>`;
     }
 
     // Helper for formatting numbers
@@ -309,37 +324,70 @@ function updatePlacementContainer(placementsToShow, showAll) {
         }
     }
 
-    // Add numbering to each row
-    const dataRows = placementsToShow.map((values, index) => {
-        const likeWeight = formatNumber(values[2]);
-        const pendantLen = formatNumber(values[4]);
-        return `
+    let summaryBox;
+
+    if (showAllPlacements) {
+        // Show all placements with numbering
+        const dataRows = placementsToShow.map((values, index) => {
+            const likeWeight = formatNumber(values[2]);
+            const pendantLen = formatNumber(values[4]);
+            return `
                 <li style="margin-bottom: 4px;">
                     <span style="font-weight:600; color:#7B1B38;">${index + 1}.</span>
                     <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
                     <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
                 </li>
             `;
-    }).join('');
+        }).join('');
 
-    // Wrap in a styled box similar to Metadata summary
-    const summaryBox = `
+        summaryBox = `
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
                 ${dataRows}
             </ul>
         `;
+    } else {
+        // Show only the best placement
+        const likeWeight = formatNumber(bestPlacement[2]);
+        const pendantLen = formatNumber(bestPlacement[4]);
+        const dataRow = `
+            <li style="margin-bottom: 4px;">
+                <span style="font-weight:600; color:#7B1B38;">Best:</span>
+                <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
+                <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+            </li>
+        `;
+
+        summaryBox = `
+            <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
+                ${dataRow}
+            </ul>
+        `;
+    }
 
     // Update container content
-    placementContainer.innerHTML = toggleButton + statusHeader + summaryBox;
+    placementContainer.innerHTML = confidenceToggleButton + placementToggleButton + statusHeader + summaryBox;
 
-    // Add event listener to toggle button
+    // Add event listener to confidence toggle button
     const toggleBtn = document.getElementById('toggle-placements-btn');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', function () {
             showingAllPlacements = !showingAllPlacements;
             const newPlacements = showingAllPlacements ? allPlacements : highConfidencePlacements;
             updatePlacementDisplay(newPlacements, showingAllPlacements);
-            MRSA_summury(newPlacements, placements, tree, metadata); // <-- update here as well
+            MRSA_summury(newPlacements, placements, tree, metadata);
+        });
+    }
+
+    // Add event listener to placement view toggle button
+    const placementViewToggleBtn = document.getElementById('toggle-placement-view-btn');
+    if (placementViewToggleBtn) {
+        placementViewToggleBtn.addEventListener('click', function () {
+            // Toggle the state
+            const currentState = placementContainer.dataset.showAllPlacements === 'true';
+            placementContainer.dataset.showAllPlacements = !currentState;
+
+            // Refresh the display
+            updatePlacementContainer(placementsToShow, showAll);
         });
     }
 }
@@ -449,25 +497,6 @@ function MRSA_summury(displayedPlacements, placements, tree, metadata) {
     if (mrcaNode) {
         // Now you have all leaves under the MRCA node!
         const terminalNodes = tree.selectAllDescendants(mrcaNode, true, true);
-        //visually select the clade in the tree
-        //tree.modifySelection(terminalNodes);
-        // if (currentTree && typeof currentTree.modifySelection === "function") {
-        //     currentTree.modifySelection(terminalNodes);
-        // }
-        // else {
-        //     console.warn("currentTree.modifySelection is not a function");
-        // }
-        // if (tree && typeof tree.modifySelection === "function") {
-        //     tree.modifySelection(terminalNodes);
-        // }
-        // else {
-        //     console.warn("currentTree.modifySelection is not a function");
-        // }
-        // Instead of currentTree.modifySelection(terminalNodes)
-        // Call the function directly with the correct tree context
-        // Debug what currentTree contains
-
-
 
 
         console.log("currentTree type:", typeof currentTree);
