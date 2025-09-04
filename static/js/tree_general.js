@@ -822,14 +822,34 @@ window.createExternalLinksTable = function (metadata) {
   });
 
   // Add rows to table
-  Object.keys(linksBySource).sort().forEach(source => {
+  // Define custom sort order
+  const sortOrder = ['MITE', 'MIBiG', 'UniProt', 'PanBGC'];
+
+  // Add rows to table
+  Object.keys(linksBySource).sort((a, b) => {
+    const indexA = sortOrder.indexOf(a);
+    const indexB = sortOrder.indexOf(b);
+
+    // If both sources are in our sort order, sort by their position
+    if (indexA !== -1 && indexB !== -1) {
+      return indexA - indexB;
+    }
+
+    // If only one is in our sort order, it comes first
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+
+    // If neither is in our sort order, sort alphabetically
+    return a.localeCompare(b);
+  }).forEach(source => {
     linksBySource[source].forEach((link, index) => {
       const row = document.createElement('tr');
 
-      // ID column
+      // ID column - show the actual sequence ID from metadata
       const idCell = document.createElement('td');
-      idCell.textContent = link.id;
+      idCell.textContent = link.sequenceId; // This is the actual ID from metadata
       idCell.style.fontFamily = 'monospace';
+      idCell.style.fontSize = '11px';
       row.appendChild(idCell);
 
       // Source column (only show for first item of each source)
@@ -840,14 +860,16 @@ window.createExternalLinksTable = function (metadata) {
       }
       row.appendChild(sourceCell);
 
-      // Link column
+      // Link column - use the cleaned ID as the link text
       const linkCell = document.createElement('td');
       const linkElement = document.createElement('a');
       linkElement.href = link.url;
       linkElement.target = '_blank';
-      linkElement.textContent = 'View';
+      linkElement.textContent = link.id; // This is the cleaned ID that goes in the URL
       linkElement.style.color = '#3D3D3D';
       linkElement.style.textDecoration = 'underline';
+      linkElement.style.fontFamily = 'monospace';
+      linkElement.style.fontSize = '11px';
       linkElement.title = `${link.description} - ${link.id}`;
 
       // Add external link icon if Font Awesome is available
