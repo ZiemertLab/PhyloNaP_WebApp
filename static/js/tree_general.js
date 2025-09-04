@@ -644,6 +644,332 @@ window.checkSVGSize = function () {
 //   .attr("y2", 0)
 //   .attr("stroke", "black");
 
+// Add this function to tree_general.js
+
+/**
+ * Create external links table from metadata
+ * @param {Object} metadata - The metadata object containing sequence information
+ */
+window.createExternalLinksTable = function (metadata) {
+  console.log('createExternalLinksTable called with:', metadata);
+
+  const hyperlinkContainer = document.getElementById('hyperlink-container');
+
+  if (!hyperlinkContainer) {
+    console.error('hyperlink-container element not found');
+    return;
+  }
+
+  // Clear existing content except the header
+  const header = hyperlinkContainer.querySelector('h4');
+  hyperlinkContainer.innerHTML = '';
+  if (header) {
+    hyperlinkContainer.appendChild(header);
+  }
+
+  // Handle both array and object formats
+  let metadataArray = [];
+  if (Array.isArray(metadata)) {
+    metadataArray = metadata;
+  } else if (metadata && typeof metadata === 'object') {
+    // Convert object to array
+    metadataArray = Object.values(metadata);
+  } else {
+    console.warn('Invalid metadata format:', typeof metadata);
+    const noDataMsg = document.createElement('p');
+    noDataMsg.textContent = 'No external links available - invalid metadata format';
+    noDataMsg.style.fontStyle = 'italic';
+    noDataMsg.style.color = '#666';
+    hyperlinkContainer.appendChild(noDataMsg);
+    return;
+  }
+
+  if (metadataArray.length === 0) {
+    const noDataMsg = document.createElement('p');
+    noDataMsg.textContent = 'No external links available - empty metadata';
+    noDataMsg.style.fontStyle = 'italic';
+    noDataMsg.style.color = '#666';
+    hyperlinkContainer.appendChild(noDataMsg);
+    return;
+  }
+
+  console.log('Processing metadata array with', metadataArray.length, 'items');
+  console.log('First item keys:', Object.keys(metadataArray[0] || {}));
+
+  // Define link templates for different ID types
+  const linkTemplates = {
+    'Uniprot_ID': {
+      name: 'UniProt',
+      url: 'https://www.uniprot.org/uniprotkb/{id}',
+      description: 'Protein sequence and functional information'
+    },
+    'mibig': {
+      name: 'MIBiG',
+      url: 'https://mibig.secondarymetabolites.org/repository/{id}',
+      description: 'Biosynthetic gene cluster information'
+    },
+    'PDB_IDs': {
+      name: 'PDB',
+      url: 'https://www.rcsb.org/structure/{id}',
+      description: 'Protein structure data'
+    },
+    'MITE_ID': {
+      name: 'MITE',
+      url: 'https://mite.bioinformatics.nl/repository/{id}',
+      description: 'Metabolic information'
+    },
+    'FAM_ID': {
+      name: 'PanBGC',
+      url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
+      description: 'Protein family information'
+    }
+  };
+
+  // Collect all external links
+  const externalLinks = [];
+
+  // Iterate through all sequences in metadata
+  metadataArray.forEach((sequenceData, index) => {
+    if (!sequenceData || typeof sequenceData !== 'object') {
+      console.warn(`Invalid sequence data at index ${index}:`, sequenceData);
+      return;
+    }
+
+    const sequenceId = sequenceData.ID || sequenceData.id || `sequence_${index}`;
+
+    // Check each column type for IDs
+    Object.keys(linkTemplates).forEach(columnName => {
+      const columnValue = sequenceData[columnName];
+
+      if (columnValue &&
+        columnValue !== '' &&
+        columnValue !== 'NaN' &&
+        columnValue !== 'nan' &&
+        columnValue !== 'null' &&
+        columnValue !== null &&
+        columnValue !== 'undefined') {
+
+        const template = linkTemplates[columnName];
+
+        // Convert to string and handle multiple IDs separated by semicolon, comma, or pipe
+        const rawIds = String(columnValue);
+        const ids = rawIds.split(/[;,|]/).map(id => id.trim()).filter(id => id && id !== '');
+
+        ids.forEach(id => {
+          // Clean the ID (remove any prefixes/suffixes if needed)
+          const cleanId = cleanIdentifier(id, columnName);
+
+          if (cleanId) {
+            externalLinks.push({
+              id: cleanId,
+              originalId: id,
+              source: template.name,
+              url: template.url.replace('{id}', cleanId),
+              description: template.description,
+              sequenceId: sequenceId
+            });
+          }
+        });
+      }
+    });
+  });
+
+  console.log('Found', externalLinks.length, 'external links');
+
+  // Remove duplicates
+  const uniqueLinks = removeDuplicateLinks(externalLinks);
+
+  console.log('After removing duplicates:', uniqueLinks.length, 'links');
+
+  if (uniqueLinks.length === 0) {
+    const noLinksMsg = document.createElement('p');
+    noLinksMsg.textContent = 'No external links found in metadata';
+    noLinksMsg.style.fontStyle = 'italic';
+    noLinksMsg.style.color = '#666';
+    hyperlinkContainer.appendChild(noLinksMsg);
+    return;
+  }
+
+  // Create table
+  const table = document.createElement('table');
+  table.className = 'table table-sm table-striped';
+  table.style.fontSize = '12px';
+  table.style.marginTop = '10px';
+
+  // Create header
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  ['ID', 'Source', 'Link'].forEach(headerText => {
+    const th = document.createElement('th');
+    th.textContent = headerText;
+    th.style.backgroundColor = '#f8f9fa';
+    th.style.fontWeight = 'bold';
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // Create body
+  const tbody = document.createElement('tbody');
+
+  // Group links by source for better organization
+  const linksBySource = {};
+  uniqueLinks.forEach(link => {
+    if (!linksBySource[link.source]) {
+      linksBySource[link.source] = [];
+    }
+    linksBySource[link.source].push(link);
+  });
+
+  // Add rows to table
+  Object.keys(linksBySource).sort().forEach(source => {
+    linksBySource[source].forEach((link, index) => {
+      const row = document.createElement('tr');
+
+      // ID column
+      const idCell = document.createElement('td');
+      idCell.textContent = link.id;
+      idCell.style.fontFamily = 'monospace';
+      row.appendChild(idCell);
+
+      // Source column (only show for first item of each source)
+      const sourceCell = document.createElement('td');
+      if (index === 0) {
+        sourceCell.textContent = link.source;
+        sourceCell.style.fontWeight = 'bold';
+      }
+      row.appendChild(sourceCell);
+
+      // Link column
+      const linkCell = document.createElement('td');
+      const linkElement = document.createElement('a');
+      linkElement.href = link.url;
+      linkElement.target = '_blank';
+      linkElement.textContent = 'View';
+      linkElement.style.color = '#3D3D3D';
+      linkElement.style.textDecoration = 'underline';
+      linkElement.title = `${link.description} - ${link.id}`;
+
+      // Add external link icon if Font Awesome is available
+      if (typeof FontAwesome !== 'undefined' || document.querySelector('link[href*="font-awesome"]')) {
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-external-link';
+        icon.style.marginLeft = '4px';
+        icon.style.fontSize = '10px';
+        linkElement.appendChild(icon);
+      }
+
+      linkCell.appendChild(linkElement);
+      row.appendChild(linkCell);
+
+      tbody.appendChild(row);
+    });
+  });
+
+  table.appendChild(tbody);
+  hyperlinkContainer.appendChild(table);
+
+  // Add a summary
+  const summary = document.createElement('p');
+  summary.style.fontSize = '11px';
+  summary.style.color = '#666';
+  summary.style.marginTop = '10px';
+  summary.textContent = `Found ${uniqueLinks.length} external links from ${Object.keys(linksBySource).length} sources`;
+  hyperlinkContainer.appendChild(summary);
+
+  console.log('External links table created successfully');
+};
+
+/**
+ * Clean identifier based on the column type
+ * @param {string} id - Raw identifier
+ * @param {string} columnName - Column name to determine cleaning strategy
+ * @returns {string} - Cleaned identifier
+ */
+function cleanIdentifier(id, columnName) {
+  if (!id || typeof id !== 'string') return '';
+
+  // Remove common prefixes and clean up
+  let cleanId = id.trim();
+
+  switch (columnName) {
+    case 'Uniprot_ID':
+      // UniProt IDs are typically 6-10 characters, alphanumeric
+      cleanId = cleanId.replace(/^(UniProt:|UP:)/i, '');
+      break;
+    case 'mibig':
+      // MIBiG IDs are typically BGC followed by 7 digits
+      cleanId = cleanId.replace(/^(MIBiG:|BGC-)/i, '');
+      if (!cleanId.startsWith('BGC') && /^\d{7}$/.test(cleanId)) {
+        cleanId = 'BGC' + cleanId;
+      }
+      break;
+    case 'PDB_IDs':
+      // PDB IDs are 4 characters
+      cleanId = cleanId.replace(/^(PDB:|pdb:)/i, '');
+      cleanId = cleanId.toUpperCase();
+      break;
+    case 'MITE_ID':
+      // Clean MITE IDs
+      cleanId = cleanId.replace(/^(MITE:|mite:)/i, '');
+      break;
+    case 'FAM_ID':
+      // Pfam IDs typically start with PF
+      cleanId = cleanId.replace(/^(Pfam:|PF:)/i, '');
+      if (!cleanId.startsWith('PF') && /^\d+/.test(cleanId)) {
+        cleanId = 'PF' + cleanId.padStart(5, '0');
+      }
+      break;
+  }
+
+  return cleanId;
+}
+
+/**
+ * Remove duplicate links based on ID and source
+ * @param {Array} links - Array of link objects
+ * @returns {Array} - Array of unique links
+ */
+function removeDuplicateLinks(links) {
+  const seen = new Set();
+  return links.filter(link => {
+    const key = `${link.source}:${link.id}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * Update external links when a node is selected
+ * @param {Object} nodeData - Selected node data
+ * @param {Object} fullMetadata - Complete metadata object
+ */
+window.updateExternalLinksForNode = function (nodeData, fullMetadata) {
+  if (!nodeData || !nodeData.name) {
+    // Show all links if no specific node is selected
+    createExternalLinksTable(fullMetadata);
+    return;
+  }
+
+  // Filter metadata for the selected node
+  const nodeMetadata = {};
+  if (fullMetadata[nodeData.name]) {
+    nodeMetadata[nodeData.name] = fullMetadata[nodeData.name];
+  }
+
+  createExternalLinksTable(nodeMetadata);
+};
+
+// Initialize external links table when page loads
+document.addEventListener('DOMContentLoaded', function () {
+  // This will be called when the tree is loaded and metadata is available
+  if (window.treeMetadata) {
+    createExternalLinksTable(window.treeMetadata);
+  }
+});
 
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
@@ -1291,6 +1617,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   // console.log(document.getElementById('biosyn-class-button'));
 
   // ['Enzyme_function', 'Species', 'biosyn_class'].forEach(id => {
+
+  // Annotation field in the tree-controls area - animate the buttons when clicked
   const buttonContainer = document.querySelector('.button-container') || document.getElementById('button-container') || document.body;
 
   metadataListArray.forEach(id => {
@@ -1495,6 +1823,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       }
     });
   })();
+  // Initialize external links with the metadata we already have
+  console.log('Initializing external links with metadata from addImagesAndMetadata');
+  window.treeMetadata = metadata;
+  if (window.createExternalLinksTable) {
+    createExternalLinksTable(metadata);
+  }
 }
 
 window.setupSaveImageButton = function () {
@@ -2148,207 +2482,15 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
   }
 }
 
-// Add this function to clear the metadata summary
-const clearMetadataSummary = function () {
-  const summaryContainer = document.getElementById('summary-container');
-  const metadataHeading = document.getElementById('metadata-summary-heading');
+// // Add this to your tree initialization code (likely in your main tree rendering function)
+// window.initializeExternalLinks = function (metadata) {
+//   // Store metadata globally for external links
+//   window.treeMetadata = metadata;
 
-  if (summaryContainer) {
-    summaryContainer.innerHTML = ''; // Clear content
-  }
-
-  if (metadataHeading) {
-    metadataHeading.style.display = 'none'; // Hide heading
-  }
-}
-
-// const displayMetadataSummary = function(summary) {
-//   const summaryContainer = document.getElementById('summary-container');
-//   if (summaryContainer) {
-//     summaryContainer.innerHTML = ''; // Clear previous content
-
-//     for (const [key, values] of Object.entries(summary)) {
-//       const columnDiv = document.createElement('div');
-//       columnDiv.classList.add('summary-column');
-
-//       const columnTitle = document.createElement('h3');
-//       columnTitle.textContent = key;
-
-//       // Create a toggle button
-//       const toggleButton = document.createElement('button');
-//       toggleButton.textContent = 'Toggle';
-//       toggleButton.onclick = () => {
-//         const contentDiv = columnDiv.querySelector('.content');
-//         if (contentDiv.style.display === 'none') {
-//           contentDiv.style.display = 'block';
-//         } else {
-//           contentDiv.style.display = 'none';
-//         }
-//       };
-
-//       columnDiv.appendChild(columnTitle);
-//       columnDiv.appendChild(toggleButton);
-
-//       const contentDiv = document.createElement('div');
-//       contentDiv.classList.add('content');
-
-//       for (const [value, count] of Object.entries(values)) {
-//         const valueDiv = document.createElement('div');
-//         valueDiv.textContent = `${value}: ${count}`;
-//         contentDiv.appendChild(valueDiv);
-//       }
-
-//       columnDiv.appendChild(contentDiv);
-//       summaryContainer.appendChild(columnDiv);
-//     }
-//   } else {
-//     console.error('summaryContainer element not found');
+//   // Initialize external links table
+//   if (window.createExternalLinksTable) {
+//     createExternalLinksTable(metadata);
 //   }
-// }
-window.checkForClusters = function (tree, node) {
-  // viewof diameter_threshold = slider({
-  //   min: 0.0,
-  //   max: 0.2,
-  //   precision: 3,
-  //   value: 0.045,
-  //   description: "Diameter Threshold"
-  // })
-
-  bootstrap_threshold = 70;
-  diameter_threshold = 0.06;
-  clusters = phylotree.phylopart(tree, bootstrap_threshold, diameter_threshold, node);
-  console.log('Clusters:', clusters);
-}
-window.getTerminalNodesArray = function (tree, metadata) {
-  let nodeNames = [];
-  document.addEventListener('terminalNodesSelected', event => {
-    nodeNames = [];
-    // Clear all previous selections
-
-    const terminal_nodes = event.detail;
-    // If no nodes selected, clear the summary
-    if (!terminal_nodes || terminal_nodes.length === 0) {
-      clearMetadataSummary();
-      return;
-    }
-    // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree, terminal_nodes);
-    terminal_nodes.forEach(node => {
-      nodeNames.push(node.data.name);
-    });
-    console.log('Node names:', nodeNames);
-    filteredTable = getMetadataSubset(nodeNames, metadata);
-    metadataSummaryResult = getMetadataSummary(filteredTable)
-    console.log('Metadata summary:', metadataSummaryResult);
-    displayMetadataSummary(metadataSummaryResult);
-  });
-  return nodeNames;
-}
-
-window.downloadSequences = function (tree, metadata) {
-  let nodeNames = [];
-  document.addEventListener('terminalNodesSelected', summaryEvent => {
-    nodeNames = [];
-    // Clear all previous selections
-
-    const terminal_nodes = summaryEvent.detail;
-    // Clear all previous selections except the new selection
-    phylotree.clearAllSelections(tree, terminal_nodes);
-    terminal_nodes.forEach(node => {
-      nodeNames.push(node.data.name);
-    });
-    console.log('Node names:', nodeNames);
-    // Send the node names to the backend to retrieve sequences
-
-    try {
-      // Prompt the user to enter a file name
-      const fileName = prompt('Enter a name for the file (default: nodeSequences.fasta):', 'nodeSequences.fasta') || 'nodeSequences.fasta';
-
-      (async function () {
-        const response = await fetch('/api/download_sequences', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ nodeNames }),
-        });
-      })();
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch sequences: ${response.statusText}`);
-      }
-
-      // Get the file blob from the response
-      const blob = await(async () => await response.blob())();
-
-      // Create a download link for the file
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName; // Use the user-provided file name
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-      console.log('File downloaded successfully');
-    } catch (error) {
-      console.error('Error downloading sequences:', error);
-    }
-  });
-  return nodeNames;
-}
-
-// // Add this function to get tree positioning information
-// window.getTreePositionInfo = function (tree) {
-//   if (!tree.display) {
-//     console.warn('Tree display not available');
-//     return null;
-//   }
-
-//   const display = tree.display;
-
-//   return {
-//     // Most distant leaf position (rightmost in linear layout)
-//     rightMostLeaf: display.right_most_leaf,
-
-//     // Tree extents (bounding box)
-//     extents: display._extents,
-
-//     // Scale information
-//     scales: display.scales,
-
-//     // Size information
-//     size: display.size,
-
-//     // Offsets (padding)
-//     offsets: display.offsets,
-//     leftOffset: display.options["left-offset"],
-
-//     // Font and spacing
-//     shownFontSize: display.shown_font_size,
-//     labelWidth: display.label_width,
-
-//     // Layout type
-//     isRadial: display.radial(),
-//     layout: display.options["layout"],
-
-//     // Calculate column start position
-//     getColumnStartPosition: function () {
-//       // This is where your annotation columns should start
-//       return display.right_most_leaf + 20; // Add 20px padding
-//     },
-
-//     // Get scale bar end position
-//     getScaleEndPosition: function () {
-//       if (display.radial()) {
-//         return display.radius;
-//       } else {
-//         return display.size[1] - display.offsets[1] - display.options["left-offset"] - display.shown_font_size;
-//       }
-//     }
-//   };
 // };
-
 
 
