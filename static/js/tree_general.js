@@ -1821,21 +1821,33 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false') {
+            // NEW: Deactivate PanBGC button if it's active (MINIMAL ADDITION)
+            if (activeColoringButton === 'panbgc') {
+              const panbgcButton = document.getElementById('panbgc');
+              if (panbgcButton && panbgcButton.dataset.active === 'true') {
+                removePanBGCColors();
+                panbgcButton.dataset.active = 'false';
+                panbgcButton.classList.remove('active-button');
+                panbgcButton.classList.add('non-active-button');
+              }
+            }
+
             // If the button is not active, display the content and set the button to active
-            colorSameCluster(id);
+            colorSameCluster(); // FIXED: Remove (id) parameter
             button.dataset.active = 'true';
             button.classList.add('active-button');
             button.classList.remove('non-active-button');
+            activeColoringButton = 'cluster'; // NEW: Track active button
           } else {
             // If the button is active, hide the content and set the button to inactive
-            removeColors(id);
+            removeColors(); // FIXED: Remove (id) parameter
             button.dataset.active = 'false';
             button.classList.remove('active-button');
             button.classList.add('non-active-button');
+            activeColoringButton = null; // NEW: Clear active button
           }
         });
 
-        // }
         console.log('Cluster button created and added');
       } else {
         console.log('Cluster button element not found in DOM');
@@ -1850,8 +1862,6 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       }
     }
   });
-  // Add this block after the cluster button code (around line 1750)
-
   ["panbgc"].forEach(id => {
     // CHECK if 'FAM_ID' column exists in metadata before creating button
     let hasFamIdColumn = false;
@@ -1871,15 +1881,28 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false') {
+            // NEW: Deactivate Cluster button if it's active
+            if (activeColoringButton === 'cluster') {
+              const clusterButton = document.getElementById('cluster');
+              if (clusterButton && clusterButton.dataset.active === 'true') {
+                removeColors();
+                clusterButton.dataset.active = 'false';
+                clusterButton.classList.remove('active-button');
+                clusterButton.classList.add('non-active-button');
+              }
+            }
+
             colorSamePanBGC();
             button.dataset.active = 'true';
             button.classList.add('active-button');
             button.classList.remove('non-active-button');
+            activeColoringButton = 'panbgc'; // NEW: Track active button
           } else {
             removePanBGCColors();
             button.dataset.active = 'false';
             button.classList.remove('active-button');
             button.classList.add('non-active-button');
+            activeColoringButton = null; // NEW: Clear active button
           }
         });
 
