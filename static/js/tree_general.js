@@ -936,11 +936,12 @@ function cleanIdentifier(id, columnName) {
       cleanId = cleanId.replace(/^(MITE:|mite:)/i, '');
       break;
     case 'FAM_ID':
+      clean_Id = cleanId
       // Pfam IDs typically start with PF
-      cleanId = cleanId.replace(/^(Pfam:|PF:)/i, '');
-      if (!cleanId.startsWith('PF') && /^\d+/.test(cleanId)) {
-        cleanId = 'PF' + cleanId.padStart(5, '0');
-      }
+      // cleanId = cleanId.replace(/^(Pfam:|PF:)/i, '');
+      // if (!cleanId.startsWith('PF') && /^\d+/.test(cleanId)) {
+      //   cleanId = 'PF' + cleanId.padStart(5, '0');
+      // }
       break;
   }
 
@@ -1009,6 +1010,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
+
+  let activeColoringButton = null; // Track which coloring button is currently active
 
   let activeColumns = 0;
   let maxColumns = 0;
@@ -1380,8 +1383,123 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       });
     });
   }
+  // Add these functions after the removeColors() function
+
+  function colorSamePanBGC() {
+    let columnName = 'FAM_ID';
+
+    // SAFETY CHECK: Ensure metadata exists and has the required column
+    if (!metadata || metadata.length === 0) {
+      console.error('No metadata available for PanBGC coloring');
+      return;
+    }
+
+    if (!metadata[0].hasOwnProperty(columnName)) {
+      console.error(`Column '${columnName}' not found in metadata`);
+      console.log('Available columns:', Object.keys(metadata[0]));
+      return;
+    }
+
+    console.log('Coloring by PanBGC FAM_ID');
+    let annot = metadata.reduce((obj, item) => {
+      obj[item["ID"]] = item[columnName];
+      return obj;
+    }, {});
+
+    console.log('PanBGC annotation data:', annot);
+    let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+
+    // Group nodes by their FAM_ID content
+    let famGroups = {};
+    nodes.each(function (d) {
+      let famId = annot[d.data.name];
+      console.log('FAM_ID:', famId);
+      if (famId !== null && famId !== undefined && famId !== '' && famId !== 'NaN' && famId !== 'nan') {
+        if (!famGroups[famId]) {
+          famGroups[famId] = [];
+        }
+        famGroups[famId].push(this);
+      }
+    });
+
+    // Filter out FAM groups with only one element
+    famGroups = Object.keys(famGroups).filter(famId => famGroups[famId].length > 1).reduce((obj, key) => {
+      obj[key] = famGroups[key];
+      return obj;
+    }, {});
+
+    console.log('FAM groups with more than one member:', famGroups);
+
+    if (Object.keys(famGroups).length === 0) {
+      console.log('No PanBGC families with multiple members found');
+      return;
+    }
+
+    // Use a different color palette to distinguish from clusters
+    var panbgc_colors = palette('cb-Set3', Object.keys(famGroups).length);
+    Object.keys(famGroups).forEach((famId, index) => {
+      famGroups[famId].forEach(node => {
+        let textElement = d3.select(node).select('text');
+        if (textElement.node()) {
+          let bbox = textElement.node().getBBox();
+          d3.select(node)
+            .insert('rect', 'text')
+            .attr('class', 'panbgc-rect') // Add specific class for PanBGC rectangles
+            .attr('x', bbox.x - 2)
+            .attr('y', bbox.y - 2)
+            .attr('width', bbox.width + 4)
+            .attr('height', bbox.height + 4)
+            .style('fill', '#' + panbgc_colors[index])
+            .style('opacity', '0.7'); // Slightly transparent to distinguish from cluster colors
+        }
+      });
+    });
+  }
+
+  function removePanBGCColors() {
+    d3.selectAll('rect.panbgc-rect').remove();
+  }
   function removeColors() {
     d3.selectAll('rect').remove();
+  }
+  // Add this function after removePanBGCColors() and removeColors()
+  function handleColoringButtonToggle(buttonId, button, activateFunction, deactivateFunction) {
+    if (button.dataset.active === 'false') {
+      // Deactivate the currently active button if there is one
+      if (activeColoringButton && activeColoringButton !== buttonId) {
+        const currentActiveButton = document.getElementById(activeColoringButton);
+        if (currentActiveButton && currentActiveButton.dataset.active === 'true') {
+          // Deactivate the current button
+          if (activeColoringButton === 'cluster') {
+            removeColors();
+          } else if (activeColoringButton === 'panbgc') {
+            removePanBGCColors();
+          }
+
+          currentActiveButton.dataset.active = 'false';
+          currentActiveButton.classList.remove('active-button');
+          currentActiveButton.classList.add('non-active-button');
+          console.log(`Deactivated ${activeColoringButton} button`);
+        }
+      }
+
+      // Activate the clicked button
+      activateFunction();
+      button.dataset.active = 'true';
+      button.classList.add('active-button');
+      button.classList.remove('non-active-button');
+      activeColoringButton = buttonId;
+      console.log(`Activated ${buttonId} button`);
+
+    } else {
+      // Deactivate the clicked button
+      deactivateFunction();
+      button.dataset.active = 'false';
+      button.classList.remove('active-button');
+      button.classList.add('non-active-button');
+      activeColoringButton = null;
+      console.log(`Deactivated ${buttonId} button`);
+    }
   }
   // Add column header functions
   function createColumnHeader(columnName, slotIndex) {
@@ -1716,16 +1834,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             button.classList.add('non-active-button');
           }
         });
-        //buttonContainer.appendChild(button);
-        // // CHANGED: Move button to the colour annotation container instead of main button container
-        // const colourButtonContainer = document.getElementById('colour_button-container');
-        // if (colourButtonContainer && !colourButtonContainer.contains(button)) {
-        //   colourButtonContainer.appendChild(button);
-        //   console.log('Cluster button moved to colour annotation section');
-        // } else {
-        //   // Fallback to original container if colour container not found
-        //   buttonContainer.appendChild(button);
-        //   console.log('Cluster button added to main container (fallback)');
+
         // }
         console.log('Cluster button created and added');
       } else {
@@ -1739,6 +1848,49 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         button.style.display = 'none';
         console.log('Cluster button hidden because column does not exist');
       }
+    }
+  });
+  // Add this block after the cluster button code (around line 1750)
+
+  ["panbgc"].forEach(id => {
+    // CHECK if 'FAM_ID' column exists in metadata before creating button
+    let hasFamIdColumn = false;
+    if (metadata && metadata.length > 0) {
+      hasFamIdColumn = metadata[0].hasOwnProperty('FAM_ID');
+      console.log('Checking for FAM_ID column:', hasFamIdColumn);
+      console.log('Available columns:', Object.keys(metadata[0]));
+    }
+
+    let button = document.getElementById(id);
+
+    if (button) {
+      if (hasFamIdColumn) {
+        // Show and enable the button
+        button.style.display = 'block';
+        button.dataset.active = 'false';
+
+        button.addEventListener('click', function () {
+          if (button.dataset.active === 'false') {
+            colorSamePanBGC();
+            button.dataset.active = 'true';
+            button.classList.add('active-button');
+            button.classList.remove('non-active-button');
+          } else {
+            removePanBGCColors();
+            button.dataset.active = 'false';
+            button.classList.remove('active-button');
+            button.classList.add('non-active-button');
+          }
+        });
+
+        console.log('PanBGC button enabled - FAM_ID column found');
+      } else {
+        // Hide the button if no FAM_ID data exists
+        console.log('FAM_ID column not found - hiding button');
+        button.style.display = 'none';
+      }
+    } else {
+      console.error('PanBGC button element not found in DOM');
     }
   });
 
