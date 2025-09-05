@@ -985,6 +985,21 @@ window.updateExternalLinksForNode = function (nodeData, fullMetadata) {
   createExternalLinksTable(nodeMetadata);
 };
 
+window.checkForClusters = function (tree, node) {
+  // viewof diameter_threshold = slider({
+  //   min: 0.0,
+  //   max: 0.2,
+  //   precision: 3,
+  //   value: 0.045,
+  //   description: "Diameter Threshold"
+  // })
+
+  bootstrap_threshold = 70;
+  diameter_threshold = 0.06;
+  clusters = phylotree.phylopart(tree, bootstrap_threshold, diameter_threshold, node);
+  console.log('Clusters:', clusters);
+}
+
 // Initialize external links table when page loads
 document.addEventListener('DOMContentLoaded', function () {
   // This will be called when the tree is loaded and metadata is available
@@ -1701,7 +1716,17 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             button.classList.add('non-active-button');
           }
         });
-        buttonContainer.appendChild(button);
+        //buttonContainer.appendChild(button);
+        // // CHANGED: Move button to the colour annotation container instead of main button container
+        // const colourButtonContainer = document.getElementById('colour_button-container');
+        // if (colourButtonContainer && !colourButtonContainer.contains(button)) {
+        //   colourButtonContainer.appendChild(button);
+        //   console.log('Cluster button moved to colour annotation section');
+        // } else {
+        //   // Fallback to original container if colour container not found
+        //   buttonContainer.appendChild(button);
+        //   console.log('Cluster button added to main container (fallback)');
+        // }
         console.log('Cluster button created and added');
       } else {
         console.log('Cluster button element not found in DOM');
