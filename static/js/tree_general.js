@@ -1845,12 +1845,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       }
     });
   })();
-  // Initialize external links with the metadata we already have
-  console.log('Initializing external links with metadata from addImagesAndMetadata');
-  window.treeMetadata = metadata;
-  if (window.createExternalLinksTable) {
-    createExternalLinksTable(metadata);
-  }
+  // At the very end of addImagesAndMetadata function, replace the current external links code with:
+  setTimeout(function () {
+    // Initialize external links with the metadata we already have
+    console.log('Initializing external links with metadata from addImagesAndMetadata');
+    window.treeMetadata = metadata;
+    if (window.createExternalLinksTable) {
+      createExternalLinksTable(metadata);
+    }
+  }, 100); // Small delay to ensure other functionality is set up first
 }
 
 window.setupSaveImageButton = function () {
@@ -2504,6 +2507,28 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
   }
 }
 
+// The KEY function from your working version - this is what was missing!
+window.getTerminalNodesArray = function (tree, metadata) {
+  let nodeNames = [];
+  document.addEventListener('terminalNodesSelected', event => {
+    nodeNames = [];
+    // Clear all previous selections
+
+    const terminal_nodes = event.detail;
+    // Clear all previous selections except the new selection
+    phylotree.clearAllSelections(tree, terminal_nodes);
+    terminal_nodes.forEach(node => {
+      nodeNames.push(node.data.name);
+    });
+    console.log('Node names:', nodeNames);
+    filteredTable = getMetadataSubset(nodeNames, metadata);
+    metadataSummaryResult = getMetadataSummary(filteredTable)
+    console.log('Metadata summary:', metadataSummaryResult);
+    displayMetadataSummary(metadataSummaryResult);
+  });
+  return nodeNames;
+}
+
 // // Add this to your tree initialization code (likely in your main tree rendering function)
 // window.initializeExternalLinks = function (metadata) {
 //   // Store metadata globally for external links
@@ -2515,4 +2540,107 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
 //   }
 // };
 
+// Add this function to handle clade summary - place it near your other summary functions
+window.generateCladeSummary = function () {
+  // This function should be called when the "Get summary of clade" button is clicked
+  // or when terminal nodes are selected
+
+  console.log('Generating clade summary...');
+
+  // Check if we have selected terminal nodes
+  if (window.selectedTerminalNodes && window.selectedTerminalNodes.length > 0) {
+    const nodeNames = window.selectedTerminalNodes.map(node => node.data.name);
+    console.log('Selected node names:', nodeNames);
+
+    // Get metadata subset
+    if (window.treeMetadata && Array.isArray(window.treeMetadata)) {
+      const filteredMetadata = getMetadataSubset(nodeNames, window.treeMetadata);
+      console.log('Filtered metadata:', filteredMetadata);
+
+      if (filteredMetadata.length > 0) {
+        const summary = getMetadataSummary(filteredMetadata);
+        console.log('Generated summary:', summary);
+
+        displayMetadataSummary(summary, true); // true for showing placement header
+      } else {
+        console.warn('No metadata found for selected nodes');
+      }
+    } else {
+      console.error('Tree metadata not available');
+    }
+  } else {
+    console.warn('No terminal nodes selected');
+  }
+};
+
+// Make sure the event listener is properly set up
+window.addEventListener("terminalNodesSelected", function (event) {
+  console.log('Terminal nodes selected event received:', event.detail);
+
+  // Store the selected nodes globally
+  window.selectedTerminalNodes = event.detail;
+
+  // Generate the summary
+  window.generateCladeSummary();
+});
+
+// Also make sure processTerminalNodes calls the summary generation
+window.processTerminalNodes = function (nodes) {
+  console.log("Processing terminal nodes:", nodes);
+
+  // Store nodes globally
+  window.selectedTerminalNodes = nodes;
+
+  // Generate summary
+  window.generateCladeSummary();
+};
+
+// Add this to connect the summary button (adjust the button ID as needed)
+document.addEventListener('DOMContentLoaded', function () {
+  // Try multiple possible button IDs
+  const summaryButton = document.getElementById('get-clade-summary') ||
+    document.getElementById('clade-summary-btn') ||
+    document.querySelector('[data-action="get-clade-summary"]') ||
+    document.querySelector('button[title*="clade"]');
+
+  if (summaryButton) {
+    console.log('Found clade summary button:', summaryButton);
+
+    summaryButton.addEventListener('click', function () {
+      console.log('Clade summary button clicked');
+      window.generateCladeSummary();
+    });
+  } else {
+    console.warn('Clade summary button not found');
+    // List all buttons to help debug
+    const allButtons = document.querySelectorAll('button');
+    console.log('Available buttons:', Array.from(allButtons).map(btn => ({
+      id: btn.id,
+      text: btn.textContent,
+      title: btn.title
+    })));
+  }
+});
+
+
+window.debugSummaryFunctionality = function () {
+  console.log('=== DEBUGGING SUMMARY FUNCTIONALITY ===');
+  console.log('Tree metadata available:', !!window.treeMetadata);
+  console.log('Tree metadata length:', window.treeMetadata ? window.treeMetadata.length : 'N/A');
+  console.log('Selected terminal nodes:', window.selectedTerminalNodes);
+  console.log('getMetadataSubset function:', typeof getMetadataSubset);
+  console.log('getMetadataSummary function:', typeof getMetadataSummary);
+  console.log('displayMetadataSummary function:', typeof displayMetadataSummary);
+  console.log('Summary container element:', !!document.getElementById('summary-container'));
+  console.log('Metadata heading element:', !!document.getElementById('metadata-summary-heading'));
+
+  // Test the functions with sample data
+  if (window.treeMetadata && window.treeMetadata.length > 0) {
+    console.log('Testing with first 3 metadata entries...');
+    const testNodeNames = window.treeMetadata.slice(0, 3).map(item => item.ID);
+    const testFiltered = getMetadataSubset(testNodeNames, window.treeMetadata);
+    const testSummary = getMetadataSummary(testFiltered);
+    console.log('Test summary result:', testSummary);
+  }
+};
 
