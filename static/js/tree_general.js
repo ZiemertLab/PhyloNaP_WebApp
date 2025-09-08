@@ -653,6 +653,7 @@ window.checkSVGSize = function () {
 window.createExternalLinksTable = function (metadata) {
   console.log('createExternalLinksTable called with:', metadata);
 
+
   const hyperlinkContainer = document.getElementById('hyperlink-container');
 
   if (!hyperlinkContainer) {
@@ -900,6 +901,49 @@ window.createExternalLinksTable = function (metadata) {
   hyperlinkContainer.appendChild(summary);
 
   console.log('External links table created successfully');
+
+
+
+
+  // Add this after the table creation in createExternalLinksTable function, before the summary paragraph:
+
+  // Create the "Display on tree" button
+  const displayButton = document.createElement('button');
+  displayButton.id = 'display-links-on-tree';
+  displayButton.className = 'btn btn-sm btn-outline-secondary mt-2';
+  displayButton.textContent = 'Display on tree';
+  displayButton.style.cssText = `
+  font-size: 12px;
+  padding: 4px 12px;
+  margin-top: 8px;
+  border: 1px solid #6c757d;
+  background-color: white;
+  color: #6c757d;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+`;
+
+  // Add hover effects
+  displayButton.addEventListener('mouseenter', () => {
+    displayButton.style.backgroundColor = '#6c757d';
+    displayButton.style.color = 'white';
+  });
+
+  displayButton.addEventListener('mouseleave', () => {
+    displayButton.style.backgroundColor = 'white';
+    displayButton.style.color = '#6c757d';
+  });
+
+  // Add click functionality
+  displayButton.addEventListener('click', function () {
+    if (window.toggleExternalLinksOnTree) {
+      window.toggleExternalLinksOnTree(uniqueLinks);
+    }
+  });
+
+  hyperlinkContainer.appendChild(displayButton);
+
 };
 
 /**
@@ -1539,6 +1583,39 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   function removeColumnHeader(slotIndex) {
     d3.selectAll(`.column-header[data-slot="${slotIndex}"]`).remove();
   }
+  // Add this after your existing ["panbgc"] button handler in addImagesAndMetadata function:
+
+  // External Links display functionality
+  window.toggleExternalLinksOnTree = function (externalLinks) {
+    const button = document.getElementById('display-links-on-tree');
+    if (!button) return;
+
+    if (button.dataset.active === 'true') {
+      // Hide external links
+      hideExternalLinks();
+      button.dataset.active = 'false';
+      button.textContent = 'Display on tree';
+      button.style.backgroundColor = 'white';
+      button.style.color = '#6c757d';
+    } else {
+      // Show external links
+      if (renderExternalLinks(externalLinks)) {
+        button.dataset.active = 'true';
+        button.textContent = 'Hide from tree';
+        button.style.backgroundColor = '#6c757d';
+        button.style.color = 'white';
+      }
+    }
+  };
+
+  // Initialize button state
+  document.addEventListener('DOMContentLoaded', function () {
+    const button = document.getElementById('display-links-on-tree');
+    if (button) {
+      button.dataset.active = 'false';
+    }
+  });
+
   function renderNP() {
     const slotIndex = getNextAvailableSlot();
     if (slotIndex === -1) {
@@ -1765,6 +1842,142 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     removeColumnHeader(freedSlot); // Add this line
     d3.selectAll(`text.${columnName}`).remove();
     console.log(`Freed ${columnName} from slot ${freedSlot}`);
+  }
+
+  // Add these functions after hideMetadata function:
+
+  function renderExternalLinks(externalLinks) {
+    // Check for available slots
+    const sourcesNeeded = [...new Set(externalLinks.map(link => link.source))];
+    const availableSlots = sourcesNeeded.length;
+
+    let slotsToUse = [];
+    for (let i = 0; i < availableSlots; i++) {
+      const slot = getNextAvailableSlot();
+      if (slot === -1) {
+        console.warn(`Only ${i} slots available for ${sourcesNeeded.length} link sources`);
+        if (i === 0) {
+          showColumnWarning();
+          return false;
+        }
+        break;
+      }
+      slotsToUse.push(slot);
+    }
+
+    // Group links by source
+    const linksBySource = {};
+    externalLinks.forEach(link => {
+      if (!linksBySource[link.source]) {
+        linksBySource[link.source] = [];
+      }
+      linksBySource[link.source].push(link);
+    });
+
+    // Sort sources by priority
+    const sortOrder = ['MITE', 'MIBiG', 'UniProt', 'PanBGC'];
+    const sortedSources = Object.keys(linksBySource).sort((a, b) => {
+      const indexA = sortOrder.indexOf(a);
+      const indexB = sortOrder.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    // Render each source as a column
+    sortedSources.slice(0, slotsToUse.length).forEach((source, index) => {
+      const slotIndex = slotsToUse[index];
+      columnSlots[slotIndex] = `ExternalLinks_${source}`;
+
+      createColumnHeader(source, slotIndex);
+
+      // Create a lookup map for this source
+      const sourceLookup = {};
+      linksBySource[source].forEach(link => {
+        if (!sourceLookup[link.sequenceId]) {
+          sourceLookup[link.sequenceId] = [];
+        }
+        sourceLookup[link.sequenceId].push(link);
+      });
+
+      setTimeout(function () {
+        let nodes = d3.selectAll('.node').filter(d => sourceLookup.hasOwnProperty(d.data.name));
+
+        nodes.each(function (d) {
+          const links = sourceLookup[d.data.name];
+          if (links && links.length > 0) {
+            let leaveFontSize = d3.select(this).attr('font-size');
+            let transformValue = d3.select(this).attr('transform');
+            let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
+            let translateValues = parseFloat(match[1]);
+
+            // Create container for multiple links
+            const linkTexts = links.map(link => link.id).join(', ');
+
+            let textElement = d3.select(this).append('text')
+              .attr('x', () => getColumnStartX() + slotIndex * 200 - translateValues)
+              .attr('y', 0)
+              .attr('class', `ExternalLinks_${source}`)
+              .attr('font-size', leaveFontSize)
+              .attr('data-slot', slotIndex)
+              .attr('fill', '#3D3D3D')
+              .style('cursor', 'pointer')
+              .style('text-decoration', 'underline');
+
+            // Handle long text
+            if (linkTexts.length > 80) {
+              let firstLine = linkTexts.substring(0, 80);
+              let secondLine = linkTexts.substring(80);
+              textElement.append('tspan').text(firstLine);
+              textElement.append('tspan')
+                .attr('x', getColumnStartX() + slotIndex * 200 - translateValues)
+                .attr('dy', '1em')
+                .text(secondLine);
+            } else {
+              textElement.text(linkTexts);
+            }
+
+            // Add click handler to open the first link
+            textElement.on('click', function () {
+              if (links[0] && links[0].url) {
+                window.open(links[0].url, '_blank');
+              }
+            });
+
+            // Add tooltip for multiple links
+            if (links.length > 1) {
+              textElement.append('title').text(
+                `${links.length} links: ${links.map(l => l.id).join(', ')}\nClick to open first link`
+              );
+            } else {
+              textElement.append('title').text(`Click to open: ${links[0].url}`);
+            }
+          }
+        });
+      }, 0);
+    });
+
+    console.log(`Rendered external links in ${slotsToUse.length} columns`);
+    return true;
+  }
+
+  function hideExternalLinks() {
+    // Find and free all external link columns
+    const externalLinkSlots = [];
+    columnSlots.forEach((slot, index) => {
+      if (slot && slot.startsWith('ExternalLinks_')) {
+        externalLinkSlots.push({ index, columnName: slot });
+      }
+    });
+
+    externalLinkSlots.forEach(({ index, columnName }) => {
+      const source = columnName.replace('ExternalLinks_', '');
+      removeColumnHeader(index);
+      d3.selectAll(`text.ExternalLinks_${source}`).remove();
+      columnSlots[index] = false;
+      console.log(`Freed external links column: ${source} from slot ${index}`);
+    });
   }
   // Check if the buttons exist and the event listeners are being attached
   // console.log(document.getElementById('enzyme-function-button'));
@@ -2045,7 +2258,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       }
     });
   })();
-  // At the very end of addImagesAndMetadata function, replace the current external links code with:
+
   setTimeout(function () {
     // Initialize external links with the metadata we already have
     console.log('Initializing external links with metadata from addImagesAndMetadata');
