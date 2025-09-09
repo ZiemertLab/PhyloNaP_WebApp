@@ -905,13 +905,11 @@ window.createExternalLinksTable = function (metadata) {
 
 
 
-  // Add this after the table creation in createExternalLinksTable function, before the summary paragraph:
-
   // Create the "Display on tree" button
   const displayButton = document.createElement('button');
   displayButton.id = 'display-links-on-tree';
   displayButton.className = 'btn btn-sm btn-outline-secondary mt-2';
-  displayButton.textContent = 'Display on tree';
+  displayButton.textContent = 'Display on the tree';
   displayButton.style.cssText = `
   font-size: 12px;
   padding: 4px 12px;
@@ -938,7 +936,7 @@ window.createExternalLinksTable = function (metadata) {
   // Add click functionality
   displayButton.addEventListener('click', function () {
     if (window.toggleExternalLinksOnTree) {
-      window.toggleExternalLinksOnTree(uniqueLinks);
+      window.toggleExternalLinksOnTree(externalLinks);
     }
   });
 
@@ -1601,7 +1599,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       // Show external links
       if (renderExternalLinks(externalLinks)) {
         button.dataset.active = 'true';
-        button.textContent = 'Hide from tree';
+        button.textContent = 'Hide from the tree';
         button.style.backgroundColor = '#6c757d';
         button.style.color = 'white';
       }
