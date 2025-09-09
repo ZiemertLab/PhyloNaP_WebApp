@@ -13,6 +13,38 @@
 // };
 
 // import phylotree from "/static/js/phylotree.js/dist/phylotree.js";
+// Centralized configuration - declare once, use everywhere
+const HYPERLINK_CONFIG = {
+  'Uniprot_ID': {
+    name: 'UniProt',
+    url: 'https://www.uniprot.org/uniprotkb/{id}',
+    description: 'Protein sequence and functional information'
+  },
+  'mibig': {
+    name: 'MIBiG',
+    url: 'https://mibig.secondarymetabolites.org/repository/{id}',
+    description: 'Biosynthetic gene cluster information'
+  },
+  'PDB_IDs': {
+    name: 'PDB',
+    url: 'https://www.rcsb.org/structure/{id}',
+    description: 'Protein structure data'
+  },
+  'MITE_ID': {
+    name: 'MITE',
+    url: 'https://mite.bioinformatics.nl/repository/{id}',
+    description: 'Metabolic information'
+  },
+  'FAM_ID': {
+    name: 'PanBGC',
+    url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
+    description: 'Protein family information'
+  }
+};
+// Create reverse mapping for external links functionality
+const HYPERLINK_SOURCE_TO_COLUMN = Object.fromEntries(
+  Object.entries(HYPERLINK_CONFIG).map(([columnName, config]) => [config.name, columnName])
+);
 
 window.getContainerDimensions = function () {
   let container = d3.select('#tree');
@@ -698,33 +730,7 @@ window.createExternalLinksTable = function (metadata) {
   console.log('First item keys:', Object.keys(metadataArray[0] || {}));
 
   // Define link templates for different ID types
-  const linkTemplates = {
-    'Uniprot_ID': {
-      name: 'UniProt',
-      url: 'https://www.uniprot.org/uniprotkb/{id}',
-      description: 'Protein sequence and functional information'
-    },
-    'mibig': {
-      name: 'MIBiG',
-      url: 'https://mibig.secondarymetabolites.org/repository/{id}',
-      description: 'Biosynthetic gene cluster information'
-    },
-    'PDB_IDs': {
-      name: 'PDB',
-      url: 'https://www.rcsb.org/structure/{id}',
-      description: 'Protein structure data'
-    },
-    'MITE_ID': {
-      name: 'MITE',
-      url: 'https://mite.bioinformatics.nl/repository/{id}',
-      description: 'Metabolic information'
-    },
-    'FAM_ID': {
-      name: 'PanBGC',
-      url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
-      description: 'Protein family information'
-    }
-  };
+  const linkTemplates = HYPERLINK_CONFIG;
 
   // Collect all external links
   const externalLinks = [];
@@ -1064,6 +1070,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   let cachedColumnStartX = null;
   let cachedTreeWidth = null;
   let cachedTreeHeight = null;
+
 
 
   // Function to get or calculate column start position
@@ -1590,14 +1597,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     if (button.dataset.active === 'true') {
       // Hide external links
-      hideExternalLinks();
+      hideExternalLinksViaButtons();
       button.dataset.active = 'false';
       button.textContent = 'Display on tree';
       button.style.backgroundColor = 'white';
       button.style.color = '#6c757d';
     } else {
       // Show external links
-      if (renderExternalLinks(externalLinks)) {
+      if (showExternalLinksViaButtons()) {
         button.dataset.active = 'true';
         button.textContent = 'Hide from the tree';
         button.style.backgroundColor = '#6c757d';
@@ -1779,6 +1786,9 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     const displayName = columnName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     createColumnHeader(displayName, slotIndex);
 
+
+    const isHyperlinkColumn = HYPERLINK_CONFIG.hasOwnProperty(columnName);
+
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
       return obj;
@@ -1803,31 +1813,109 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           // let translateValues = transformValue.match(/translate\(([^,]+),([^)]+)\)/).slice(1).map(Number);
           let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
           let translateValues = parseFloat(match[1]);
-          // console.log('transformValue:', transformValue);
-          // console.log('translateValues:', translateValues);
-          // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
-          // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
-          let textElement = d3.select(this).append('text')
-            // .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
-            .attr('x', (d) => {
+          // **NEW**: Handle hyperlink columns differently
+          if (isHyperlinkColumn) {
+            const template = HYPERLINK_CONFIG[columnName]; // **UPDATED**: Now uses global config
 
-              return getColumnStartX() + slotIndex * 200 - translateValues;
 
-            })
-            .attr('y', 0)
-            .attr('class', columnName)
-            .attr("font-size", leaveFontSize)
-            .attr("debugging", translateValues)
-            .attr('data-slot', slotIndex); // Add slot tracking
+            // Handle multiple IDs separated by semicolon, comma, or pipe
+            const rawIds = String(text);
+            const ids = rawIds.split(/[;,|]/).map(id => id.trim()).filter(id => id && id !== '');
 
-          if (text.length > 80) {
-            let firstLine = text.substring(0, 80);
-            let secondLine = text.substring(80);
+            // Create a container for all links
+            const linkTexts = ids.map(id => {
+              const cleanId = cleanIdentifier(id, columnName);
+              return cleanId;
+            }).join(', ');
 
-            textElement.append('tspan').text(firstLine);
-            textElement.append('tspan').attr('x', 400).attr('dy', '1em').text(secondLine);
+            let textElement = d3.select(this).append('text')
+              .attr('x', () => getColumnStartX() + slotIndex * 200 - translateValues)
+              .attr('y', 0)
+              .attr('class', columnName)
+              .attr("font-size", leaveFontSize)
+              .attr("debugging", translateValues)
+              .attr('data-slot', slotIndex)
+              .attr('fill', '#3D3D3D')
+              .style('cursor', 'pointer')
+              .style('text-decoration', 'underline') // **NEW**: Make it look like a link
+              .text(linkTexts);
+
+            // **NEW**: Add click handler for hyperlinks
+            textElement.on('click', function () {
+              if (ids.length === 1) {
+                // Single link - open directly
+                const cleanId = cleanIdentifier(ids[0], columnName);
+                const url = template.url.replace('{id}', cleanId);
+                window.open(url, '_blank');
+              } else {
+                // Multiple links - show options
+                const linkUrls = ids.map(id => {
+                  const cleanId = cleanIdentifier(id, columnName);
+                  return {
+                    id: cleanId,
+                    url: template.url.replace('{id}', cleanId)
+                  };
+                });
+
+                const linkList = linkUrls.map(l => `${l.id}: ${l.url}`).join('\n');
+                const userChoice = confirm(`Multiple links found (${ids.length}):\n\n${linkList}\n\nClick OK to open the first link, Cancel to copy all URLs to clipboard.`);
+
+                if (userChoice) {
+                  window.open(linkUrls[0].url, '_blank');
+                } else {
+                  // Copy all URLs to clipboard
+                  const allUrls = linkUrls.map(l => l.url).join('\n');
+                  navigator.clipboard.writeText(allUrls).then(() => {
+                    alert('All URLs copied to clipboard!');
+                  }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = allUrls;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('All URLs copied to clipboard!');
+                  });
+                }
+              }
+            });
+
+            // **NEW**: Add tooltip
+            const tooltipText = ids.length === 1
+              ? `Click to open ${template.name}: ${template.url.replace('{id}', cleanIdentifier(ids[0], columnName))}`
+              : `${ids.length} ${template.name} links found. Click for options.`;
+
+            textElement.append('title').text(tooltipText);
+
           } else {
-            textElement.text(text);
+
+            // console.log('transformValue:', transformValue);
+            // console.log('translateValues:', translateValues);
+            // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
+            // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
+            let textElement = d3.select(this).append('text')
+              // .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
+              .attr('x', (d) => {
+
+                return getColumnStartX() + slotIndex * 200 - translateValues;
+
+              })
+              .attr('y', 0)
+              .attr('class', columnName)
+              .attr("font-size", leaveFontSize)
+              .attr("debugging", translateValues)
+              .attr('data-slot', slotIndex); // Add slot tracking
+
+            if (text.length > 80) {
+              let firstLine = text.substring(0, 80);
+              let secondLine = text.substring(80);
+
+              textElement.append('tspan').text(firstLine);
+              textElement.append('tspan').attr('x', 400).attr('dy', '1em').text(secondLine);
+            } else {
+              textElement.text(text);
+            }
           }
         }
       });
@@ -1842,6 +1930,103 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     console.log(`Freed ${columnName} from slot ${freedSlot}`);
   }
 
+
+  // **NEW**: Add these helper functions after your existing hideMetadata function
+  function showExternalLinksViaButtons() {
+    // **NEW**: Define mapping from hyperlink sources to metadata column names
+    const hyperlinkSourceToColumn = HYPERLINK_SOURCE_TO_COLUMN;
+
+    // **NEW**: Check which hyperlink columns exist in metadata
+    const availableColumns = [];
+    if (metadata && metadata.length > 0) {
+      const metadataColumns = Object.keys(metadata[0]);
+
+      Object.entries(hyperlinkSourceToColumn).forEach(([source, columnName]) => {
+        if (metadataColumns.includes(columnName)) {
+          // **NEW**: Check if column has actual data (not all empty/null)
+          const hasData = metadata.some(row => {
+            const value = row[columnName];
+            return value && value !== '' && value !== 'null' && value !== 'NaN' && value !== 'nan';
+          });
+
+          if (hasData) {
+            availableColumns.push({ source, columnName });
+          }
+        }
+      });
+    }
+
+    console.log('Available hyperlink columns:', availableColumns);
+
+    if (availableColumns.length === 0) {
+      alert('No hyperlink data found in metadata');
+      return false;
+    }
+
+    // **NEW**: Check if we have enough column slots
+    const slotsNeeded = availableColumns.length;
+    let availableSlots = 0;
+    for (let i = 0; i < columnSlots.length; i++) {
+      if (!columnSlots[i]) availableSlots++;
+    }
+
+    if (slotsNeeded > availableSlots) {
+      // **NEW**: Show nice warning about column limit
+      const message = `Cannot display all hyperlink sources.\n\n` +
+        `• Sources available: ${availableColumns.map(c => c.source).join(', ')}\n` +
+        `• Columns needed: ${slotsNeeded}\n` +
+        `• Columns available: ${availableSlots}\n\n` +
+        `Remove some annotations to display all hyperlink sources.`;
+
+      alert(message);
+
+      // **NEW**: Also show the visual warning
+      showColumnWarning();
+      return false;
+    }
+
+    // **NEW**: Activate buttons for available columns (reuse existing system!)
+    let activatedButtons = [];
+    availableColumns.forEach(({ source, columnName }) => {
+      const button = document.getElementById(columnName);
+
+      if (button && button.dataset.active === 'false') {
+        console.log(`Activating button for ${source} (${columnName})`);
+        button.click(); // **NEW**: Just click the existing button!
+        activatedButtons.push(source);
+      } else if (button) {
+        console.log(`Button for ${source} already active`);
+        activatedButtons.push(source);
+      } else {
+        console.warn(`Button not found for ${columnName}`);
+      }
+    });
+
+    // **NEW**: Track which buttons we activated for later cleanup
+    const displayButton = document.getElementById('display-links-on-tree');
+    displayButton._activatedColumns = availableColumns.map(c => c.columnName);
+
+    console.log(`Activated ${activatedButtons.length} hyperlink columns:`, activatedButtons);
+    return activatedButtons.length > 0;
+  }
+
+  function hideExternalLinksViaButtons() {
+    const button = document.getElementById('display-links-on-tree');
+
+    // **NEW**: Deactivate the buttons we previously activated
+    if (button._activatedColumns) {
+      button._activatedColumns.forEach(columnName => {
+        const metadataButton = document.getElementById(columnName);
+        if (metadataButton && metadataButton.dataset.active === 'true') {
+          console.log(`Deactivating button for ${columnName}`);
+          metadataButton.click(); // **NEW**: Just click to deactivate!
+        }
+      });
+
+      // **NEW**: Clear the tracking
+      delete button._activatedColumns;
+    }
+  }
   // Add these functions after hideMetadata function:
 
   function renderExternalLinks(externalLinks) {
