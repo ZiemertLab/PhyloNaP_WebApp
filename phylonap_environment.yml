@@ -1,47 +1,92 @@
 name: phylonap_test
 channels:
   - conda-forge
-  - anaconda
-  - defaults
-  - bioconda
 dependencies:
-  # Base dependencies
-  - python==3.8.10
-  - pip
-
-  # Developer dependencies
+  - _libgcc_mutex=0.1
+  - _openmp_mutex=4.5
+  - brotli-python=1.1.0
+  - ca-certificates=2025.4.26
+  - certifi=2024.8.30
+  - cffi=1.17.0
+  - charset-normalizer=3.4.0
+  - gunicorn=23.0.0
+  - h2=4.1.0
+  - hpack=4.0.0
+  - hyperframe=6.0.1
+  - idna=3.10
+  - ld_impl_linux-64=2.43
+  - libblas=3.9.0
+  - libcblas=3.9.0
+  - libffi=3.4.6
+  - libgcc=15.1.0
+  - libgcc-ng=15.1.0
+  - libgfortran=15.1.0
+  - libgfortran5=15.1.0
+  - libgomp=15.1.0
+  - liblapack=3.9.0
+  - liblzma=5.8.1
+  - liblzma-devel=5.8.1
+  - libopenblas=0.3.29
+  - libsqlite=3.46.0
+  - libstdcxx=15.1.0
+  - libstdcxx-ng=15.1.0
+  - libzlib=1.2.13
+  - ncurses=6.5
+  - numpy=1.24.4
+  - openssl=1.1.1w
+  - packaging=25.0
+  - pandas=2.0.3
+  - pip=24.3.1
+  - pycparser=2.22
+  - pysocks=1.7.1
+  - python=3.8.10
+  - python-dateutil=2.9.0
+  - python-dotenv=1.0.1
+  - python-tzdata=2024.2
+  - python_abi=3.8
+  - pytz=2024.2
+  - readline=8.2
+  - requests=2.32.3
+  - setuptools=75.3.0
+  - six=1.16.0
+  - sqlite=3.46.0
+  - tk=8.6.13
+  - urllib3=2.2.3
+  - wheel=0.45.1
+  - xz=5.8.1
+  - xz-gpl-tools=5.8.1
+  - xz-tools=5.8.1
+  - zlib=1.2.13
+  - zstandard=0.23.0
+  - zstd=1.5.6
   - pip:
+    - Flask==2.2.5
+    - Flask-Mail==0.9.1
+    - Flask-RESTful==0.3.9
+    - Flask-SQLAlchemy==3.1.1
+    - Flask-SocketIO==5.5.1
+    - Flask-Sockets==0.2.1
+    - Jinja2==3.0.1
+    - MarkupSafe==2.1.3
+    - Pillow==10.0.1
+    - Werkzeug==2.3.8
     - aniso8601==9.0.1
     - biopython==1.79
     - blinker==1.4
     - click==8.0.1
     - et-xmlfile==1.1.0
     - ete3==3.1.2
-    - Flask==2.2.5
-    - Flask-Mail==0.9.1
-    - Flask-RESTful==0.3.9
-    - Flask-Sockets==0.2.1
-    - Flask-SQLAlchemy==3.1.1
-    - flask-socketio==5.3.6 
+    - eventlet==0.39.1
     - gevent==23.9.1
     - gevent-websocket==0.10.1
     - greenlet==2.0.0
     - itsdangerous==2.0.1
     - jdcal==1.4.1
-    - Jinja2==3.0.1
-    - MarkupSafe==2.1.3
-    - numpy==1.24.4
     - olefile==0.44
     - openpyxl==3.0.7
-    - Pillow==10.0.1
     - python-dateutil==2.8.2
     - pytz==2021.1
     - pyuwsgi==2.0.21
     - redis==3.5.3
     - redis-server==5.0.7
-    - six==1.16.0
-    - Werkzeug==2.3.8
-    - dnspython==2.6.1
-    - eventlet==0.39.1
 
-    
