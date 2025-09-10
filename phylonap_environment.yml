@@ -90,3 +90,4 @@ dependencies:
     - redis==3.5.3
     - redis-server==5.0.7
 
+prefix: "/home/phylonapadm/.local/share/mamba/envs/phylonap_test"
