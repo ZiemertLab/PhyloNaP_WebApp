@@ -777,33 +777,7 @@ def get_db_structure():
         logger.error(f"Error detecting schema type: {e}")
         return _get_db_structure_from_json()
 
-def export_database_as_json(output_file=None):
-    """
-    Export the entire database as a JSON file using the old format
-    
-    Args:
-        output_file (str): Path to output JSON file. If None, a default path is used.
-        
-    Returns:
-        str: Path to the output file
-    """
-    try:
-        if output_file is None:
-            output_file = os.path.join('/home/phylonapadm/PhyloNaP/logs', f"db_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-        
-        # Get the structure in the old format
-        db_structure = get_db_structure()
-        
-        # Write it to a file
-        with open(output_file, 'w') as f:
-            json.dump(db_structure, f, indent=2)
-            
-        logger.info(f"Exported database to {output_file}")
-        return output_file
-    
-    except Exception as e:
-        logger.error(f"Error exporting database: {e}", exc_info=True)
-        return None
+
 
 # Add a function to migrate from old schema to new schema
 def migrate_to_single_table():
