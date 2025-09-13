@@ -1185,6 +1185,35 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }, 1000);
   }
 
+  function showCustomWarning(message) {
+    let warningContainer = document.getElementById('column-warning');
+
+    if (!warningContainer) {
+      warningContainer = createWarningContainer();
+    }
+
+    // Clear any existing timeout
+    if (warningTimeout) {
+      clearTimeout(warningTimeout);
+    }
+
+    // If warning is already visible, trigger blink effect
+    if (warningContainer.style.display === 'block') {
+      blinkWarning(warningContainer);
+    } else {
+      // Show the warning with full opacity
+      warningContainer.style.display = 'block';
+      warningContainer.style.opacity = '1';
+    }
+
+    warningContainer.textContent = message;
+
+    // Set timeout to fade out after 1 second
+    warningTimeout = setTimeout(() => {
+      fadeOutWarning(warningContainer);
+    }, 1500);
+  }
+
   // Add new blink function
   function blinkWarning(warningContainer) {
     // Quick blink effect - flash the warning
@@ -1412,6 +1441,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     if (Object.keys(textGroups).length === 0) {
       console.log('No clusters with multiple members found');
+      showCustomWarning("No proteins are coming from the same cluster, nothing to highlight");
       return;
     }
 
@@ -1481,6 +1511,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     if (Object.keys(famGroups).length === 0) {
       console.log('No PanBGC families with multiple members found');
+      showCustomWarning("No proteins are coming from the same GCF, nothing to highlight");
       return;
     }
 
