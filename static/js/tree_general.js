@@ -1155,36 +1155,6 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
   }
 
-  // Show warning when user tries to exceed limit
-  function showColumnWarning() {
-    let warningContainer = document.getElementById('column-warning');
-
-    if (!warningContainer) {
-      warningContainer = createWarningContainer();
-    }
-
-    // Clear any existing timeout
-    if (warningTimeout) {
-      clearTimeout(warningTimeout);
-    }
-
-    // If warning is already visible, trigger blink effect
-    if (warningContainer.style.display === 'block') {
-      blinkWarning(warningContainer);
-    } else {
-      // Show the warning with full opacity
-      warningContainer.style.display = 'block';
-      warningContainer.style.opacity = '1';
-    }
-
-    warningContainer.textContent = `Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`;
-
-    // Set timeout to fade out after 3 seconds (reduced from 5 seconds)
-    warningTimeout = setTimeout(() => {
-      fadeOutWarning(warningContainer);
-    }, 1000);
-  }
-
   function showCustomWarning(message) {
     let warningContainer = document.getElementById('column-warning');
 
@@ -2012,7 +1982,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       alert(message);
 
       // **NEW**: Also show the visual warning
-      showColumnWarning();
+      showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`);
       return false;
     }
 
@@ -2071,7 +2041,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       if (slot === -1) {
         console.warn(`Only ${i} slots available for ${sourcesNeeded.length} link sources`);
         if (i === 0) {
-          showColumnWarning();
+          showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`);
           return false;
         }
         break;
@@ -2211,7 +2181,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       // Check if slots are available for inactive buttons
       if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
         console.warn('No available slots for new columns');
-        showColumnWarning(); // Show warning when user tries to add more
+        showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`); // Show warning when user tries to add more
         return;
       }
 
@@ -2392,7 +2362,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
             console.warn('No available slots for new columns');
-            showColumnWarning();
+            showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`);
             return;
           }
 
@@ -2442,7 +2412,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
             console.warn('No available slots for new columns');
-            showColumnWarning();
+            showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`);
             return;
           }
 
