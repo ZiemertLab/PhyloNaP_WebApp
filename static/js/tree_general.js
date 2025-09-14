@@ -22,7 +22,8 @@ const HYPERLINK_CONFIG = {
   },
   'mibig': {
     name: 'MIBiG',
-    url: 'https://mibig.secondarymetabolites.org/repository/{id}',
+    url: 'https://bioregistry.io/mibig:{id}',
+    //url: 'https://mibig.secondarymetabolites.org/repository/{id}',
     description: 'Biosynthetic gene cluster information'
   },
   'PDB_IDs': {
@@ -32,7 +33,8 @@ const HYPERLINK_CONFIG = {
   },
   'MITE_ID': {
     name: 'MITE',
-    url: 'https://mite.bioinformatics.nl/repository/{id}',
+    url: 'https://bioregistry.io/mite:{id}',
+    //url: 'https://mite.bioinformatics.nl/repository/{id}',
     description: 'Metabolic information'
   },
   'FAM_ID': {
