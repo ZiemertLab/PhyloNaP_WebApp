@@ -1273,17 +1273,38 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // For BGC_product, scan the entire dataset until we find a BGC
     if (imageType === 'BGC_product') {
       console.log('Scanning entire dataset for BGC entries...');
+      // Check if mibig column exists
+      if (!metadata[0].hasOwnProperty('mibig')) {
+        console.log('No mibig column found in metadata');
+        return false;
+      }
 
-      let bgcCount = 0;
       for (let i = 0; i < metadata.length; i++) {
         const item = metadata[i];
 
-        if (item.hasOwnProperty('Cluster') && item.Cluster && item.Cluster.startsWith("BGC")) {
-          bgcCount++;
-          console.log(`*** FOUND BGC entry ${bgcCount} at index ${i}: ${item.Cluster} ***`);
+        // Only process non-empty mibig values
+        if (item.mibig &&
+          item.mibig !== 'NaN' &&
+          item.mibig !== 'nan' &&
+          item.mibig !== '' &&
+          item.mibig !== null) {
+
+          console.log(`Found MIBiG entry at index ${i}: ${item.mibig}`);
 
           // Test this BGC entry for images
-          let bgc = item.Cluster;
+          let bgc = item.mibig;
+          if (bgc.includes(';') || bgc.includes(',') || bgc.includes('|')) {
+            // If multiple IDs, just use the first one
+            bgc = bgc.split(/[;,|]/)[0].trim();
+          }
+
+          // Format properly for image lookup
+          if (!bgc.startsWith("BGC")) {
+            if (/^\d+$/.test(bgc)) {
+              bgc = "BGC" + bgc;
+            }
+          }
+
           let bgc1 = bgc.split('.')[0];
           let image1 = "/static/images/" + bgc + "_1.png";
           let image2 = "/static/images/" + bgc1 + "_1.png";
@@ -1307,26 +1328,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           } catch (error) {
             console.log('Fetch error for BGC:', error);
           }
-
-          // Stop after testing first 10 BGC entries to avoid too many requests
-          if (bgcCount >= 10) {
-            console.log('Tested 10 BGC entries, stopping search');
-            break;
-          }
-        }
-
-        // Log progress every 50 items to see scan progress
-        if (i % 50 === 0) {
-          console.log(`Scanned ${i} items, found ${bgcCount} BGC entries so far`);
         }
       }
 
-      console.log(`Finished scanning. Total BGC entries found: ${bgcCount}`);
-      if (bgcCount === 0) {
-        console.log('No BGC entries found in entire dataset');
-      }
       return false;
     }
+
 
     // For other image types (Reaction), use the original logic with sample
     const sampleSize = Math.min(10, metadata.length);
@@ -1335,20 +1342,89 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     console.log('sampleSize:', sampleSize);
     console.log('sampleEntries:', sampleEntries);
 
-    for (let item of sampleEntries) {
-      console.log('Processing item:', item);
 
-      if (imageType === 'Reaction') {
-        let image = "/static/images_reactions/" + item.ID + ".png";
-        try {
-          const response = await fetch(image, { method: 'HEAD' });
-          if (response.ok) {
-            return true;
+    if (imageType === 'Reaction') {
+      console.log('Scanning for Reaction images based on MITE_ID or Uniprot_ID');
+
+      // Check if columns exist
+      const hasMiteColumn = metadata[0].hasOwnProperty('MITE_ID');
+      const hasUniprotColumn = metadata[0].hasOwnProperty('Uniprot_ID');
+
+      console.log('Has MITE_ID column:', hasMiteColumn);
+      console.log('Has Uniprot_ID column:', hasUniprotColumn);
+
+      if (!hasMiteColumn && !hasUniprotColumn) {
+        console.log('Neither MITE_ID nor Uniprot_ID columns found in metadata');
+        return false;
+      }
+
+      // Take a reasonable sample size to avoid checking every entry
+      const sampleSize = Math.min(50, metadata.length);
+      const sampleEntries = metadata.slice(0, sampleSize);
+
+      for (let i = 0; i < sampleEntries.length; i++) {
+        const item = sampleEntries[i];
+
+        // Try MITE_ID first if available
+        if (hasMiteColumn && item.MITE_ID &&
+          item.MITE_ID !== 'NaN' &&
+          item.MITE_ID !== 'nan' &&
+          item.MITE_ID !== '' &&
+          item.MITE_ID !== null) {
+
+          // Handle multiple IDs separated by delimiters
+          const miteIds = item.MITE_ID.split(/[;,|]/).map(id => id.trim()).filter(id => id);
+
+          for (const miteId of miteIds) {
+            const image = "/static/images_reactions/" + miteId + ".png";
+            console.log(`Checking MITE_ID image: ${image}`);
+            try {
+              const response = await fetch(image, { method: 'HEAD' });
+              if (response.ok) {
+                console.log('Found valid reaction image for MITE_ID:', miteId);
+                return true;
+              }
+            } catch (error) {
+              console.log('Error checking MITE image:', error);
+            }
           }
-        } catch (error) {
-          continue;
+        }
+
+        // Try Uniprot_ID if available
+        if (hasUniprotColumn && item.Uniprot_ID &&
+          item.Uniprot_ID !== 'NaN' &&
+          item.Uniprot_ID !== 'nan' &&
+          item.Uniprot_ID !== '' &&
+          item.Uniprot_ID !== null) {
+
+          // Handle multiple IDs separated by delimiters
+          const uniprotIds = item.Uniprot_ID.split(/[;,|]/).map(id => id.trim()).filter(id => id);
+
+          for (const uniprotId of uniprotIds) {
+            const image = "/static/images_reactions/" + uniprotId + ".png";
+            console.log(`Checking Uniprot_ID image: ${image}`);
+
+            try {
+              const response = await fetch(image, { method: 'HEAD' });
+              if (response.ok) {
+                console.log('Found valid reaction image for Uniprot_ID:', uniprotId);
+                return true;
+              }
+            } catch (error) {
+              console.log('Error checking UniProt image:', error);
+            }
+          }
+        }
+
+        // Log progress periodically
+        if (i % 10 === 0 && i > 0) {
+          console.log(`Checked ${i}/${sampleEntries.length} entries for reaction images`);
         }
       }
+
+      console.log('No reaction images found for MITE_ID or Uniprot_ID');
+      return false;
+
     }
 
     console.log('No images found for imageType:', imageType);
@@ -1636,7 +1712,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // Add this line:
     createColumnHeader('BGC Products', slotIndex);
 
-    let columnName = 'Cluster';
+    let columnName = 'mibig';
     if (metadata.length > 0) {
       let columnNames = Object.keys(metadata[0]);
       console.log("Available columns:", columnNames);
@@ -1657,9 +1733,26 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       let translateValues = parseFloat(match[1]);
 
       let bgc = annot[d.data.name];
-      if (bgc && bgc.startsWith("BGC")) {
-        let bgc1 = bgc.split('.')[0];
+      // Check that bgc exists and is not empty/null
+      if (bgc && bgc !== 'NaN' && bgc !== 'nan' && bgc !== '' && bgc !== null) {
+        // Clean up the BGC ID if needed
+        if (bgc.includes(';') || bgc.includes(',') || bgc.includes('|')) {
+          // If multiple IDs, just use the first one
+          bgc = bgc.split(/[;,|]/)[0].trim();
+        }
+
         console.log(bgc, ': Checking images');
+
+        // MIBiG IDs should be formatted like "BGCxxxxxxx"
+        // Ensure proper format for image lookup
+        if (!bgc.startsWith("BGC")) {
+          // If it's just numbers, add BGC prefix
+          if (/^\d+$/.test(bgc)) {
+            bgc = "BGC" + bgc;
+          }
+        }
+        // ADD THIS LINE:
+        let bgc1 = bgc.split('.')[0];
 
         let image1 = "static/images/" + bgc + "_1.png";
         let image2 = "static/images/" + bgc1 + "_1.png";
@@ -2351,8 +2444,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   (async function () {
     let hasBGCImages = false;
     if (metadata && metadata.length > 0) {
-      hasBGCImages = await checkImagesExist(metadata, 'BGC_product');
-      console.log('Checking for BGC_product images:', hasBGCImages);
+      // Change: Check for mibig column instead of Cluster
+      let hasMibigColumn = metadata[0].hasOwnProperty('mibig');
+      console.log('Checking for mibig column:', hasMibigColumn);
+
+      if (hasMibigColumn) {
+        hasBGCImages = await checkImagesExist(metadata, 'BGC_product');
+        console.log('Checking for BGC_product images from mibig column:', hasBGCImages);
+      }
     }
 
     ["BGC_product"].forEach(id => {
