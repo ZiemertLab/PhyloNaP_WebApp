@@ -37,7 +37,7 @@ const HYPERLINK_CONFIG = {
     //url: 'https://mite.bioinformatics.nl/repository/{id}',
     description: 'Metabolic information'
   },
-  'FAM_ID': {
+  'GCF_ID': {
     name: 'PanBGC',
     url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
     description: 'Protein family information'
@@ -985,7 +985,7 @@ function cleanIdentifier(id, columnName) {
       // Clean MITE IDs
       cleanId = cleanId.replace(/^(MITE:|mite:)/i, '');
       break;
-    case 'FAM_ID':
+    case 'GCF_ID':
       clean_Id = cleanId
       // Pfam IDs typically start with PF
       // cleanId = cleanId.replace(/^(Pfam:|PF:)/i, '');
@@ -1437,7 +1437,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   // Add these functions after the removeColors() function
 
   function colorSamePanBGC() {
-    let columnName = 'FAM_ID';
+    let columnName = 'GCF_ID';
 
     // SAFETY CHECK: Ensure metadata exists and has the required column
     if (!metadata || metadata.length === 0) {
@@ -1451,7 +1451,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       return;
     }
 
-    console.log('Coloring by PanBGC FAM_ID');
+    console.log('Coloring by PanBGC GCF_ID');
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
       return obj;
@@ -1464,7 +1464,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     let famGroups = {};
     nodes.each(function (d) {
       let famId = annot[d.data.name];
-      console.log('FAM_ID:', famId);
+      console.log('GCF_ID:', famId);
       if (famId !== null && famId !== undefined && famId !== '' && famId !== 'NaN' && famId !== 'nan') {
         if (!famGroups[famId]) {
           famGroups[famId] = [];
@@ -2262,18 +2262,18 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
   });
   ["panbgc"].forEach(id => {
-    // CHECK if 'FAM_ID' column exists in metadata before creating button
-    let hasFamIdColumn = false;
+    // CHECK if 'GCF_ID' column exists in metadata before creating button
+    let hasGcfIdColumn = false;
     if (metadata && metadata.length > 0) {
-      hasFamIdColumn = metadata[0].hasOwnProperty('FAM_ID');
-      console.log('Checking for FAM_ID column:', hasFamIdColumn);
+      hasGcfIdColumn = metadata[0].hasOwnProperty('GCF_ID');
+      console.log('Checking for GCF_ID column:', hasGcfIdColumn);
       console.log('Available columns:', Object.keys(metadata[0]));
     }
 
     let button = document.getElementById(id);
 
     if (button) {
-      if (hasFamIdColumn) {
+      if (hasGcfIdColumn) {
         // Show and enable the button
         button.style.display = 'block';
         button.dataset.active = 'false';
@@ -2305,10 +2305,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           }
         });
 
-        console.log('PanBGC button enabled - FAM_ID column found');
+        console.log('PanBGC button enabled - GCF_ID column found');
       } else {
-        // Hide the button if no FAM_ID data exists
-        console.log('FAM_ID column not found - hiding button');
+        // Hide the button if no GCF_ID data exists
+        console.log('GCF_ID column not found - hiding button');
         button.style.display = 'none';
       }
     } else {
