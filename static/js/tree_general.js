@@ -971,7 +971,9 @@ function cleanIdentifier(id, columnName) {
       break;
     case 'mibig':
       // MIBiG IDs are typically BGC followed by 7 digits
+
       cleanId = cleanId.replace(/^(MIBiG:|BGC-)/i, '');
+      cleanId = cleanId.split('.')[0];
       if (!cleanId.startsWith('BGC') && /^\d{7}$/.test(cleanId)) {
         cleanId = 'BGC' + cleanId;
       }
