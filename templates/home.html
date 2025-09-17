@@ -6,6 +6,18 @@
     <img src="{{ url_for('static', filename='pictures/home.png') }}" alt="PhyloNaP Homepage"
         style="max-width: 100%; max-height: 100%; object-fit: contain;">
 </div>
+
+<!-- Add clickable overlays with a higher z-index -->
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none;">
+    <!-- Analysis link (bottom left) -->
+    <a href="{{ url_for('analyse') }}" style="position: absolute; left: 0; bottom: 0; width: 25%; height: 25%; 
+              pointer-events: auto; cursor: pointer;" title="Go to Analysis"></a>
+
+    <!-- Database link (rest of image) -->
+    <a href="{{ url_for('database') }}" style="position: absolute; top: 0; right: 0; width: 75%; height: 100%; 
+              pointer-events: auto; cursor: pointer;" title="Go to Database"></a>
+</div>
+
 <footer class="text-center text-white fixed-bottom" style="background: var(--background-dark, #3D3D3D);">
     <p class="mb-0">University of Tübingen - 2025 -</p>
 </footer>
