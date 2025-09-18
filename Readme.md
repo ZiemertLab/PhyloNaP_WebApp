@@ -52,7 +52,7 @@ We present PhyloNaP, the first large-scale resource dedicated to phylogenies of 
 
 ```bash
 # Clone repository
-git clone [repository-url]
+git clone https://github.com/SashaKorenskaia/PhyloNaP_WebApp.git
 cd PhyloNaP_WebApp
 
 # Install Python dependencies
