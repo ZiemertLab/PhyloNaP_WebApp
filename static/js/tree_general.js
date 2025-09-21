@@ -3123,7 +3123,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       statusHeader.style.cssText = `
             font-size: 12px; 
             color: #6c757d; 
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-weight: 500;
           `;
       statusHeader.innerHTML = '<strong>For the clade of placements</strong>';
       summaryContainer.appendChild(statusHeader);
@@ -3144,12 +3145,12 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       columnDiv.setAttribute('draggable', 'true');
       columnDiv.setAttribute('data-column-key', key);
       columnDiv.style.cssText = `
-        margin-bottom: 15px;
-        border-left: 3px solid #7B1B38;
-        padding-left: 10px;
+        margin-bottom: 8px;
+        border-left: 2px solid #7B1B38;
+        padding-left: 8px;
         background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: all 0.2s ease;
         cursor: grab;
         position: relative;
@@ -3187,10 +3188,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
 
           // Show drop indicator
           if (e.clientY < midpoint) {
-            columnDiv.style.borderTop = '3px solid #7B1B38';
+            columnDiv.style.borderTop = '2px solid #7B1B38';
             columnDiv.style.borderBottom = '';
           } else {
-            columnDiv.style.borderBottom = '3px solid #7B1B38';
+            columnDiv.style.borderBottom = '2px solid #7B1B38';
             columnDiv.style.borderTop = '';
           }
         }
@@ -3232,8 +3233,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         display: flex;
         align-items: center;
         cursor: pointer;
-        padding: 8px 0;
-        border-radius: 4px;
+        padding: 4px 0;
+        border-radius: 3px;
         transition: background-color 0.2s;
         position: relative;
       `;
@@ -3252,7 +3253,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       dragHandle.style.cssText = `
         color: #999;
         font-size: 16px;
-        margin-right: 8px;
+        margin-right: 6px;
         cursor: grab;
         user-select: none;
         line-height: 1;
@@ -3281,13 +3282,13 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       statsSpan.style.cssText = `
         font-size: 12px;
         color: #666;
-        margin-left: 8px;
+        margin-left: 6px;
         font-weight: normal;
       `;
 
       // Color code based on diversity
       if (uniqueValues <= 2) {
-        statsSpan.style.color = '#d73502'; // Red for most interesting (least diverse)
+        statsSpan.style.color = '#7B1B38'; // Red for most interesting (least diverse)
         statsSpan.style.fontWeight = '500';
       } else if (uniqueValues <= 4) {
         statsSpan.style.color = '#f57c00'; // Orange for moderately interesting
@@ -3298,8 +3299,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       arrowContainer.style.cssText = `
         display: flex;
         flex-direction: column;
-        margin-left: 8px;
-        gap: 2px;
+        margin-left: 6px;
+        gap: 1px;
       `;
 
       const upArrow = document.createElement('button');
@@ -3310,7 +3311,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         color: #7B1B38;
         cursor: pointer;
         font-size: 10px;
-        padding: 1px 4px;
+        padding: 1px 3px;
         border-radius: 2px;
         transition: background-color 0.2s;
         line-height: 1;
@@ -3334,7 +3335,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         color: #7B1B38;
         cursor: pointer;
         font-size: 10px;
-        padding: 1px 4px;
+        padding: 1px 3px;
         border-radius: 2px;
         transition: background-color 0.2s;
         line-height: 1;
@@ -3365,10 +3366,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         font-size: 14px;
         color: #7B1B38;
         cursor: pointer;
-        padding: 4px 8px;
+        padding: 2px 4px;
         border-radius: 3px;
         transition: background-color 0.2s;
-        margin-left: 8px;
+        margin-left: 4px;
       `;
 
       // Toggle button hover effect
@@ -3403,28 +3404,36 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 4px 8px;
-          margin: 2px 0;
+          padding: 2px 6px;
+          margin: 1px 0;
           background-color: #f8f9fa;
-          border-radius: 4px;
+          border-radius: 3px;
           font-size: 13px;
         `;
 
         const valueSpan = document.createElement('span');
         valueSpan.textContent = value || '(empty)';
         valueSpan.style.color = '#333';
-        valueSpan.style.fontWeight = '500';
+        // valueSpan.style.fontWeight = '500';
+        valueSpan.style.cssText = `
+          color: #333;
+          font-weight: 500;
+          max-width: 60%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        `;
 
         const countSpan = document.createElement('span');
         countSpan.textContent = count;
         countSpan.style.cssText = `
           background-color: #7B1B38;
           color: white;
-          padding: 2px 6px;
-          border-radius: 10px;
+          padding: 1px 4px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 600;
-          min-width: 20px;
+          min-width: 16px;
           text-align: center;
         `;
 
@@ -3465,10 +3474,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
     if (validColumns.length > 5) {
       const footerDiv = document.createElement('div');
       footerDiv.style.cssText = `
-        margin-top: 20px;
-        padding: 10px;
+        margin-top: 12px;
+        padding: 6px;
         background-color: #f0f0f0;
-        border-radius: 6px;
+        border-radius: 4px;
         font-size: 12px;
         color: #666;
         text-align: center;
