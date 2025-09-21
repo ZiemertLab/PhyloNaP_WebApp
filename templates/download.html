@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<meta charset="UTF-8">
 <style>
     .centered-page-container {
         min-height: 80vh;
@@ -69,21 +68,10 @@
 
     .explanation {
         max-width: 600px;
-        margin: 30px auto 10px auto;
+        margin: 20px auto;
         text-align: center;
         color: #333;
         font-size: 1.08em;
-    }
-
-    .info-message {
-        background-color: rgba(123, 27, 56, 0.08);
-        border-left: 4px solid #7B1B38;
-        color: #7B1B38;
-        padding: 15px 20px;
-        margin: 20px 0;
-        border-radius: 6px;
-        font-size: 1em;
-        text-align: left;
     }
 
     .error-message {
@@ -93,11 +81,9 @@
         padding: 15px 20px;
         margin: 20px 0;
         border-radius: 6px;
-        font-size: 1em;
         text-align: center;
     }
 </style>
-<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
 <div class="centered-page-container">
     <div class="explanation">
@@ -116,7 +102,7 @@
         </div>
 
         <a href="{{ url_for('download_file') }}" class="download-btn">
-            <i class="fas fa-download" style="margin-right: 10px;"></i>Download Database Archive
+            Download Database Archive
         </a>
 
         {% else %}
