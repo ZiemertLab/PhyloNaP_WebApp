@@ -951,7 +951,48 @@ window.createExternalLinksTable = function (metadata) {
   hyperlinkContainer.appendChild(displayButton);
 
 };
+// Add external links toggle functionality
+window.setupExternalLinksToggle = function () {
+  const heading = document.getElementById('external-links-heading');
+  const toggle = document.getElementById('external-links-toggle');
+  const container = document.getElementById('hyperlink-container');
 
+  if (heading && toggle && container) {
+    let isCollapsed = true;
+
+    // Hide the container by default
+    container.style.display = 'none';
+    toggle.textContent = '▶'; // Right arrow (collapsed state)
+
+    // Add click handler to the heading
+    heading.addEventListener('click', function () {
+      isCollapsed = !isCollapsed;
+
+      if (isCollapsed) {
+        // Hide the container
+        container.style.display = 'none';
+        toggle.textContent = '▶'; // Right arrow
+        toggle.style.transform = 'rotate(0deg)';
+      } else {
+        // Show the container
+        container.style.display = 'block';
+        toggle.textContent = '▼'; // Down arrow
+        toggle.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    // Add hover effect
+    heading.addEventListener('mouseenter', function () {
+      heading.style.backgroundColor = '#f5f5f5';
+    });
+
+    heading.addEventListener('mouseleave', function () {
+      heading.style.backgroundColor = 'transparent';
+    });
+
+    console.log('External links toggle functionality added');
+  }
+};
 /**
  * Clean identifier based on the column type
  * @param {string} id - Raw identifier
@@ -2552,6 +2593,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     window.treeMetadata = metadata;
     if (window.createExternalLinksTable) {
       createExternalLinksTable(metadata);
+    }
+    // Initialize the toggle functionality
+    if (window.setupExternalLinksToggle) {
+      window.setupExternalLinksToggle();
     }
   }, 100); // Small delay to ensure other functionality is set up first
 }
