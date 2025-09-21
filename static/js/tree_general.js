@@ -1101,7 +1101,231 @@ document.addEventListener('DOMContentLoaded', function () {
     createExternalLinksTable(window.treeMetadata);
   }
 });
+// Add this function after your existing functions
+window.showImageInEnlargedContainer = function (imageSrc, bgcId, nodeId) {
+  const enlargedContainer = document.getElementById('enlarged-image-container');
+  const enlargedImage = document.getElementById('enlarged-image');
 
+  if (!enlargedContainer || !enlargedImage) {
+    console.error('Enlarged image container or image element not found');
+    return;
+  }
+
+  // Clear any existing content except the image
+  const existingLinks = enlargedContainer.querySelectorAll('.mibig-info');
+  existingLinks.forEach(link => link.remove());
+
+  // Set the image
+  enlargedImage.src = imageSrc;
+  enlargedImage.style.display = 'block';
+
+  // Add MIBiG link and node info
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'mibig-info';
+  infoDiv.style.cssText = `
+    margin-top: 10px;
+    text-align: center;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+  `;
+
+  const mibigLink = document.createElement('a');
+  mibigLink.href = `https://bioregistry.io/mibig:${bgcId}`;
+  mibigLink.target = '_blank';
+  mibigLink.textContent = `MIBiG: ${bgcId}`;
+  mibigLink.style.cssText = `
+    color: #7B1B38;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: monospace;
+    border: 1px solid #7B1B38;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 10px;
+    transition: all 0.2s;
+  `;
+
+  mibigLink.addEventListener('mouseenter', () => {
+    mibigLink.style.backgroundColor = '#7B1B38';
+    mibigLink.style.color = 'white';
+  });
+
+  mibigLink.addEventListener('mouseleave', () => {
+    mibigLink.style.backgroundColor = 'transparent';
+    mibigLink.style.color = '#7B1B38';
+  });
+
+  const nodeInfo = document.createElement('span');
+  nodeInfo.textContent = `Node: ${nodeId}`;
+  nodeInfo.style.cssText = `
+    color: #666;
+    font-size: 12px;
+  `;
+
+  infoDiv.appendChild(mibigLink);
+  infoDiv.appendChild(nodeInfo);
+  enlargedContainer.appendChild(infoDiv);
+
+  // Add click handler to enlarged image for full-screen view
+  enlargedImage.onclick = function () {
+    showLargeImageOverlay(imageSrc, bgcId, nodeId);
+  };
+
+  // Make it look clickable
+  enlargedImage.style.cursor = 'pointer';
+  enlargedImage.title = 'Click to enlarge further';
+};
+
+// Add the large overlay function
+window.showLargeImageOverlay = function (imageSrc, bgcId, nodeId) {
+  // Remove any existing overlay
+  const existingOverlay = document.getElementById('large-image-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+    return; // If overlay exists, just remove it (toggle behavior)
+  }
+
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'large-image-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    cursor: pointer;
+  `;
+
+  // Create content container
+  const contentContainer = document.createElement('div');
+  contentContainer.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+  `;
+
+  // Prevent overlay click from closing when clicking on content
+  contentContainer.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+
+  // Create header with MIBiG link
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+  `;
+
+  const idLabel = document.createElement('span');
+  idLabel.textContent = `MIBiG ID: `;
+  idLabel.style.cssText = `
+    font-weight: bold;
+    color: #333;
+  `;
+
+  const idLink = document.createElement('a');
+  idLink.href = `https://bioregistry.io/mibig:${bgcId}`;
+  idLink.target = '_blank';
+  idLink.textContent = bgcId;
+  idLink.style.cssText = `
+    color: #7B1B38;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: monospace;
+    border: 1px solid #7B1B38;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  `;
+
+  idLink.addEventListener('mouseenter', () => {
+    idLink.style.backgroundColor = '#7B1B38';
+    idLink.style.color = 'white';
+  });
+
+  idLink.addEventListener('mouseleave', () => {
+    idLink.style.backgroundColor = 'transparent';
+    idLink.style.color = '#7B1B38';
+  });
+
+  const nodeLabel = document.createElement('span');
+  nodeLabel.textContent = `(Node: ${nodeId})`;
+  nodeLabel.style.cssText = `
+    color: #666;
+    font-size: 12px;
+  `;
+
+  header.appendChild(idLabel);
+  header.appendChild(idLink);
+  header.appendChild(nodeLabel);
+
+  // Create large image
+  const largeImage = document.createElement('img');
+  largeImage.src = imageSrc;
+  largeImage.style.cssText = `
+    max-width: 80vw;
+    max-height: 70vh;
+    object-fit: contain;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  `;
+
+  // Make the large image clickable to close
+  largeImage.title = 'Click to close';
+
+  // Create close instruction
+  const closeInstruction = document.createElement('p');
+  closeInstruction.textContent = 'Click image or anywhere outside to close';
+  closeInstruction.style.cssText = `
+    margin-top: 10px;
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+  `;
+
+  // Assemble components
+  contentContainer.appendChild(header);
+  contentContainer.appendChild(largeImage);
+  contentContainer.appendChild(closeInstruction);
+  overlay.appendChild(contentContainer);
+
+  // Close when clicking anywhere (image or overlay)
+  overlay.addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  // Close with Escape key
+  const escapeHandler = function (e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', escapeHandler);
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
+
+  // Add to page
+  document.body.appendChild(overlay);
+};
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   let activeColoringButton = null; // Track which coloring button is currently active
@@ -1838,7 +2062,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           console.log('image:width', img.attr('width'));
 
           img.on('click', function () {
-            d3.select('#enlarged-image').attr('src', image);
+            //d3.select('#enlarged-image').attr('src', image);
+            // Get the BGC ID for the MIBiG link
+            let bgcForLink = bgc.split('.')[0]; // This gives us the clean BGC ID
+
+            // Show in enlarged container with MIBiG link
+            showImageInEnlargedContainer(image, bgcForLink, d.data.name);
           });
         });
       }
