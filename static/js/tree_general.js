@@ -1158,7 +1158,7 @@ window.showImageInEnlargedContainer = function (imageSrc, bgcId, nodeId) {
   });
 
   const nodeInfo = document.createElement('span');
-  nodeInfo.textContent = `Node: ${nodeId}`;
+  // nodeInfo.textContent = `Node: ${nodeId}`;
   nodeInfo.style.cssText = `
     color: #666;
     font-size: 12px;
