@@ -1,4 +1,4 @@
-# PhyloNaP - Phylogenetic Natural Product Database
+# PhyloNaP -  Phylogeny for Natural Product-producing enzymes
 
 ## Overview
 
