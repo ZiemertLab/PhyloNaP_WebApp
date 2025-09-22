@@ -137,6 +137,83 @@ window.setupDownloadDataset = function (nwk, metadata) {
     }
   };
 
+  // Download sequences file (.fasta)  
+  window.downloadSequencesFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the sequences file (default: sequences.fasta):', 'sequences.fasta') || 'sequences.fasta';
+
+      // Get dataset ID from current page
+      const datasetId = getDatasetId();
+
+      if (!datasetId) {
+        throw new Error('Dataset ID not found');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/sequences/${datasetId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download sequences file: ' + error.message);
+    }
+  };
+
+  // Download alignment file (.fasta)
+  window.downloadAlignmentFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the alignment file (default: alignment.faa):', 'alignment.faa') || 'alignment.faa';
+
+      // Get dataset ID from current page
+      const datasetId = getDatasetId(); // You'll need to implement this helper
+
+      if (!datasetId) {
+        throw new Error('Dataset ID not found');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/alignment/${datasetId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download alignment file: ' + error.message);
+    }
+  };
+  // Helper function to get dataset ID from current page
+  function getDatasetId() {
+    const url = window.location.href;
+
+    // Method 1: Extract from treeId parameter (jplace_render.html?...&treeId=T000002)
+    const treeIdMatch = url.match(/[?&]treeId=([^&]+)/);
+    if (treeIdMatch) {
+      return treeIdMatch[1];
+    }
+
+    // Method 2: Extract from dataset_id parameter (phylotree_render?dataset_id=T000002)
+    const datasetIdMatch = url.match(/[?&]dataset_id=([^&]+)/);
+    if (datasetIdMatch) {
+      return datasetIdMatch[1];
+    }
+
+    console.error('Could not determine dataset ID from URL:', url);
+    return null;
+  }
+
   // Helper to attach listeners (can be called multiple times safely)
   function attachDownloadListeners() {
     const downloadTreeBtn = document.getElementById('download-tree-btn');
@@ -148,6 +225,17 @@ window.setupDownloadDataset = function (nwk, metadata) {
     if (downloadMetadataBtn && !downloadMetadataBtn._listenerAttached) {
       downloadMetadataBtn.addEventListener('click', window.downloadMetadataFile);
       downloadMetadataBtn._listenerAttached = true;
+    }
+    const downloadAlignmentBtn = document.getElementById('download-alignment-btn');
+    if (downloadAlignmentBtn && !downloadAlignmentBtn._listenerAttached) {
+      downloadAlignmentBtn.addEventListener('click', window.downloadAlignmentFile);
+      downloadAlignmentBtn._listenerAttached = true;
+    }
+
+    const downloadSequencesBtn = document.getElementById('download-sequences-btn');
+    if (downloadSequencesBtn && !downloadSequencesBtn._listenerAttached) {
+      downloadSequencesBtn.addEventListener('click', window.downloadSequencesFile);
+      downloadSequencesBtn._listenerAttached = true;
     }
   }
 
