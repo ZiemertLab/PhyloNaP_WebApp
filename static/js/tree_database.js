@@ -26,7 +26,7 @@ async function main() {
 
     // Initialize download functionality
     setupDownloadDataset(nwk, metadata);
-    // At the end of tree_rendering.js
+
 
     selectedLeavesArray = getTerminalNodesArray(tree, metadata)
     console.log("selectedLeavesArray: ", selectedLeavesArray);

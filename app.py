@@ -188,6 +188,44 @@ def register_routes(app):
     @app.route('/')
     def home():
         return render_template('home.html')
+    @app.route('/download')
+    def download():
+        try:
+            download_path = app.config.get('DOWNLOAD_FILE')
+            if download_path and os.path.exists(download_path):
+                # Get file size in a readable format
+                file_size = os.path.getsize(download_path)
+                if file_size > 1024**3:  # GB
+                    file_size_str = f"{file_size / (1024**3):.1f} GB"
+                elif file_size > 1024**2:  # MB
+                    file_size_str = f"{file_size / (1024**2):.1f} MB"
+                else:  # KB
+                    file_size_str = f"{file_size / 1024:.1f} KB"
+            else:
+                file_size_str = None
+        except Exception as e:
+            app.logger.error(f"Error getting download path: {e}", exc_info=True)
+            download_path = None
+            file_size_str = None
+
+        return render_template('download.html', 
+                        download_path=download_path,
+                        file_size=file_size_str)
+
+    @app.route('/download_file')
+    def download_file():
+        """Actual file download endpoint"""
+        try:
+            download_path = app.config.get('DOWNLOAD_FILE')
+            if download_path and os.path.exists(download_path):
+                directory = os.path.dirname(download_path)
+                filename = os.path.basename(download_path)
+                return send_from_directory(directory, filename, as_attachment=True)
+            else:
+                return "File not found", 404
+        except Exception as e:
+            app.logger.error(f"Error downloading file: {e}", exc_info=True)
+            return "Download error", 500
 
     @app.route('/analyse')
     def analyse():
@@ -488,6 +526,65 @@ def register_routes(app):
             app.logger.error(f"Error in tree_renderer: {e}", exc_info=True)
             return render_template('error.html', 
                              error_message=f"Error loading tree data: {str(e)}"), 500
+    @app.route('/download/alignment/<dataset_id>')
+    def download_alignment(dataset_id):
+        try:
+            from .db import get_dataset_by_id
+            
+            dataset = get_dataset_by_id(dataset_id)
+            if not dataset:
+                return "Dataset not found", 404
+            
+            alignment_file = dataset.get('alignment', '')
+            if not alignment_file:
+                return "No alignment file available for this dataset", 404
+            
+            database_dir = app.config['DATABASE_DIR']
+            alignment_path = os.path.join(database_dir, alignment_file)
+            
+            if not os.path.exists(alignment_path):
+                return "Alignment file not found", 404
+            
+            return send_from_directory(
+                os.path.dirname(alignment_path),
+                os.path.basename(alignment_path),
+                as_attachment=True,
+                download_name=f"{dataset_id}_alignment.fasta"
+            )
+            
+        except Exception as e:
+            app.logger.error(f"Error downloading alignment for {dataset_id}: {e}")
+            return "Download error", 500
+    @app.route('/download/sequences/<dataset_id>')
+    def download_sequences(dataset_id):
+        try:
+            from .db import get_dataset_by_id
+            
+            dataset = get_dataset_by_id(dataset_id)
+            if not dataset:
+                return "Dataset not found", 404
+            
+            sequences_file = dataset.get('sequences', '')
+            if not sequences_file:
+                return "No sequences file available for this dataset", 404
+            
+            database_dir = app.config['DATABASE_DIR']
+            sequences_path = os.path.join(database_dir, sequences_file)
+            
+            if not os.path.exists(sequences_path):
+                return "Sequences file not found", 404
+            
+            return send_from_directory(
+                os.path.dirname(sequences_path),
+                os.path.basename(sequences_path),
+                as_attachment=True,
+                download_name=f"{dataset_id}_sequences.fasta"
+            )
+            
+        except Exception as e:
+            app.logger.error(f"Error downloading sequences for {dataset_id}: {e}")
+            return "Download error", 500
+
 
     # Add other routes here...
     @app.route('/submit', methods=['POST'])

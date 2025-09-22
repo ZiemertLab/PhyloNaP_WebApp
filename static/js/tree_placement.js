@@ -142,6 +142,11 @@ async function main() {
     console.log("selectedLeavesArray: ", selectedLeavesArray);
     checkForClusters(tree);
 
+    // Initialize download functionality
+    setupDownloadDataset(nwk, metadata);
+
+    setupJplaceDownloads();
+
     $(document).ready(function () {
         Split(['.tree-panel', '.details'], {
             sizes: [75, 25],

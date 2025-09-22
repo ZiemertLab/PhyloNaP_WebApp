@@ -359,9 +359,18 @@
           <button id="cluster" class="btn m-1 non-active-button">Proteins from the same cluster</button>
           <button id="panbgc" class="btn m-1 non-active-button">Proteins from the same GCF</button>
         </div>
-        <div id="hyperlink-container" style="margin-top: 20px;">
-          <h4>External links</h4>
-
+        <div class="external-links-section">
+          <h4 id="external-links-heading"
+            style="cursor: pointer; display: flex; align-items: center; user-select: none;">
+            External links
+            <span id="external-links-toggle"
+              style="margin-left: 8px; font-size: 14px; transition: transform 0.2s ease;">
+              ▼
+            </span>
+          </h4>
+          <div id="hyperlink-container">
+            <!-- Table and button will be added here by createExternalLinksTable -->
+          </div>
         </div>
         <!-- {{ metadata_list }} 
         {% for item in metadataListArray %}
@@ -381,6 +390,27 @@
         <div id="summary-container"></div>
         <h4>Placements</h4>
         <div id="placement-container"></div>
+        <h4>Download Dataset</h4>
+        <div class="download-buttons">
+          <button id="download-tree-btn" class="btn btn-sm non-active-button m-1">
+            Tree (.nwk)
+          </button>
+          <button id="download-metadata-btn" class="btn btn-sm non-active-button m-1">
+            Metadata (.tsv)
+          </button>
+          <button id="download-alignment-btn" class="btn btn-sm non-active-button m-1">
+            Alignment (.faa)
+          </button>
+          <button id="download-sequences-btn" class="btn btn-sm non-active-button m-1">
+            Sequences (.fasta)
+          </button>
+          <button id="download-aligned-query-btn" class="btn btn-sm non-active-button m-1">
+            Aligned Query (.fa)
+          </button>
+          <button id="download-placement-btn" class="btn btn-sm non-active-button m-1">
+            Placement (.jplace)
+          </button>
+        </div>
       </div>
 
     </div>

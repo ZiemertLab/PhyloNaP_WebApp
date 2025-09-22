@@ -88,11 +88,11 @@ window.getTreeData = function () {
 
 // Add download dataset functionality
 window.setupDownloadDataset = function (nwk, metadata) {
-
+  const datasetId = getDatasetId();
   // Download tree file (.nwk)
   window.downloadTreeFile = function () {
     try {
-      const fileName = prompt('Enter a name for the tree file (default: phylogenetic_tree.nwk):', 'phylogenetic_tree.nwk') || 'phylogenetic_tree.nwk';
+      const fileName = prompt('Enter a name for the tree file (default: {datasetId}.nwk):', `${datasetId}.nwk`) || `${datasetId}.nwk`;
       if (!nwk) throw new Error('Tree data not found');
       const blob = new Blob([nwk], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
@@ -111,7 +111,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download metadata file (.tsv)
   window.downloadMetadataFile = function () {
     try {
-      const fileName = prompt('Enter a name for the metadata file (default: metadata.tsv):', 'metadata.tsv') || 'metadata.tsv';
+      const fileName = prompt('Enter a name for the metadata file (default: {datasetId}.tsv):', `${datasetId}.tsv`) || `${datasetId}.tsv`;
       if (!metadata || metadata.length === 0) throw new Error('No metadata available');
       const headers = Object.keys(metadata[0]);
       const tsvContent = [
@@ -137,6 +137,179 @@ window.setupDownloadDataset = function (nwk, metadata) {
     }
   };
 
+  // Download sequences file (.fasta)  
+  window.downloadSequencesFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the sequences file (default: {datasetId}.fasta):', `${datasetId}.fasta`) || `${datasetId}.fasta`;
+
+      // Get dataset ID from current page
+      const datasetId = getDatasetId();
+
+      if (!datasetId) {
+        throw new Error('Dataset ID not found');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/sequences/${datasetId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download sequences file: ' + error.message);
+    }
+  };
+
+  // Download alignment file (.fasta)
+  window.downloadAlignmentFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the alignment file (default: {datasetId}.faa):', `${datasetId}.faa`) || `${datasetId}.faa`;
+
+      // Get dataset ID from current page
+      const datasetId = getDatasetId(); // You'll need to implement this helper
+
+      if (!datasetId) {
+        throw new Error('Dataset ID not found');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/alignment/${datasetId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download alignment file: ' + error.message);
+    }
+  };
+  // Helper function to get dataset ID from current page
+  function getDatasetId() {
+    const url = window.location.href;
+
+    // Method 1: Extract from treeId parameter (jplace_render.html?...&treeId=T000002)
+    const treeIdMatch = url.match(/[?&]treeId=([^&]+)/);
+    if (treeIdMatch) {
+      return treeIdMatch[1];
+    }
+
+    // Method 2: Extract from dataset_id parameter (phylotree_render?dataset_id=T000002)
+    const datasetIdMatch = url.match(/[?&]dataset_id=([^&]+)/);
+    if (datasetIdMatch) {
+      return datasetIdMatch[1];
+    }
+
+    console.error('Could not determine dataset ID from URL:', url);
+    return null;
+  }
+  // Add these functions to tree_placement.js after the main() function
+
+  // Helper function to extract URL parameters for jplace
+  function getJplaceParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      jobId: urlParams.get('jobId'),
+      query: urlParams.get('query'),
+      treeId: urlParams.get('treeId')
+    };
+  }
+
+  // Download aligned query file (.fa)
+  window.downloadAlignedQueryFile = function () {
+
+    try {
+      const { jobId, query, treeId } = getJplaceParams();
+
+
+
+      if (!jobId || !query || !treeId) {
+        throw new Error('Missing required parameters (jobId, query, or treeId)');
+      }
+      const fileName = prompt('Enter a name for the aligned query file (default: {query}_{treeId}.fa):', `${query}_${treeId}.fa`) || `${query}_${treeId}.fa`;
+
+
+      // Create download URL
+      const downloadUrl = `/download/aligned_query/${jobId}/${query}/${treeId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download aligned query file: ' + error.message);
+    }
+  };
+
+  // Download placement file (.jplace)
+  window.downloadPlacementFile = function () {
+    try {
+      const { jobId, query, treeId } = getJplaceParams();
+
+      if (!jobId || !query || !treeId) {
+        throw new Error('Missing required parameters (jobId, query, or treeId)');
+
+      }
+      const fileName = prompt('Enter a name for the placement file (default: {query}_{treeId}.jplace):', `${query}_${treeId}.jplace`) || `${query}_${treeId}.jplace`;
+
+
+      // Create download URL
+      const downloadUrl = `/download/placement/${jobId}/${query}/${treeId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download placement file: ' + error.message);
+    }
+  };
+
+  // Setup jplace-specific download functionality
+  window.setupJplaceDownloads = function () {
+    // Helper to attach listeners
+    function attachJplaceDownloadListeners() {
+      const downloadAlignedQueryBtn = document.getElementById('download-aligned-query-btn');
+      if (downloadAlignedQueryBtn && !downloadAlignedQueryBtn._listenerAttached) {
+        downloadAlignedQueryBtn.addEventListener('click', window.downloadAlignedQueryFile);
+        downloadAlignedQueryBtn._listenerAttached = true;
+      }
+
+      const downloadPlacementBtn = document.getElementById('download-placement-btn');
+      if (downloadPlacementBtn && !downloadPlacementBtn._listenerAttached) {
+        downloadPlacementBtn.addEventListener('click', window.downloadPlacementFile);
+        downloadPlacementBtn._listenerAttached = true;
+      }
+    }
+
+    // Attach listeners after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attachJplaceDownloadListeners);
+    } else {
+      attachJplaceDownloadListeners();
+    }
+  };
+
   // Helper to attach listeners (can be called multiple times safely)
   function attachDownloadListeners() {
     const downloadTreeBtn = document.getElementById('download-tree-btn');
@@ -148,6 +321,17 @@ window.setupDownloadDataset = function (nwk, metadata) {
     if (downloadMetadataBtn && !downloadMetadataBtn._listenerAttached) {
       downloadMetadataBtn.addEventListener('click', window.downloadMetadataFile);
       downloadMetadataBtn._listenerAttached = true;
+    }
+    const downloadAlignmentBtn = document.getElementById('download-alignment-btn');
+    if (downloadAlignmentBtn && !downloadAlignmentBtn._listenerAttached) {
+      downloadAlignmentBtn.addEventListener('click', window.downloadAlignmentFile);
+      downloadAlignmentBtn._listenerAttached = true;
+    }
+
+    const downloadSequencesBtn = document.getElementById('download-sequences-btn');
+    if (downloadSequencesBtn && !downloadSequencesBtn._listenerAttached) {
+      downloadSequencesBtn.addEventListener('click', window.downloadSequencesFile);
+      downloadSequencesBtn._listenerAttached = true;
     }
   }
 
@@ -951,7 +1135,48 @@ window.createExternalLinksTable = function (metadata) {
   hyperlinkContainer.appendChild(displayButton);
 
 };
+// Add external links toggle functionality
+window.setupExternalLinksToggle = function () {
+  const heading = document.getElementById('external-links-heading');
+  const toggle = document.getElementById('external-links-toggle');
+  const container = document.getElementById('hyperlink-container');
 
+  if (heading && toggle && container) {
+    let isCollapsed = true;
+
+    // Hide the container by default
+    container.style.display = 'none';
+    toggle.textContent = '▶'; // Right arrow (collapsed state)
+
+    // Add click handler to the heading
+    heading.addEventListener('click', function () {
+      isCollapsed = !isCollapsed;
+
+      if (isCollapsed) {
+        // Hide the container
+        container.style.display = 'none';
+        toggle.textContent = '▶'; // Right arrow
+        toggle.style.transform = 'rotate(0deg)';
+      } else {
+        // Show the container
+        container.style.display = 'block';
+        toggle.textContent = '▼'; // Down arrow
+        toggle.style.transform = 'rotate(0deg)';
+      }
+    });
+
+    // Add hover effect
+    heading.addEventListener('mouseenter', function () {
+      heading.style.backgroundColor = '#f5f5f5';
+    });
+
+    heading.addEventListener('mouseleave', function () {
+      heading.style.backgroundColor = 'transparent';
+    });
+
+    console.log('External links toggle functionality added');
+  }
+};
 /**
  * Clean identifier based on the column type
  * @param {string} id - Raw identifier
@@ -1060,7 +1285,231 @@ document.addEventListener('DOMContentLoaded', function () {
     createExternalLinksTable(window.treeMetadata);
   }
 });
+// Add this function after your existing functions
+window.showImageInEnlargedContainer = function (imageSrc, bgcId, nodeId) {
+  const enlargedContainer = document.getElementById('enlarged-image-container');
+  const enlargedImage = document.getElementById('enlarged-image');
 
+  if (!enlargedContainer || !enlargedImage) {
+    console.error('Enlarged image container or image element not found');
+    return;
+  }
+
+  // Clear any existing content except the image
+  const existingLinks = enlargedContainer.querySelectorAll('.mibig-info');
+  existingLinks.forEach(link => link.remove());
+
+  // Set the image
+  enlargedImage.src = imageSrc;
+  enlargedImage.style.display = 'block';
+
+  // Add MIBiG link and node info
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'mibig-info';
+  infoDiv.style.cssText = `
+    margin-top: 10px;
+    text-align: center;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+  `;
+
+  const mibigLink = document.createElement('a');
+  mibigLink.href = `https://bioregistry.io/mibig:${bgcId}`;
+  mibigLink.target = '_blank';
+  mibigLink.textContent = `MIBiG: ${bgcId}`;
+  mibigLink.style.cssText = `
+    color: #7B1B38;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: monospace;
+    border: 1px solid #7B1B38;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-right: 10px;
+    transition: all 0.2s;
+  `;
+
+  mibigLink.addEventListener('mouseenter', () => {
+    mibigLink.style.backgroundColor = '#7B1B38';
+    mibigLink.style.color = 'white';
+  });
+
+  mibigLink.addEventListener('mouseleave', () => {
+    mibigLink.style.backgroundColor = 'transparent';
+    mibigLink.style.color = '#7B1B38';
+  });
+
+  const nodeInfo = document.createElement('span');
+  // nodeInfo.textContent = `Node: ${nodeId}`;
+  nodeInfo.style.cssText = `
+    color: #666;
+    font-size: 12px;
+  `;
+
+  infoDiv.appendChild(mibigLink);
+  infoDiv.appendChild(nodeInfo);
+  enlargedContainer.appendChild(infoDiv);
+
+  // Add click handler to enlarged image for full-screen view
+  enlargedImage.onclick = function () {
+    showLargeImageOverlay(imageSrc, bgcId, nodeId);
+  };
+
+  // Make it look clickable
+  enlargedImage.style.cursor = 'pointer';
+  enlargedImage.title = 'Click to enlarge further';
+};
+
+// Add the large overlay function
+window.showLargeImageOverlay = function (imageSrc, bgcId, nodeId) {
+  // Remove any existing overlay
+  const existingOverlay = document.getElementById('large-image-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+    return; // If overlay exists, just remove it (toggle behavior)
+  }
+
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'large-image-overlay';
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    cursor: pointer;
+  `;
+
+  // Create content container
+  const contentContainer = document.createElement('div');
+  contentContainer.style.cssText = `
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: default;
+  `;
+
+  // Prevent overlay click from closing when clicking on content
+  contentContainer.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+
+  // Create header with MIBiG link
+  const header = document.createElement('div');
+  header.style.cssText = `
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+  `;
+
+  const idLabel = document.createElement('span');
+  idLabel.textContent = `MIBiG ID: `;
+  idLabel.style.cssText = `
+    font-weight: bold;
+    color: #333;
+  `;
+
+  const idLink = document.createElement('a');
+  idLink.href = `https://bioregistry.io/mibig:${bgcId}`;
+  idLink.target = '_blank';
+  idLink.textContent = bgcId;
+  idLink.style.cssText = `
+    color: #7B1B38;
+    text-decoration: none;
+    font-weight: bold;
+    font-family: monospace;
+    border: 1px solid #7B1B38;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  `;
+
+  idLink.addEventListener('mouseenter', () => {
+    idLink.style.backgroundColor = '#7B1B38';
+    idLink.style.color = 'white';
+  });
+
+  idLink.addEventListener('mouseleave', () => {
+    idLink.style.backgroundColor = 'transparent';
+    idLink.style.color = '#7B1B38';
+  });
+
+  const nodeLabel = document.createElement('span');
+  nodeLabel.textContent = `(Node: ${nodeId})`;
+  nodeLabel.style.cssText = `
+    color: #666;
+    font-size: 12px;
+  `;
+
+  header.appendChild(idLabel);
+  header.appendChild(idLink);
+  header.appendChild(nodeLabel);
+
+  // Create large image
+  const largeImage = document.createElement('img');
+  largeImage.src = imageSrc;
+  largeImage.style.cssText = `
+    max-width: 80vw;
+    max-height: 70vh;
+    object-fit: contain;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  `;
+
+  // Make the large image clickable to close
+  largeImage.title = 'Click to close';
+
+  // Create close instruction
+  const closeInstruction = document.createElement('p');
+  closeInstruction.textContent = 'Click image or anywhere outside to close';
+  closeInstruction.style.cssText = `
+    margin-top: 10px;
+    color: #666;
+    font-size: 12px;
+    font-style: italic;
+  `;
+
+  // Assemble components
+  contentContainer.appendChild(header);
+  contentContainer.appendChild(largeImage);
+  contentContainer.appendChild(closeInstruction);
+  overlay.appendChild(contentContainer);
+
+  // Close when clicking anywhere (image or overlay)
+  overlay.addEventListener('click', () => {
+    overlay.remove();
+  });
+
+  // Close with Escape key
+  const escapeHandler = function (e) {
+    if (e.key === 'Escape') {
+      overlay.remove();
+      document.removeEventListener('keydown', escapeHandler);
+    }
+  };
+  document.addEventListener('keydown', escapeHandler);
+
+  // Add to page
+  document.body.appendChild(overlay);
+};
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   let activeColoringButton = null; // Track which coloring button is currently active
@@ -1797,7 +2246,12 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           console.log('image:width', img.attr('width'));
 
           img.on('click', function () {
-            d3.select('#enlarged-image').attr('src', image);
+            //d3.select('#enlarged-image').attr('src', image);
+            // Get the BGC ID for the MIBiG link
+            let bgcForLink = bgc.split('.')[0]; // This gives us the clean BGC ID
+
+            // Show in enlarged container with MIBiG link
+            showImageInEnlargedContainer(image, bgcForLink, d.data.name);
           });
         });
       }
@@ -2553,6 +3007,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     if (window.createExternalLinksTable) {
       createExternalLinksTable(metadata);
     }
+    // Initialize the toggle functionality
+    if (window.setupExternalLinksToggle) {
+      window.setupExternalLinksToggle();
+    }
   }, 100); // Small delay to ensure other functionality is set up first
 }
 
@@ -2849,7 +3307,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       statusHeader.style.cssText = `
             font-size: 12px; 
             color: #6c757d; 
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            font-weight: 500;
           `;
       statusHeader.innerHTML = '<strong>For the clade of placements</strong>';
       summaryContainer.appendChild(statusHeader);
@@ -2870,12 +3329,12 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       columnDiv.setAttribute('draggable', 'true');
       columnDiv.setAttribute('data-column-key', key);
       columnDiv.style.cssText = `
-        margin-bottom: 15px;
-        border-left: 3px solid #7B1B38;
-        padding-left: 10px;
+        margin-bottom: 8px;
+        border-left: 2px solid #7B1B38;
+        padding-left: 8px;
         background-color: white;
-        border-radius: 6px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         transition: all 0.2s ease;
         cursor: grab;
         position: relative;
@@ -2913,10 +3372,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
 
           // Show drop indicator
           if (e.clientY < midpoint) {
-            columnDiv.style.borderTop = '3px solid #7B1B38';
+            columnDiv.style.borderTop = '2px solid #7B1B38';
             columnDiv.style.borderBottom = '';
           } else {
-            columnDiv.style.borderBottom = '3px solid #7B1B38';
+            columnDiv.style.borderBottom = '2px solid #7B1B38';
             columnDiv.style.borderTop = '';
           }
         }
@@ -2958,8 +3417,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         display: flex;
         align-items: center;
         cursor: pointer;
-        padding: 8px 0;
-        border-radius: 4px;
+        padding: 4px 0;
+        border-radius: 3px;
         transition: background-color 0.2s;
         position: relative;
       `;
@@ -2978,7 +3437,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       dragHandle.style.cssText = `
         color: #999;
         font-size: 16px;
-        margin-right: 8px;
+        margin-right: 6px;
         cursor: grab;
         user-select: none;
         line-height: 1;
@@ -3007,13 +3466,13 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       statsSpan.style.cssText = `
         font-size: 12px;
         color: #666;
-        margin-left: 8px;
+        margin-left: 6px;
         font-weight: normal;
       `;
 
       // Color code based on diversity
       if (uniqueValues <= 2) {
-        statsSpan.style.color = '#d73502'; // Red for most interesting (least diverse)
+        statsSpan.style.color = '#7B1B38'; // Red for most interesting (least diverse)
         statsSpan.style.fontWeight = '500';
       } else if (uniqueValues <= 4) {
         statsSpan.style.color = '#f57c00'; // Orange for moderately interesting
@@ -3024,8 +3483,8 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       arrowContainer.style.cssText = `
         display: flex;
         flex-direction: column;
-        margin-left: 8px;
-        gap: 2px;
+        margin-left: 6px;
+        gap: 1px;
       `;
 
       const upArrow = document.createElement('button');
@@ -3036,7 +3495,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         color: #7B1B38;
         cursor: pointer;
         font-size: 10px;
-        padding: 1px 4px;
+        padding: 1px 3px;
         border-radius: 2px;
         transition: background-color 0.2s;
         line-height: 1;
@@ -3060,7 +3519,7 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         color: #7B1B38;
         cursor: pointer;
         font-size: 10px;
-        padding: 1px 4px;
+        padding: 1px 3px;
         border-radius: 2px;
         transition: background-color 0.2s;
         line-height: 1;
@@ -3091,10 +3550,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         font-size: 14px;
         color: #7B1B38;
         cursor: pointer;
-        padding: 4px 8px;
+        padding: 2px 4px;
         border-radius: 3px;
         transition: background-color 0.2s;
-        margin-left: 8px;
+        margin-left: 4px;
       `;
 
       // Toggle button hover effect
@@ -3129,28 +3588,36 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 4px 8px;
-          margin: 2px 0;
+          padding: 2px 6px;
+          margin: 1px 0;
           background-color: #f8f9fa;
-          border-radius: 4px;
+          border-radius: 3px;
           font-size: 13px;
         `;
 
         const valueSpan = document.createElement('span');
         valueSpan.textContent = value || '(empty)';
         valueSpan.style.color = '#333';
-        valueSpan.style.fontWeight = '500';
+        // valueSpan.style.fontWeight = '500';
+        valueSpan.style.cssText = `
+          color: #333;
+          font-weight: 500;
+          max-width: 60%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        `;
 
         const countSpan = document.createElement('span');
         countSpan.textContent = count;
         countSpan.style.cssText = `
           background-color: #7B1B38;
           color: white;
-          padding: 2px 6px;
-          border-radius: 10px;
+          padding: 1px 4px;
+          border-radius: 6px;
           font-size: 11px;
           font-weight: 600;
-          min-width: 20px;
+          min-width: 16px;
           text-align: center;
         `;
 
@@ -3191,10 +3658,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
     if (validColumns.length > 5) {
       const footerDiv = document.createElement('div');
       footerDiv.style.cssText = `
-        margin-top: 20px;
-        padding: 10px;
+        margin-top: 12px;
+        padding: 6px;
         background-color: #f0f0f0;
-        border-radius: 6px;
+        border-radius: 4px;
         font-size: 12px;
         color: #666;
         text-align: center;
