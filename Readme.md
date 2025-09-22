@@ -108,6 +108,9 @@ flask run --host=127.0.0.1 --port=8000
 
 Note: install the placement pipeline and the database separately — installation instructions coming soon.
 
+The code for the protein classification pipeline available here:
+https://github.com/SashaKorenskaia/PhyloNaP_placement_clean
+
 ## Third-Party Licenses
 
 This product includes color specifications and designs developed by Cynthia Brewer (http://colorbrewer.org/).
