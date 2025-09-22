@@ -88,11 +88,11 @@ window.getTreeData = function () {
 
 // Add download dataset functionality
 window.setupDownloadDataset = function (nwk, metadata) {
-
+  const datasetId = getDatasetId();
   // Download tree file (.nwk)
   window.downloadTreeFile = function () {
     try {
-      const fileName = prompt('Enter a name for the tree file (default: phylogenetic_tree.nwk):', 'phylogenetic_tree.nwk') || 'phylogenetic_tree.nwk';
+      const fileName = prompt('Enter a name for the tree file (default: {datasetId}.nwk):', `${datasetId}.nwk`) || `${datasetId}.nwk`;
       if (!nwk) throw new Error('Tree data not found');
       const blob = new Blob([nwk], { type: 'text/plain' });
       const url = window.URL.createObjectURL(blob);
@@ -111,7 +111,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download metadata file (.tsv)
   window.downloadMetadataFile = function () {
     try {
-      const fileName = prompt('Enter a name for the metadata file (default: metadata.tsv):', 'metadata.tsv') || 'metadata.tsv';
+      const fileName = prompt('Enter a name for the metadata file (default: {datasetId}.tsv):', `${datasetId}.tsv`) || `${datasetId}.tsv`;
       if (!metadata || metadata.length === 0) throw new Error('No metadata available');
       const headers = Object.keys(metadata[0]);
       const tsvContent = [
@@ -140,7 +140,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download sequences file (.fasta)  
   window.downloadSequencesFile = function () {
     try {
-      const fileName = prompt('Enter a name for the sequences file (default: sequences.fasta):', 'sequences.fasta') || 'sequences.fasta';
+      const fileName = prompt('Enter a name for the sequences file (default: {datasetId}.fasta):', `${datasetId}.fasta`) || `${datasetId}.fasta`;
 
       // Get dataset ID from current page
       const datasetId = getDatasetId();
@@ -169,7 +169,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download alignment file (.fasta)
   window.downloadAlignmentFile = function () {
     try {
-      const fileName = prompt('Enter a name for the alignment file (default: alignment.faa):', 'alignment.faa') || 'alignment.faa';
+      const fileName = prompt('Enter a name for the alignment file (default: {datasetId}.faa):', `${datasetId}.faa`) || `${datasetId}.faa`;
 
       // Get dataset ID from current page
       const datasetId = getDatasetId(); // You'll need to implement this helper
@@ -227,14 +227,17 @@ window.setupDownloadDataset = function (nwk, metadata) {
 
   // Download aligned query file (.fa)
   window.downloadAlignedQueryFile = function () {
-    try {
-      const fileName = prompt('Enter a name for the aligned query file (default: aligned_query.fa):', 'aligned_query.fa') || 'aligned_query.fa';
 
+    try {
       const { jobId, query, treeId } = getJplaceParams();
+
+
 
       if (!jobId || !query || !treeId) {
         throw new Error('Missing required parameters (jobId, query, or treeId)');
       }
+      const fileName = prompt('Enter a name for the aligned query file (default: {query}_{treeId}.fa):', `${query}_${treeId}.fa`) || `${query}_${treeId}.fa`;
+
 
       // Create download URL
       const downloadUrl = `/download/aligned_query/${jobId}/${query}/${treeId}`;
@@ -256,13 +259,14 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download placement file (.jplace)
   window.downloadPlacementFile = function () {
     try {
-      const fileName = prompt('Enter a name for the placement file (default: placement.jplace):', 'placement.jplace') || 'placement.jplace';
-
       const { jobId, query, treeId } = getJplaceParams();
 
       if (!jobId || !query || !treeId) {
         throw new Error('Missing required parameters (jobId, query, or treeId)');
+
       }
+      const fileName = prompt('Enter a name for the placement file (default: {query}_{treeId}.jplace):', `${query}_${treeId}.jplace`) || `${query}_${treeId}.jplace`;
+
 
       // Create download URL
       const downloadUrl = `/download/placement/${jobId}/${query}/${treeId}`;
