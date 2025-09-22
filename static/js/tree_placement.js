@@ -145,6 +145,8 @@ async function main() {
     // Initialize download functionality
     setupDownloadDataset(nwk, metadata);
 
+    setupJplaceDownloads();
+
     $(document).ready(function () {
         Split(['.tree-panel', '.details'], {
             sizes: [75, 25],

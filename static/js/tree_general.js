@@ -213,6 +213,98 @@ window.setupDownloadDataset = function (nwk, metadata) {
     console.error('Could not determine dataset ID from URL:', url);
     return null;
   }
+  // Add these functions to tree_placement.js after the main() function
+
+  // Helper function to extract URL parameters for jplace
+  function getJplaceParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return {
+      jobId: urlParams.get('jobId'),
+      query: urlParams.get('query'),
+      treeId: urlParams.get('treeId')
+    };
+  }
+
+  // Download aligned query file (.fa)
+  window.downloadAlignedQueryFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the aligned query file (default: aligned_query.fa):', 'aligned_query.fa') || 'aligned_query.fa';
+
+      const { jobId, query, treeId } = getJplaceParams();
+
+      if (!jobId || !query || !treeId) {
+        throw new Error('Missing required parameters (jobId, query, or treeId)');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/aligned_query/${jobId}/${query}/${treeId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download aligned query file: ' + error.message);
+    }
+  };
+
+  // Download placement file (.jplace)
+  window.downloadPlacementFile = function () {
+    try {
+      const fileName = prompt('Enter a name for the placement file (default: placement.jplace):', 'placement.jplace') || 'placement.jplace';
+
+      const { jobId, query, treeId } = getJplaceParams();
+
+      if (!jobId || !query || !treeId) {
+        throw new Error('Missing required parameters (jobId, query, or treeId)');
+      }
+
+      // Create download URL
+      const downloadUrl = `/download/placement/${jobId}/${query}/${treeId}`;
+
+      // Create temporary link and trigger download
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+    } catch (error) {
+      alert('Failed to download placement file: ' + error.message);
+    }
+  };
+
+  // Setup jplace-specific download functionality
+  window.setupJplaceDownloads = function () {
+    // Helper to attach listeners
+    function attachJplaceDownloadListeners() {
+      const downloadAlignedQueryBtn = document.getElementById('download-aligned-query-btn');
+      if (downloadAlignedQueryBtn && !downloadAlignedQueryBtn._listenerAttached) {
+        downloadAlignedQueryBtn.addEventListener('click', window.downloadAlignedQueryFile);
+        downloadAlignedQueryBtn._listenerAttached = true;
+      }
+
+      const downloadPlacementBtn = document.getElementById('download-placement-btn');
+      if (downloadPlacementBtn && !downloadPlacementBtn._listenerAttached) {
+        downloadPlacementBtn.addEventListener('click', window.downloadPlacementFile);
+        downloadPlacementBtn._listenerAttached = true;
+      }
+    }
+
+    // Attach listeners after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', attachJplaceDownloadListeners);
+    } else {
+      attachJplaceDownloadListeners();
+    }
+  };
 
   // Helper to attach listeners (can be called multiple times safely)
   function attachDownloadListeners() {
