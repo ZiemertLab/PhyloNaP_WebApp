@@ -72,10 +72,11 @@ docker pull sashakorenskaia/phylonap-backend
 cd ../PhyloNaP_WebApp
 conda env create -f phylonap_test.yml
 conda activate phylonap_test
+```
 
-#create a config file inside the PhyloNaP_WebApp directory: 
+create a config file **config_update.py** inside the PhyloNaP_WebApp directory: 
 
-
+```python
 import os
 from pathlib import Path
 
@@ -96,7 +97,9 @@ UPLOAD_FOLDER = os.path.join(DATA_DIR, "PhyloNaP_uploads")
 
 # SSL configuration (disabled for local development)
 SSL_ENABLED = False
+```
 
+```bash
 cd ..
 python -m PhyloNaP_WebApp.app
 cd PhyloNaP_WebApp
