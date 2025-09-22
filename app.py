@@ -90,7 +90,7 @@ def create_app():
     try:
         # Load configuration - KEEP YOUR ORIGINAL METHOD
         flask_app.config.from_pyfile("config_update.py")
-        flask_app.secret_key = flask_app.config['SECRET_KEY']
+
         
         # Validate required directories
         database_dir = flask_app.config['DB_DIR']
