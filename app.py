@@ -119,6 +119,8 @@ def create_app():
         flask_app.queue_lock = threading.Lock()
         flask_app.cache = {}
         
+
+        
         # Global cache for the db_structure
         flask_app.DB_STRUCTURE = None
         
@@ -853,6 +855,180 @@ def register_routes(app):
 
     @app.route('/upload',methods=['POST','GET'])
     def upload_dataset():
+        if request.method == 'POST':
+            try:
+                print(f"POST request received for upload!")
+                print(f"Request form data: {dict(request.form)}")
+                print(f"Request files: {dict(request.files)}")
+                
+                # Get upload folder from config
+                upload_folder = app.config.get('UPLOAD_FOLDER')
+                if not upload_folder:
+                    print("UPLOAD_FOLDER not set in config, using TMP_DIR/uploads")
+                    upload_folder = os.path.join(app.config['TMP_DIR'], 'uploads')
+                
+                print(f"Upload folder: {upload_folder}")
+                
+                # Create upload directory if it doesn't exist
+                os.makedirs(upload_folder, exist_ok=True)
+                print(f"Upload directory created/exists: {os.path.exists(upload_folder)}")
+                
+                # Generate unique dataset ID first (needed for file renaming)
+                dataset_id = f"T{datetime.now().strftime('%y%m%d%H%M%S')}"
+                
+                # Process uploaded files - rename with submission ID
+                uploaded_files = {}
+                file_mappings = {
+                    'tree_file': ('tree', '.nwk'),
+                    'metadata_file': ('metadata', '.tsv'), 
+                    'alignment_file': ('alignment', '.fasta'),
+                    'hmm_file': ('hmm', '.hmm'),
+                    'iqtree_file': ('iqtree', '.iqtree')
+                }
+                
+                for form_field, (file_type, extension) in file_mappings.items():
+                    files = request.files.getlist(form_field)
+                    for file in files:
+                        if file and file.filename:
+                            # Create new filename with submission ID
+                            new_filename = f"{dataset_id}_{file_type}{extension}"
+                            filepath = os.path.join(upload_folder, new_filename)
+                            file.save(filepath)
+                            uploaded_files[file_type] = new_filename
+                            print(f"Uploaded {file_type} file saved as: {filepath}")
+                            app.logger.info(f"Uploaded {file_type} file saved as: {filepath}")
+                
+                # Get form data
+                form_data = request.form.to_dict()
+                app.logger.info(f"Form data received: {form_data}")
+                
+                # Parse evolutionary model
+                evolutionary_model = ""
+                model_input_type = form_data.get('model_input_type', 'text')
+                
+                if model_input_type == 'text':
+                    evolutionary_model = form_data.get('evolutionary_model_text', '').strip()
+                elif model_input_type == 'file' and 'iqtree' in uploaded_files:
+                    # Parse evolutionary model from IQ-TREE file
+                    iqtree_path = os.path.join(upload_folder, uploaded_files['iqtree'])
+                    try:
+                        with open(iqtree_path, 'r') as f:
+                            for line in f:
+                                if "Best-fit model according to BIC:" in line:
+                                    # Extract model after "BIC: "
+                                    model_part = line.split("Best-fit model according to BIC:")[1].strip()
+                                    evolutionary_model = model_part
+                                    print(f"Extracted evolutionary model from IQ-TREE: {evolutionary_model}")
+                                    break
+                                elif "Best-fit model according to AIC:" in line and not evolutionary_model:
+                                    # Fallback to AIC if BIC not found
+                                    model_part = line.split("Best-fit model according to AIC:")[1].strip()
+                                    evolutionary_model = model_part
+                                    print(f"Extracted evolutionary model from IQ-TREE (AIC): {evolutionary_model}")
+                    except Exception as e:
+                        print(f"Error parsing IQ-TREE file: {e}")
+                        evolutionary_model = "Could not parse IQ-TREE file"
+                
+                print(f"Final evolutionary model: {evolutionary_model}")
+                
+                # Parse metadata columns if provided
+                metadata_columns = []
+                if 'metadata_columns' in form_data and form_data['metadata_columns']:
+                    metadata_columns = [col.strip() for col in form_data['metadata_columns'].split(',') if col.strip()]
+                
+                # Parse HMM names if provided
+                hmm_names = []
+                if 'hmm_name' in form_data and form_data['hmm_name']:
+                    hmm_names = [hmm.strip() for hmm in form_data['hmm_name'].split(',') if hmm.strip()]
+                
+                # Create structured JSON according to your schema
+                dataset_entry = {
+                    "name": form_data.get('dataset_name', ''),
+                    "id": dataset_id,
+                    "description": form_data.get('dataset_description', ''),  # Fixed field name
+                    "tree": uploaded_files.get('tree', ''),
+                    "metadata": uploaded_files.get('metadata', ''),
+                    "sequences": uploaded_files.get('sequences', ''),
+                    "metadata_columns": metadata_columns,
+                    "N_proteins": int(form_data.get('n_proteins', 0)) if form_data.get('n_proteins', '').isdigit() else 0,
+                    "N_characterized": int(form_data.get('n_characterized', 0)) if form_data.get('n_characterized', '').isdigit() else 0,
+                    "N_np_val": int(form_data.get('n_np_val', 0)) if form_data.get('n_np_val', '').isdigit() else 0,
+                    "N_np_pred": int(form_data.get('n_np_pred', 0)) if form_data.get('n_np_pred', '').isdigit() else 0,
+                    "alignment": uploaded_files.get('alignment', ''),
+                    "evolutionary_model": evolutionary_model,  # New field
+                    "source": form_data.get('source', 'user_submitted'),
+                    "cite": {
+                        "name": form_data.get('authors', ''),  # Fixed field name
+                        "doi": form_data.get('paper_link', '')  # Fixed field name
+                    },
+                    "data_type": form_data.get('data_type', 'protein'),
+                    "reviewed": form_data.get('reviewed', 'no')
+                }
+                
+                superfamily_name = form_data.get('superfamily', 'other')
+                
+                # Create the full structure
+                submission_data = {
+                    "superfamilies": [
+                        {
+                            "name": superfamily_name,
+                            "hmm_name": hmm_names,
+                            "datasets": [dataset_entry]
+                        }
+                    ],
+                    "submission_metadata": {
+                        "submission_time": datetime.now().isoformat(),
+                        "submitter_email": form_data.get('email', ''),  # Fixed field name
+                        "submitter_name": form_data.get('authors', ''),  # Fixed field name
+                        "upload_folder": upload_folder
+                    }
+                }
+                
+                # Save individual submission JSON file (no locking needed)
+                individual_submission_file = os.path.join(upload_folder, f'submission_{dataset_id}.json')
+                
+                # Create complete submission data for individual file
+                individual_submission = {
+                    "submission_id": dataset_id,
+                    "submission_time": datetime.now().isoformat(),
+                    "superfamily": {
+                        "name": superfamily_name,
+                        "hmm_name": hmm_names,
+                        "dataset": dataset_entry
+                    },
+                    "submitter": {
+                        "email": form_data.get('email', ''),
+                        "name": form_data.get('authors', ''),
+                        "paper_link": form_data.get('paper_link', '')
+                    },
+                    "files": {
+                        "upload_folder": upload_folder,
+                        "uploaded_files": uploaded_files
+                    }
+                }
+                
+                # Save individual submission file
+                with open(individual_submission_file, 'w') as f:
+                    json.dump(individual_submission, f, indent=2)
+                
+                print(f"Successfully saved individual submission to: {individual_submission_file}")
+                print(f"File exists after save: {os.path.exists(individual_submission_file)}")
+                app.logger.info(f"Individual submission saved: {individual_submission_file}")
+                app.logger.info(f"Dataset submission saved with ID: {dataset_id}")
+                
+                return render_template('upload.html', 
+                                     message=f"Successfully submitted dataset '{dataset_entry['name']}' with ID: {dataset_id}",
+                                     uploaded_files=list(uploaded_files.values()),
+                                     dataset_id=dataset_id,
+                                     superfamilies=app.DB_STRUCTURE['superfamilies'] if app.DB_STRUCTURE else [])
+                
+            except Exception as e:
+                app.logger.error(f"Error processing upload: {e}", exc_info=True)
+                return render_template('upload.html', 
+                                     error=f"Upload failed: {str(e)}",
+                                     superfamilies=app.DB_STRUCTURE['superfamilies'] if app.DB_STRUCTURE else [])
+        
+        # GET request - show upload form
         if app.DB_STRUCTURE is None:
             from .db import get_db_structure
             app.DB_STRUCTURE = get_db_structure()
@@ -864,6 +1040,51 @@ def register_routes(app):
     def get_file():
         the_file = request.args.get('filename')
         return send_from_directory('database', the_file)
+
+    @app.route('/admin/submissions')
+    def list_submissions():
+        """Admin route to list all submissions"""
+        try:
+            upload_folder = app.config.get('UPLOAD_FOLDER')
+            if not upload_folder:
+                upload_folder = os.path.join(app.config['TMP_DIR'], 'uploads')
+            
+            submissions = []
+            if os.path.exists(upload_folder):
+                # Find all submission JSON files
+                for filename in os.listdir(upload_folder):
+                    if filename.startswith('submission_') and filename.endswith('.json'):
+                        filepath = os.path.join(upload_folder, filename)
+                        try:
+                            with open(filepath, 'r') as f:
+                                submission_data = json.load(f)
+                                submissions.append({
+                                    'filename': filename,
+                                    'id': submission_data.get('submission_id', 'Unknown'),
+                                    'time': submission_data.get('submission_time', 'Unknown'),
+                                    'dataset_name': submission_data.get('superfamily', {}).get('dataset', {}).get('name', 'Unknown'),
+                                    'superfamily': submission_data.get('superfamily', {}).get('name', 'Unknown'),
+                                    'submitter': submission_data.get('submitter', {}).get('name', 'Unknown'),
+                                    'email': submission_data.get('submitter', {}).get('email', 'Unknown')
+                                })
+                        except (json.JSONDecodeError, FileNotFoundError) as e:
+                            app.logger.error(f"Error reading submission file {filename}: {e}")
+            
+            # Sort by submission time (newest first)
+            submissions.sort(key=lambda x: x['time'], reverse=True)
+            
+            return jsonify({
+                'status': 'success',
+                'submissions': submissions,
+                'total_count': len(submissions)
+            })
+            
+        except Exception as e:
+            app.logger.error(f"Error listing submissions: {e}", exc_info=True)
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 500
 
     # Add more routes as needed...
     @app.route('/debug_hmm')
