@@ -1,4 +1,4 @@
-# PhyloNaP - Phylogenetic Natural Product Database
+# PhyloNaP -  Phylogeny for Natural Product-producing enzymes
 
 ## Overview
 
@@ -48,21 +48,71 @@ We present PhyloNaP, the first large-scale resource dedicated to phylogenies of 
 - **PanBGC**: a user-friendly web tool to explore biosynthetic gene clusters (BGCs) diversity within Gene Cluster Families (GCFs)
 
 
-### Setup
+### Setup the Web App locally
 
 ```bash
 # Clone repository
 git clone https://github.com/SashaKorenskaia/PhyloNaP_WebApp.git
-cd PhyloNaP_WebApp
+
+# create folders nesessary for database to run
+mkdir PhyloNaP_data
+mkdir PhyloNaP_data/tmp
+mkdir PhyloNaP_data/PhyloNaP_uploads
+
+cd PhyloNaP_data
+#download and unzip the PhyloNaP database
+wget https://phylonap.cs.uni-tuebingen.de/download_file
+
+# to be able to classify query sequence, insltall docker image (make sure that the docker installed and ruuning)
+docker pull sashakorenskaia/phylonap-backend
+
+
 
 # Install Python dependencies
+cd ../PhyloNaP_WebApp
 conda env create -f phylonap_test.yml
 conda activate phylonap_test
-# Run application
-python app.py
 ```
 
+create a config file **config_update.py** inside the PhyloNaP_WebApp directory: 
+
+```python
+import os
+from pathlib import Path
+
+# Base directory setup
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = os.path.join(BASE_DIR, "Phylonap_storage_local")
+
+# Essential app configuration
+PORT = int(os.environ.get("PORT", 8000))  # Using 8000 for local development
+HOST = "127.0.0.1"  # localhost for local development
+FLASK_DEBUG = True  # Enable debug mode for local development
+
+# Required directory paths
+TMP_DIRECTORY = os.path.join(DATA_DIR, "tmp")
+DB_DIR = os.path.join(DATA_DIR, "PhyloNaP_database") #check that it matches with the directory name that you downloaded!
+SQLITE_DB = os.path.join(DB_DIR, "phylonap.db")
+UPLOAD_FOLDER = os.path.join(DATA_DIR, "PhyloNaP_uploads")
+
+# SSL configuration (disabled for local development)
+SSL_ENABLED = False
+```
+
+```bash
+cd ..
+python -m PhyloNaP_WebApp.app
+cd PhyloNaP_WebApp
+
+# Run application locally
+flask run --host=127.0.0.1 --port=8000
+```
+
+
 Note: install the placement pipeline and the database separately — installation instructions coming soon.
+
+The code for the protein classification pipeline available here:
+https://github.com/SashaKorenskaia/PhyloNaP_placement_clean
 
 ## Third-Party Licenses
 
