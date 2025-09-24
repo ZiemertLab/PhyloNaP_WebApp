@@ -143,7 +143,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
       const fileName = prompt('Enter a name for the sequences file (default: {datasetId}.fasta):', `${datasetId}.fasta`) || `${datasetId}.fasta`;
 
       // Get dataset ID from current page
-      const datasetId = getDatasetId();
+      // const datasetId = getDatasetId();
 
       if (!datasetId) {
         throw new Error('Dataset ID not found');
@@ -172,7 +172,7 @@ window.setupDownloadDataset = function (nwk, metadata) {
       const fileName = prompt('Enter a name for the alignment file (default: {datasetId}.faa):', `${datasetId}.faa`) || `${datasetId}.faa`;
 
       // Get dataset ID from current page
-      const datasetId = getDatasetId(); // You'll need to implement this helper
+      // const datasetId = getDatasetId(); // You'll need to implement this helper
 
       if (!datasetId) {
         throw new Error('Dataset ID not found');
