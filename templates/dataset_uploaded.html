@@ -1,7 +1,144 @@
 {% extends "base.html" %}
 {% block content %}
-<div style="text-align: center; margin-top: 50px;">
-    <h1>Thank you for uploading your {{dataset_name}} dataset!</h1>
-    <p>We will review it and contact you by the email {{ email }}. Have a nice day!</p>
+<style>
+    .centered-page-container {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .success-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .success-message {
+        background-color: rgba(40, 167, 69, 0.1);
+        border-left: 4px solid #28a745;
+        color: #155724;
+        padding: 20px 25px;
+        margin: 20px auto;
+        border-radius: 8px;
+        font-size: 1.1em;
+        width: 100%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .submission-id {
+        background-color: rgba(123, 27, 56, 0.08);
+        border: 2px solid #7B1B38;
+        color: #7B1B38;
+        padding: 15px 20px;
+        margin: 20px auto;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 1.2em;
+        font-weight: bold;
+        letter-spacing: 1px;
+        width: 100%;
+    }
+
+    .info-section {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px auto;
+        width: 100%;
+        text-align: left;
+    }
+
+    .info-section h3 {
+        color: #7B1B38;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .info-section ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+
+    .info-section li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .back-btn {
+        margin-top: 30px;
+        background-color: var(--bright-color, #7B1B38);
+        color: var(--background-light, #E0E0E0);
+        border: none;
+        border-radius: 5px;
+        padding: 12px 25px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .back-btn:hover {
+        background-color: #a61e37;
+        color: #E0E0E0;
+    }
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
+
+<div class="centered-page-container">
+    <div class="success-container">
+        <h1>Dataset Successfully Submitted!</h1>
+
+        <div class="success-message">
+            <strong>Thank you for uploading your dataset!</strong><br>
+            Your submission has been received and saved successfully.
+        </div>
+
+        {% if dataset_id %}
+        <div class="submission-id">
+            <strong>Submission ID:</strong> {{ dataset_id }}
+        </div>
+        {% endif %}
+
+        <div class="info-section">
+            <h3>What happens next?</h3>
+            <ul>
+                <li><strong>Review Process:</strong> Our team will review your dataset submission for quality and
+                    completeness.</li>
+                <li><strong>Contact:</strong> {% if email %}We will contact you at <strong>{{ email }}</strong> with
+                    updates on your submission.{% else %}Please make sure to save your submission ID for future
+                    reference.{% endif %}</li>
+                <li><strong>Integration:</strong> If approved, your dataset will be integrated into the PhyloNaP
+                    database and made available for analysis.</li>
+                <li><strong>Timeline:</strong> The review process typically takes 1-2 weeks depending on dataset
+                    complexity.</li>
+            </ul>
+        </div>
+
+        {% if dataset_name %}
+        <div class="info-section">
+            <h3>Submission Details</h3>
+            <ul>
+                <li><strong>Dataset Name:</strong> {{ dataset_name }}</li>
+                {% if evolutionary_model %}
+                <li><strong>Evolutionary Model:</strong> {{ evolutionary_model }}</li>
+                {% endif %}
+                {% if uploaded_files %}
+                <li><strong>Files Uploaded:</strong> {{ uploaded_files|length }} file(s)</li>
+                {% endif %}
+                <li><strong>Submission Time:</strong> {{ submission_time }}</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        <a href="/upload" class="back-btn">Submit Another Dataset</a>
+    </div>
 </div>
 {% endblock %}

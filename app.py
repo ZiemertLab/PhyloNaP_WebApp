@@ -1016,11 +1016,21 @@ def register_routes(app):
                 app.logger.info(f"Individual submission saved: {individual_submission_file}")
                 app.logger.info(f"Dataset submission saved with ID: {dataset_id}")
                 
-                return render_template('upload.html', 
-                                     message=f"Successfully submitted dataset '{dataset_entry['name']}' with ID: {dataset_id}",
-                                     uploaded_files=list(uploaded_files.values()),
+                # Format submission time for display
+                submission_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
+                
+                # Get file list for display
+                file_list = []
+                for file_type, filename in uploaded_files.items():
+                    file_list.append({"type": file_type, "name": filename})
+                
+                return render_template('dataset_uploaded.html', 
                                      dataset_id=dataset_id,
-                                     superfamilies=app.DB_STRUCTURE['superfamilies'] if app.DB_STRUCTURE else [])
+                                     dataset_name=dataset_entry['name'],
+                                     email=form_data.get('email', ''),
+                                     evolutionary_model=evolutionary_model,
+                                     uploaded_files=file_list,
+                                     submission_time=submission_time)
                 
             except Exception as e:
                 app.logger.error(f"Error processing upload: {e}", exc_info=True)
