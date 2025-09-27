@@ -131,7 +131,10 @@ License files are available in the `licenses/` directory.
 
 If you use PhyloNaP in your research, please cite:
 
-[Citation will be added upon publication]
+PhyloNaP: a user-friendly database of Phylogeny for Natural Product-producing enzymes
+Aleksandra Korenskaia, Judit Szenei, Lisa Vader, Kai Blin, Tilmann Weber, Nadine Ziemert
+bioRxiv 2025.09.23.677986; doi: https://doi.org/10.1101/2025.09.23.677986
+
 
 ## Contact
 
