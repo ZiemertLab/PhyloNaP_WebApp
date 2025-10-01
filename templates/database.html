@@ -7,7 +7,7 @@
     Apply filters to narrow down the datasets.
 </div>
 <div class="container-fluid">
-    
+
     <!-- Advanced Filters Section -->
     <div class="filter-section">
         <div class="collapse show" id="advanced-filters">
@@ -18,119 +18,124 @@
                     <div class="col-md-2">
                         <label for="hmm-name-filter" class="form-label">HMM Name</label>
                         <div class="input-group">
-                            <input type="text" 
-                                   id="hmm-name-filter" 
-                                   name="hmm_name"
-                                   class="form-control" 
-                                   placeholder="Search HMM..."
-                                   autocomplete="off"
-                                   value="{{ current_filters.hmm_name if current_filters and current_filters.hmm_name }}">
+                            <input type="text" id="hmm-name-filter" name="hmm_name" class="form-control"
+                                placeholder="Search HMM..." autocomplete="off"
+                                value="{{ current_filters.hmm_name if current_filters and current_filters.hmm_name }}">
                             <button class="btn btn-outline-secondary" type="button" id="hmm-dropdown-toggle">
                                 ▼
                             </button>
                         </div>
                         <div id="hmm-dropdown" class="autocomplete-dropdown" style="display: none;"></div>
                     </div>
-                    
+
                     <!-- Source - Vertical -->
                     <div class="col-md-1">
                         <label class="form-label">Source</label>
                         <div class="radio-group-vertical">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="source" id="source-all" value="" checked>
+                                <input class="form-check-input" type="radio" name="source" id="source-all" value=""
+                                    checked>
                                 <label class="form-check-label" for="source-all">All</label>
                             </div>
                             {% if filter_options and filter_options.sources %}
-                                {% for source in filter_options.sources %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="source" id="source-{{ source }}" value="{{ source }}">
-                                    <label class="form-check-label" for="source-{{ source }}">{{ source|title }}</label>
-                                </div>
-                                {% endfor %}
+                            {% for source in filter_options.sources %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="source" id="source-{{ source }}"
+                                    value="{{ source }}">
+                                <label class="form-check-label" for="source-{{ source }}">{{ source|title }}</label>
+                            </div>
+                            {% endfor %}
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Data Type - Vertical -->
                     <div class="col-md-1">
                         <label class="form-label">Data Type</label>
                         <div class="radio-group-vertical">
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="data_type" id="datatype-all" value="" checked>
+                                <input class="form-check-input" type="radio" name="data_type" id="datatype-all" value=""
+                                    checked>
                                 <label class="form-check-label" for="datatype-all">All</label>
                             </div>
                             {% if filter_options and filter_options.data_types %}
-                                {% for data_type in filter_options.data_types %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="data_type" id="datatype-{{ data_type }}" value="{{ data_type }}">
-                                    <label class="form-check-label" for="datatype-{{ data_type }}">{{ data_type|title }}</label>
-                                </div>
-                                {% endfor %}
+                            {% for data_type in filter_options.data_types %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="data_type"
+                                    id="datatype-{{ data_type }}" value="{{ data_type }}">
+                                <label class="form-check-label" for="datatype-{{ data_type }}">{{ data_type|title
+                                    }}</label>
+                            </div>
+                            {% endfor %}
                             {% endif %}
                         </div>
                     </div>
-                    
+
                     <!-- Range Filters - Compact 4 columns -->
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-3">
                                 <label class="form-label-compact">N of sequences</label>
                                 {% if filter_options and filter_options.protein_stats %}
-                                <div class="stats-info-compact">{{ filter_options.protein_stats.min }}-{{ filter_options.protein_stats.max|int }}</div>
+                                <div class="stats-info-compact">{{ filter_options.protein_stats.min }}-{{
+                                    filter_options.protein_stats.max|int }}</div>
                                 {% endif %}
                                 <div class="range-input-group-compact">
-                                    <input type="number" id="min-proteins" name="min_proteins" class="form-control-compact" 
-                                           placeholder="Min" min="0">
+                                    <input type="number" id="min-proteins" name="min_proteins"
+                                        class="form-control-compact" placeholder="Min" min="0">
                                     <span>to</span>
-                                    <input type="number" id="max-proteins" name="max_proteins" class="form-control-compact" 
-                                           placeholder="Max" min="0">
+                                    <input type="number" id="max-proteins" name="max_proteins"
+                                        class="form-control-compact" placeholder="Max" min="0">
                                 </div>
                             </div>
-                            
+
                             <div class="col-3">
                                 <label class="form-label-compact">N of characterized</label>
                                 {% if filter_options and filter_options.characterized_stats %}
-                                <div class="stats-info-compact">{{ filter_options.characterized_stats.min }}-{{ filter_options.characterized_stats.max|int }}</div>
+                                <div class="stats-info-compact">{{ filter_options.characterized_stats.min }}-{{
+                                    filter_options.characterized_stats.max|int }}</div>
                                 {% endif %}
                                 <div class="range-input-group-compact">
-                                    <input type="number" id="min-characterized" name="min_characterized" class="form-control-compact" 
-                                           placeholder="Min" min="0">
+                                    <input type="number" id="min-characterized" name="min_characterized"
+                                        class="form-control-compact" placeholder="Min" min="0">
                                     <span>to</span>
-                                    <input type="number" id="max-characterized" name="max_characterized" class="form-control-compact" 
-                                           placeholder="Max" min="0">
+                                    <input type="number" id="max-characterized" name="max_characterized"
+                                        class="form-control-compact" placeholder="Max" min="0">
                                 </div>
                             </div>
-                            
+
                             <div class="col-3">
                                 <label class="form-label-compact">N of validated NP</label>
                                 {% if filter_options and filter_options.np_val_stats %}
-                                <div class="stats-info-compact">{{ filter_options.np_val_stats.min }}-{{ filter_options.np_val_stats.max|int }}</div>
+                                <div class="stats-info-compact">{{ filter_options.np_val_stats.min }}-{{
+                                    filter_options.np_val_stats.max|int }}</div>
                                 {% endif %}
                                 <div class="range-input-group-compact">
-                                    <input type="number" id="min-np-val" name="min_np_val" class="form-control-compact" 
-                                           placeholder="Min" min="0">
+                                    <input type="number" id="min-np-val" name="min_np_val" class="form-control-compact"
+                                        placeholder="Min" min="0">
                                     <span>to</span>
-                                    <input type="number" id="max-np-val" name="max_np_val" class="form-control-compact" 
-                                           placeholder="Max" min="0">
+                                    <input type="number" id="max-np-val" name="max_np_val" class="form-control-compact"
+                                        placeholder="Max" min="0">
                                 </div>
                             </div>
-                            
+
                             <div class="col-3">
                                 <label class="form-label-compact">N of predicted NP</label>
                                 {% if filter_options and filter_options.np_pred_stats %}
-                                <div class="stats-info-compact">{{ filter_options.np_pred_stats.min }}-{{ filter_options.np_pred_stats.max|int }}</div>
+                                <div class="stats-info-compact">{{ filter_options.np_pred_stats.min }}-{{
+                                    filter_options.np_pred_stats.max|int }}</div>
                                 {% endif %}
                                 <div class="range-input-group-compact">
-                                    <input type="number" id="min-np-pred" name="min_np_pred" class="form-control-compact" 
-                                           placeholder="Min" min="0">
+                                    <input type="number" id="min-np-pred" name="min_np_pred"
+                                        class="form-control-compact" placeholder="Min" min="0">
                                     <span>to</span>
-                                    <input type="number" id="max-np-pred" name="max_np_pred" class="form-control-compact" 
-                                           placeholder="Max" min="0">
+                                    <input type="number" id="max-np-pred" name="max_np_pred"
+                                        class="form-control-compact" placeholder="Max" min="0">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Buttons Column -->
                     <div class="col-md-2 d-flex justify-content-end align-items-end">
                         <div class="button-group-horizontal">
@@ -139,7 +144,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- COMMENTED OUT Dataset Name field - Easy to recover -->
                 <!-- 
                 <div class="row filter-row">
@@ -160,87 +165,91 @@
         <!-- Results summary -->
         <!-- REPLACE the results summary section: -->
         <div id="results-summary" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-bottom: 15px; border-bottom: 1px solid #dee2e6;">
                 <div style="font-size: 1rem; color: var(--background-dark); font-weight: 500;">
-                    Showing <span id="showing-from">0</span>-<span id="showing-to">0</span> 
+                    Showing <span id="showing-from">0</span>-<span id="showing-to">0</span>
                     of <span id="total-count">0</span> datasets
                 </div>
-                
+
                 <div style="display: flex; align-items: center; gap: 10px;">
-                    <label for="per-page-filter" style="margin-bottom: 0; font-size: 1rem; white-space: nowrap; color: var(--background-dark); font-weight: 500;">
+                    <label for="per-page-filter"
+                        style="margin-bottom: 0; font-size: 1rem; white-space: nowrap; color: var(--background-dark); font-weight: 500;">
                         Records per page:
                     </label>
                     <div class="input-group" style="width: auto;">
-                        <select id="per-page-filter" name="per_page" class="form-select" style="width: auto; min-width: 80px; padding: 6px 12px; font-size: 1rem; border: 1px solid #ced4da; border-radius: 4px 0 0 4px;">
+                        <select id="per-page-filter" name="per_page" class="form-select"
+                            style="width: auto; min-width: 80px; padding: 6px 12px; font-size: 1rem; border: 1px solid #ced4da; border-radius: 4px 0 0 4px;">
                             <option value="10" selected>10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                             <option value="200">200</option>
                         </select>
-                        <button class="btn btn-outline-secondary" type="button" style="border-left: 0; color: var(--bright-color); border-color: #ced4da; padding: 6px 12px;">
+                        <button class="btn btn-outline-secondary" type="button"
+                            style="border-left: 0; color: var(--bright-color); border-color: #ced4da; padding: 6px 12px;">
                             ▼
                         </button>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Table -->
         <table class="table table-striped table-hover fixed-table" id="datasets-table">
             <thead class="table-dark">
                 <tr>
                     <th class="sortable-header" data-sort="superfamily_name">
-                        Superfamily 
+                        Superfamily
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="dataset_name">
-                        Dataset Name 
+                        Dataset Name
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="source">
-                        Source 
+                        Source
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="data_type">
-                        Data Type 
+                        Data Type
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="N_proteins">
-                        Proteins 
+                        Proteins
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="N_characterized">
-                        Characterized 
+                        Characterized
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="N_np_val">
-                        NP Val 
+                        NP Val
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
                         </span>
                     </th>
                     <th class="sortable-header" data-sort="N_np_pred">
-                        NP Pred 
+                        NP Pred
                         <span class="sort-arrows">
                             <span class="sort-up">▲</span>
                             <span class="sort-down">▼</span>
@@ -253,7 +262,7 @@
                 <!-- Data will be loaded here via AJAX -->
             </tbody>
         </table>
-        
+
         <!-- Pagination -->
         <nav aria-label="Dataset pagination" id="pagination-nav" style="display: none;">
             <div class="d-flex justify-content-between align-items-center">
@@ -269,80 +278,80 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentPage = 1;
-    let currentPerPage = 10;
-    let currentFilters = {}; // CHANGED: Remove default source filter
-    let currentSort = { sort_by: 'source', sort_order: 'desc' }; // CHANGED: Sort by source descending
-    
-    // Set initial form values - DON'T check any source radio button by default
-    document.getElementById('per-page-filter').value = '10';
-    
-    // Load initial data
-    loadData();
-    
-    function loadData(page = 1, resetPage = false) {
-        if (resetPage) {
-            page = 1;
-            currentPage = 1;
-        }
-        
-        // Build query parameters
-        const params = new URLSearchParams({
-            page: page,
-            per_page: currentPerPage,
-            ...currentFilters,
-            ...currentSort
-        });
-        
-        // Remove empty parameters
-        for (let [key, value] of Array.from(params.entries())) {
-            if (!value || value === '0' || value === '') {
-                params.delete(key);
+    document.addEventListener('DOMContentLoaded', function () {
+        let currentPage = 1;
+        let currentPerPage = 10;
+        let currentFilters = {}; // CHANGED: Remove default source filter
+        let currentSort = { sort_by: 'source', sort_order: 'desc' }; // CHANGED: Sort by source descending
+
+        // Set initial form values - DON'T check any source radio button by default
+        document.getElementById('per-page-filter').value = '10';
+
+        // Load initial data
+        loadData();
+
+        function loadData(page = 1, resetPage = false) {
+            if (resetPage) {
+                page = 1;
+                currentPage = 1;
             }
-        }
-        
-        fetch(`/api/datasets?${params.toString()}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                
-                updateTable(data.datasets);
-                updatePagination(data.pagination);
-                updateSummary(data.pagination);
-                updateSortIndicators(); // Update visual sort indicators
-                currentPage = data.pagination.page;
-            })
-            .catch(error => {
-                console.error('Error loading data:', error);
-                showError('Failed to load data: ' + error.message);
+
+            // Build query parameters
+            const params = new URLSearchParams({
+                page: page,
+                per_page: currentPerPage,
+                ...currentFilters,
+                ...currentSort
             });
-    }
-    
-    function updateTable(datasets) {
-        const tbody = document.getElementById('datasets-tbody');
-        tbody.innerHTML = '';
-        
-        if (datasets.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="9" class="text-center">No datasets found matching your criteria.</td></tr>';
-            return;
+
+            // Remove empty parameters
+            for (let [key, value] of Array.from(params.entries())) {
+                if (!value || value === '0' || value === '') {
+                    params.delete(key);
+                }
+            }
+
+            fetch(`/api/datasets?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
+                    updateTable(data.datasets);
+                    updatePagination(data.pagination);
+                    updateSummary(data.pagination);
+                    updateSortIndicators(); // Update visual sort indicators
+                    currentPage = data.pagination.page;
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    showError('Failed to load data: ' + error.message);
+                });
         }
-        
-        datasets.forEach((dataset, index) => {
-            const row = document.createElement('tr');
-            
-            const superfamilyName = dataset.superfamily_name || 'N/A';
-            const datasetName = dataset.name || dataset.dataset_name || 'N/A';
-            const datasetId = dataset.id || dataset.dataset_id || null;
-            
-            row.innerHTML = `
+
+        function updateTable(datasets) {
+            const tbody = document.getElementById('datasets-tbody');
+            tbody.innerHTML = '';
+
+            if (datasets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center">No datasets found matching your criteria.</td></tr>';
+                return;
+            }
+
+            datasets.forEach((dataset, index) => {
+                const row = document.createElement('tr');
+
+                const superfamilyName = dataset.superfamily_name || 'N/A';
+                const datasetName = dataset.name || dataset.dataset_name || 'N/A';
+                const datasetId = dataset.id || dataset.dataset_id || null;
+
+                row.innerHTML = `
                 <td>${superfamilyName}</td>
                 <td>${datasetName}</td>
                 <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
@@ -362,53 +371,53 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                 </td>
             `;
-            tbody.appendChild(row);
-        });
-        
-        // Re-attach event listeners for new buttons
-        attachTableEventListeners();
-        
-        console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
-    }
-    
-    function updateSortIndicators() {
-        // Reset all sort indicators
-        document.querySelectorAll('.sort-arrows').forEach(arrows => {
-            arrows.classList.remove('active-asc', 'active-desc');
-        });
-        
-        // Find the active sort column and update its indicator
-        const activeHeader = document.querySelector(`[data-sort="${currentSort.sort_by}"]`);
-        if (activeHeader) {
-            const arrows = activeHeader.querySelector('.sort-arrows');
-            if (arrows) {
-                if (currentSort.sort_order === 'asc') {
-                    arrows.classList.add('active-asc');
-                } else {
-                    arrows.classList.add('active-desc');
+                tbody.appendChild(row);
+            });
+
+            // Re-attach event listeners for new buttons
+            attachTableEventListeners();
+
+            console.log('Table updated with', datasets.length, 'datasets. Event listeners attached.');
+        }
+
+        function updateSortIndicators() {
+            // Reset all sort indicators
+            document.querySelectorAll('.sort-arrows').forEach(arrows => {
+                arrows.classList.remove('active-asc', 'active-desc');
+            });
+
+            // Find the active sort column and update its indicator
+            const activeHeader = document.querySelector(`[data-sort="${currentSort.sort_by}"]`);
+            if (activeHeader) {
+                const arrows = activeHeader.querySelector('.sort-arrows');
+                if (arrows) {
+                    if (currentSort.sort_order === 'asc') {
+                        arrows.classList.add('active-asc');
+                    } else {
+                        arrows.classList.add('active-desc');
+                    }
                 }
             }
         }
-    }
-    
-    function updatePagination(pagination) {
-        const nav = document.getElementById('pagination-nav');
-        const list = document.getElementById('pagination-list');
-        
-        if (pagination.total_pages <= 1) {
-            nav.style.display = 'none';
-            return;
-        }
-        
-        nav.style.display = 'block';
-        document.getElementById('current-page').textContent = pagination.page;
-        document.getElementById('total-pages').textContent = pagination.total_pages;
-        
-        list.innerHTML = '';
-        
-        // Previous button
-        if (pagination.has_prev) {
-            list.innerHTML += `
+
+        function updatePagination(pagination) {
+            const nav = document.getElementById('pagination-nav');
+            const list = document.getElementById('pagination-list');
+
+            if (pagination.total_pages <= 1) {
+                nav.style.display = 'none';
+                return;
+            }
+
+            nav.style.display = 'block';
+            document.getElementById('current-page').textContent = pagination.page;
+            document.getElementById('total-pages').textContent = pagination.total_pages;
+
+            list.innerHTML = '';
+
+            // Previous button
+            if (pagination.has_prev) {
+                list.innerHTML += `
                 <li class="page-item">
                     <a class="page-link" href="#" data-page="1">First</a>
                 </li>
@@ -416,24 +425,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a class="page-link" href="#" data-page="${pagination.page - 1}">Previous</a>
                 </li>
             `;
-        }
-        
-        // Page numbers
-        const start = Math.max(1, pagination.page - 2);
-        const end = Math.min(pagination.total_pages, pagination.page + 2);
-        
-        for (let i = start; i <= end; i++) {
-            const activeClass = i === pagination.page ? 'active' : '';
-            list.innerHTML += `
+            }
+
+            // Page numbers
+            const start = Math.max(1, pagination.page - 2);
+            const end = Math.min(pagination.total_pages, pagination.page + 2);
+
+            for (let i = start; i <= end; i++) {
+                const activeClass = i === pagination.page ? 'active' : '';
+                list.innerHTML += `
                 <li class="page-item ${activeClass}">
                     <a class="page-link" href="#" data-page="${i}">${i}</a>
                 </li>
             `;
-        }
-        
-        // Next button
-        if (pagination.has_next) {
-            list.innerHTML += `
+            }
+
+            // Next button
+            if (pagination.has_next) {
+                list.innerHTML += `
                 <li class="page-item">
                     <a class="page-link" href="#" data-page="${pagination.page + 1}">Next</a>
                 </li>
@@ -441,752 +450,771 @@ document.addEventListener('DOMContentLoaded', function() {
                     <a class="page-link" href="#" data-page="${pagination.total_pages}">Last</a>
                 </li>
             `;
+            }
+
+            // Attach pagination event listeners
+            list.querySelectorAll('.page-link[data-page]').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    loadData(page);
+                });
+            });
         }
-        
-        // Attach pagination event listeners
-        list.querySelectorAll('.page-link[data-page]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = parseInt(this.getAttribute('data-page'));
-                loadData(page);
+
+        function updateSummary(pagination) {
+            document.getElementById('showing-from').textContent = pagination.showing_from;
+            document.getElementById('showing-to').textContent = pagination.showing_to;
+            document.getElementById('total-count').textContent = pagination.total_count;
+
+            // FIXED: Use 'block' instead of 'flex' for the original alert-info structure
+            document.getElementById('results-summary').style.display = 'block';
+        }
+
+        function showError(message) {
+            let errorDiv = document.getElementById('error-message');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'error-message';
+                errorDiv.className = 'alert alert-danger';
+                document.getElementById('datasets-table').parentNode.insertBefore(errorDiv, document.getElementById('datasets-table'));
+            }
+            errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
+            errorDiv.style.display = 'block';
+
+            setTimeout(() => {
+                if (errorDiv) {
+                    errorDiv.style.display = 'none';
+                }
+            }, 5000);
+        }
+
+        // UPDATE the applyFilters function with better error handling:
+        function applyFilters() {
+            // Get selected radio button values
+            const sourceRadio = document.querySelector('input[name="source"]:checked');
+            const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
+
+            // Get dataset name filter safely
+            const datasetNameInput = document.getElementById('dataset-name-filter');
+            const datasetNameValue = datasetNameInput ? datasetNameInput.value : '';
+
+            currentFilters = {
+                hmm_name: document.getElementById('hmm-name-filter').value,
+                source: sourceRadio ? sourceRadio.value : '',
+                data_type: dataTypeRadio ? dataTypeRadio.value : '',
+                dataset_name: datasetNameValue,
+                min_proteins: document.getElementById('min-proteins').value,
+                max_proteins: document.getElementById('max-proteins').value,
+                min_characterized: document.getElementById('min-characterized').value,
+                max_characterized: document.getElementById('max-characterized').value,
+                min_np_val: document.getElementById('min-np-val').value,
+                max_np_val: document.getElementById('max-np-val').value,
+                min_np_pred: document.getElementById('min-np-pred').value,
+                max_np_pred: document.getElementById('max-np-pred').value,
+            };
+
+            // Remove empty values
+            Object.keys(currentFilters).forEach(key => {
+                if (!currentFilters[key] || currentFilters[key] === '0') {
+                    delete currentFilters[key];
+                }
+            });
+
+            console.log('Applied filters:', currentFilters); // Debug log
+            loadData(1, true); // Reset to first page
+        }
+
+        function attachTableEventListeners() {
+            // Tree view buttons
+            document.querySelectorAll('.show-tree-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const datasetId = this.getAttribute('data-dataset-id');
+                    const superfamilyName = this.getAttribute('data-superfamily');
+                    const datasetName = this.getAttribute('data-dataset');
+
+                    if (datasetId && datasetId !== 'null') {
+                        const url = `/phylotree_render?dataset_id=${encodeURIComponent(datasetId)}`;
+                        window.location.href = url;
+                    } else if (superfamilyName && datasetName && superfamilyName !== 'N/A' && datasetName !== 'N/A') {
+                        const url = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
+                        window.location.href = url;
+                    } else {
+                        alert('Dataset information is incomplete. Please check the data.');
+                    }
+                });
+            });
+        }
+
+        // Event listeners
+        document.getElementById('apply-filters').addEventListener('click', function (e) {
+            e.preventDefault(); // Prevent form submission
+            console.log('Apply Filters button clicked'); // Debug log
+            applyFilters();
+        });
+
+        // Clear filters
+        document.getElementById('clear-filters').addEventListener('click', function () {
+            // Reset the form
+            document.getElementById('filter-form').reset();
+            document.getElementById('hmm-name-filter').value = '';
+            hideDropdown();
+
+            // Clear all numeric inputs explicitly
+            document.getElementById('min-proteins').value = '';
+            document.getElementById('max-proteins').value = '';
+            document.getElementById('min-characterized').value = '';
+            document.getElementById('max-characterized').value = '';
+            document.getElementById('min-np-val').value = '';
+            document.getElementById('max-np-val').value = '';
+            document.getElementById('min-np-pred').value = '';
+            document.getElementById('max-np-pred').value = '';
+
+            // Set defaults
+            const allSourceRadio = document.getElementById('source-all');
+            const allDataTypeRadio = document.getElementById('datatype-all');
+
+            if (allSourceRadio) allSourceRadio.checked = true;
+            if (allDataTypeRadio) allDataTypeRadio.checked = true;
+            document.getElementById('per-page-filter').value = '10';
+
+            // Reset to default sort
+            currentFilters = {};
+            currentSort = { sort_by: 'source', sort_order: 'desc' };
+            currentPerPage = 10;
+
+            // Reset ranges to global ranges
+            updateRangesForHMM('');
+
+            // Reload data with defaults
+            loadData(1, true);
+        });
+
+        // Per-page selection
+        document.getElementById('per-page-filter').addEventListener('change', function () {
+            currentPerPage = parseInt(this.value);
+            loadData(1, true);
+        });
+
+        // Sortable headers - UPDATED LOGIC
+        document.querySelectorAll('.sortable-header').forEach(header => {
+            header.addEventListener('click', function () {
+                const sortField = this.getAttribute('data-sort');
+
+                if (currentSort.sort_by === sortField) {
+                    currentSort.sort_order = currentSort.sort_order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.sort_by = sortField;
+                    currentSort.sort_order = 'asc';
+                }
+
+                loadData(currentPage);
             });
         });
-    }
-    
-    function updateSummary(pagination) {
-        document.getElementById('showing-from').textContent = pagination.showing_from;
-        document.getElementById('showing-to').textContent = pagination.showing_to;
-        document.getElementById('total-count').textContent = pagination.total_count;
-        
-        // FIXED: Use 'block' instead of 'flex' for the original alert-info structure
-        document.getElementById('results-summary').style.display = 'block';
-    }
-    
-    function showError(message) {
-        let errorDiv = document.getElementById('error-message');
-        if (!errorDiv) {
-            errorDiv = document.createElement('div');
-            errorDiv.id = 'error-message';
-            errorDiv.className = 'alert alert-danger';
-            document.getElementById('datasets-table').parentNode.insertBefore(errorDiv, document.getElementById('datasets-table'));
-        }
-        errorDiv.innerHTML = `<strong>Error:</strong> ${message}`;
-        errorDiv.style.display = 'block';
-        
-        setTimeout(() => {
-            if (errorDiv) {
-                errorDiv.style.display = 'none';
-            }
-        }, 5000);
-    }
-    
-    // UPDATE the applyFilters function with better error handling:
-    function applyFilters() {
-        // Get selected radio button values
-        const sourceRadio = document.querySelector('input[name="source"]:checked');
-        const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
 
-        // Get dataset name filter safely
-        const datasetNameInput = document.getElementById('dataset-name-filter');
-        const datasetNameValue = datasetNameInput ? datasetNameInput.value : '';
-
-        currentFilters = {
-            hmm_name: document.getElementById('hmm-name-filter').value,
-            source: sourceRadio ? sourceRadio.value : '',
-            data_type: dataTypeRadio ? dataTypeRadio.value : '',
-            dataset_name: datasetNameValue,
-            min_proteins: document.getElementById('min-proteins').value,
-            max_proteins: document.getElementById('max-proteins').value,
-            min_characterized: document.getElementById('min-characterized').value,
-            max_characterized: document.getElementById('max-characterized').value,
-            min_np_val: document.getElementById('min-np-val').value,
-            max_np_val: document.getElementById('max-np-val').value,
-            min_np_pred: document.getElementById('min-np-pred').value,
-            max_np_pred: document.getElementById('max-np-pred').value,
-        };
-        
-        // Remove empty values
-        Object.keys(currentFilters).forEach(key => {
-            if (!currentFilters[key] || currentFilters[key] === '0') {
-                delete currentFilters[key];
-            }
-        });
-        
-        console.log('Applied filters:', currentFilters); // Debug log
-        loadData(1, true); // Reset to first page
-    }
-    
-    function attachTableEventListeners() {
-        // Tree view buttons
-        document.querySelectorAll('.show-tree-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const datasetId = this.getAttribute('data-dataset-id');
-                const superfamilyName = this.getAttribute('data-superfamily');
-                const datasetName = this.getAttribute('data-dataset');
-                
-                if (datasetId && datasetId !== 'null') {
-                    const url = `/phylotree_render?dataset_id=${encodeURIComponent(datasetId)}`;
-                    window.location.href = url;
-                } else if (superfamilyName && datasetName && superfamilyName !== 'N/A' && datasetName !== 'N/A') {
-                    const url = `/phylotree_render?superfamily=${encodeURIComponent(superfamilyName)}&dataset=${encodeURIComponent(datasetName)}`;
-                    window.location.href = url;
-                } else {
-                    alert('Dataset information is incomplete. Please check the data.');
+        // Auto-apply filters on Enter key - Enhanced for all inputs and form
+        document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
+            input.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Prevent form submission
+                    applyFilters();
                 }
             });
         });
-    }
-    
-    // Event listeners
-    document.getElementById('apply-filters').addEventListener('click', function(e) {
-        e.preventDefault(); // Prevent form submission
-        console.log('Apply Filters button clicked'); // Debug log
-        applyFilters();
-    });
-    
-    // Clear filters
-    document.getElementById('clear-filters').addEventListener('click', function() {
-        // Reset the form
-        document.getElementById('filter-form').reset();
-        document.getElementById('hmm-name-filter').value = '';
-        hideDropdown();
-        
-        // Clear all numeric inputs explicitly
-        document.getElementById('min-proteins').value = '';
-        document.getElementById('max-proteins').value = '';
-        document.getElementById('min-characterized').value = '';
-        document.getElementById('max-characterized').value = '';
-        document.getElementById('min-np-val').value = '';
-        document.getElementById('max-np-val').value = '';
-        document.getElementById('min-np-pred').value = '';
-        document.getElementById('max-np-pred').value = '';
-        
-        // Set defaults
-        const allSourceRadio = document.getElementById('source-all');
-        const allDataTypeRadio = document.getElementById('datatype-all');
-        
-        if (allSourceRadio) allSourceRadio.checked = true;
-        if (allDataTypeRadio) allDataTypeRadio.checked = true;
-        document.getElementById('per-page-filter').value = '10';
-        
-        // Reset to default sort
-        currentFilters = {};
-        currentSort = { sort_by: 'source', sort_order: 'desc' };
-        currentPerPage = 10;
-        
-        // Reset ranges to global ranges
-        updateRangesForHMM('');
-        
-        // Reload data with defaults
-        loadData(1, true);
-    });
-    
-    // Per-page selection
-    document.getElementById('per-page-filter').addEventListener('change', function() {
-        currentPerPage = parseInt(this.value);
-        loadData(1, true);
-    });
-    
-    // Sortable headers - UPDATED LOGIC
-    document.querySelectorAll('.sortable-header').forEach(header => {
-        header.addEventListener('click', function() {
-            const sortField = this.getAttribute('data-sort');
-            
-            if (currentSort.sort_by === sortField) {
-                currentSort.sort_order = currentSort.sort_order === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.sort_by = sortField;
-                currentSort.sort_order = 'asc';
-            }
-            
-            loadData(currentPage);
-        });
-    });
-    
-    // Auto-apply filters on Enter key
-    document.querySelectorAll('input[type="text"], input[type="number"]').forEach(input => {
-        input.addEventListener('keypress', function(e) {
+
+        // Add Enter key support to the entire form
+        document.getElementById('filter-form').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent default form submission
                 applyFilters();
             }
         });
-    });
-    
-    // HMM Name autocomplete functionality
-    let hmmNames = [];
-    let currentHighlight = -1;
-    let currentFilteredItems = [];
-    let currentLoadedCount = 0;
 
-    // Constants for lazy loading
-    const ITEMS_PER_LOAD = 20;
-    const INITIAL_LOAD = 10;
+        // Add Enter key support to radio buttons (though less common)
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    applyFilters();
+                }
+            });
+        });
 
-    // Load HMM names from filter options
-    fetch('/api/filter_options')
-        .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Full filter options data:', data);
-        console.log('HMM names array:', data.hmm_names);
-        
-        hmmNames = data.hmm_names || [];
-        console.log('HMM names loaded:', hmmNames.length, 'items');
-        console.log('First 5 HMM names:', hmmNames.slice(0, 5));
-        
-        if (hmmNames.length === 0) {
-            console.error('NO HMM NAMES FOUND! Check your backend API');
-        } else {
-            console.log('HMM names successfully loaded, dropdown should work');
-        }
-    })
-    .catch(error => {
-        console.error('Error loading HMM names:', error);
-    });
+        // HMM Name autocomplete functionality
+        let hmmNames = [];
+        let currentHighlight = -1;
+        let currentFilteredItems = [];
+        let currentLoadedCount = 0;
 
-    const hmmInput = document.getElementById('hmm-name-filter');
-    const hmmDropdown = document.getElementById('hmm-dropdown');
+        // Constants for lazy loading
+        const ITEMS_PER_LOAD = 20;
+        const INITIAL_LOAD = 10;
 
-    hmmInput.addEventListener('input', function() {
-        const value = this.value.toLowerCase();
-        
-        if (value === '') {
-            // Show all options when input is empty
-            showDropdown(hmmNames, '', true);
-        } else {
-            // Filter options based on input
-            const filtered = hmmNames.filter(name => 
-                name.toLowerCase().includes(value)
-            );
-            showDropdown(filtered, value, true);
-        }
-    });
+        // Load HMM names from filter options
+        fetch('/api/filter_options')
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Full filter options data:', data);
+                console.log('HMM names array:', data.hmm_names);
 
-    hmmInput.addEventListener('focus', function() {
-        if (hmmNames.length > 0) {
-            const currentValue = this.value.toLowerCase();
-            let filtered = hmmNames;
-            
-            if (currentValue) {
-                filtered = hmmNames.filter(name => 
-                    name.toLowerCase().includes(currentValue)
-                );
-            }
-            
-            showDropdown(filtered, currentValue, true);
-        }
-    });
+                hmmNames = data.hmm_names || [];
+                console.log('HMM names loaded:', hmmNames.length, 'items');
+                console.log('First 5 HMM names:', hmmNames.slice(0, 5));
 
-    hmmInput.addEventListener('click', function() {
-        if (hmmNames.length > 0) {
-            const currentValue = this.value.toLowerCase();
-            let filtered = hmmNames;
-            
-            if (currentValue) {
-                filtered = hmmNames.filter(name => 
-                    name.toLowerCase().includes(currentValue)
-                );
-            }
-            
-            showDropdown(filtered, currentValue, true);
-        }
-    });
+                if (hmmNames.length === 0) {
+                    console.error('NO HMM NAMES FOUND! Check your backend API');
+                } else {
+                    console.log('HMM names successfully loaded, dropdown should work');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading HMM names:', error);
+            });
 
-    hmmInput.addEventListener('keydown', function(e) {
-        const items = hmmDropdown.querySelectorAll('.autocomplete-item');
-        
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            currentHighlight = Math.min(currentHighlight + 1, items.length - 1);
-            updateHighlight(items);
-            
-            // Load more items if we're near the end
-            if (currentHighlight >= items.length - 3) {
-                loadMoreItems();
-            }
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            currentHighlight = Math.max(currentHighlight - 1, -1);
-            updateHighlight(items);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentHighlight >= 0 && items[currentHighlight]) {
-                const selectedText = items[currentHighlight].getAttribute('data-value') || items[currentHighlight].textContent;
-                selectItem(selectedText);
+        const hmmInput = document.getElementById('hmm-name-filter');
+        const hmmDropdown = document.getElementById('hmm-dropdown');
+
+        hmmInput.addEventListener('input', function () {
+            const value = this.value.toLowerCase();
+
+            if (value === '') {
+                // Show all options when input is empty
+                showDropdown(hmmNames, '', true);
             } else {
-                applyFilters();
+                // Filter options based on input
+                const filtered = hmmNames.filter(name =>
+                    name.toLowerCase().includes(value)
+                );
+                showDropdown(filtered, value, true);
             }
-        } else if (e.key === 'Escape') {
-            hideDropdown();
-        }
-    });
+        });
 
-    hmmInput.addEventListener('blur', function(e) {
-        setTimeout(() => {
-            if (!hmmDropdown.contains(document.activeElement) && !hmmDropdown.matches(':hover')) {
-                hideDropdown();
-            }
-        }, 100);
-    });
-
-    // Dropdown toggle button
-    const hmmDropdownToggle = document.getElementById('hmm-dropdown-toggle');
-    if (hmmDropdownToggle) {
-        hmmDropdownToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            const input = document.getElementById('hmm-name-filter');
-            if (input && hmmNames.length > 0) {
-                input.focus();
-                const currentValue = input.value.toLowerCase();
+        hmmInput.addEventListener('focus', function () {
+            if (hmmNames.length > 0) {
+                const currentValue = this.value.toLowerCase();
                 let filtered = hmmNames;
-                
+
                 if (currentValue) {
-                    filtered = hmmNames.filter(name => 
+                    filtered = hmmNames.filter(name =>
                         name.toLowerCase().includes(currentValue)
                     );
                 }
-                
-                showDropdown(filtered, currentValue, true); // Reset view
+
+                showDropdown(filtered, currentValue, true);
             }
         });
-    }
 
-    function showDropdown(items, searchValue, resetView = false) {
-        if (items.length === 0) {
-            hideDropdown();
-            return;
-        }
-        
-        // Store all filtered items for lazy loading
-        currentFilteredItems = items;
-        currentLoadedCount = 0;
-        
-        hmmDropdown.innerHTML = '';
-        currentHighlight = -1;
-        
-        // Load initial items
-        loadMoreItems();
-        
-        // Add scroll listener for lazy loading
-        addScrollListener();
-        
-        hmmDropdown.style.display = 'block';
-    }
+        hmmInput.addEventListener('click', function () {
+            if (hmmNames.length > 0) {
+                const currentValue = this.value.toLowerCase();
+                let filtered = hmmNames;
 
-    function loadMoreItems() {
-        if (currentLoadedCount >= currentFilteredItems.length) {
-            removeLoadMoreIndicator();
-            return; // No more items to load
-        }
-        
-        const searchValue = hmmInput.value.toLowerCase();
-        const itemsToAdd = Math.min(ITEMS_PER_LOAD, currentFilteredItems.length - currentLoadedCount);
-        
-        // Remove load more indicator temporarily
-        removeLoadMoreIndicator();
-        
-        // Add more items
-        for (let i = currentLoadedCount; i < currentLoadedCount + itemsToAdd; i++) {
-            const item = currentFilteredItems[i];
-            const div = document.createElement('div');
-            div.className = 'autocomplete-item';
-            div.setAttribute('data-value', item);
-            
-            if (searchValue && searchValue.length > 0) {
-                const regex = new RegExp(`(${searchValue})`, 'gi');
-                const highlightedText = item.replace(regex, '<mark>$1</mark>');
-                div.innerHTML = highlightedText;
-            } else {
-                div.textContent = item;
+                if (currentValue) {
+                    filtered = hmmNames.filter(name =>
+                        name.toLowerCase().includes(currentValue)
+                    );
+                }
+
+                showDropdown(filtered, currentValue, true);
             }
-            
-            div.addEventListener('mousedown', function(e) {
-                e.preventDefault();
-                selectItem(item);
-            });
-            
-            hmmDropdown.appendChild(div);
-        }
-        
-        currentLoadedCount += itemsToAdd;
-        
-        // Add load more indicator if there are more items
-        if (currentLoadedCount < currentFilteredItems.length) {
-            addLoadMoreIndicator();
-        }
-        
-        console.log(`Loaded ${itemsToAdd} more items. Total: ${currentLoadedCount}/${currentFilteredItems.length}`);
-    }
+        });
 
-    function addLoadMoreIndicator() {
-        if (hmmDropdown.querySelector('.load-more-indicator')) {
-            return; // Already exists
+        hmmInput.addEventListener('keydown', function (e) {
+            const items = hmmDropdown.querySelectorAll('.autocomplete-item');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentHighlight = Math.min(currentHighlight + 1, items.length - 1);
+                updateHighlight(items);
+
+                // Load more items if we're near the end
+                if (currentHighlight >= items.length - 3) {
+                    loadMoreItems();
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentHighlight = Math.max(currentHighlight - 1, -1);
+                updateHighlight(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentHighlight >= 0 && items[currentHighlight]) {
+                    const selectedText = items[currentHighlight].getAttribute('data-value') || items[currentHighlight].textContent;
+                    selectItem(selectedText);
+                } else {
+                    applyFilters();
+                }
+            } else if (e.key === 'Escape') {
+                hideDropdown();
+            }
+        });
+
+        hmmInput.addEventListener('blur', function (e) {
+            setTimeout(() => {
+                if (!hmmDropdown.contains(document.activeElement) && !hmmDropdown.matches(':hover')) {
+                    hideDropdown();
+                }
+            }, 100);
+        });
+
+        // Dropdown toggle button
+        const hmmDropdownToggle = document.getElementById('hmm-dropdown-toggle');
+        if (hmmDropdownToggle) {
+            hmmDropdownToggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                const input = document.getElementById('hmm-name-filter');
+                if (input && hmmNames.length > 0) {
+                    input.focus();
+                    const currentValue = input.value.toLowerCase();
+                    let filtered = hmmNames;
+
+                    if (currentValue) {
+                        filtered = hmmNames.filter(name =>
+                            name.toLowerCase().includes(currentValue)
+                        );
+                    }
+
+                    showDropdown(filtered, currentValue, true); // Reset view
+                }
+            });
         }
-        
-        const indicator = document.createElement('div');
-        indicator.className = 'load-more-indicator';
-        indicator.innerHTML = `
+
+        function showDropdown(items, searchValue, resetView = false) {
+            if (items.length === 0) {
+                hideDropdown();
+                return;
+            }
+
+            // Store all filtered items for lazy loading
+            currentFilteredItems = items;
+            currentLoadedCount = 0;
+
+            hmmDropdown.innerHTML = '';
+            currentHighlight = -1;
+
+            // Load initial items
+            loadMoreItems();
+
+            // Add scroll listener for lazy loading
+            addScrollListener();
+
+            hmmDropdown.style.display = 'block';
+        }
+
+        function loadMoreItems() {
+            if (currentLoadedCount >= currentFilteredItems.length) {
+                removeLoadMoreIndicator();
+                return; // No more items to load
+            }
+
+            const searchValue = hmmInput.value.toLowerCase();
+            const itemsToAdd = Math.min(ITEMS_PER_LOAD, currentFilteredItems.length - currentLoadedCount);
+
+            // Remove load more indicator temporarily
+            removeLoadMoreIndicator();
+
+            // Add more items
+            for (let i = currentLoadedCount; i < currentLoadedCount + itemsToAdd; i++) {
+                const item = currentFilteredItems[i];
+                const div = document.createElement('div');
+                div.className = 'autocomplete-item';
+                div.setAttribute('data-value', item);
+
+                if (searchValue && searchValue.length > 0) {
+                    const regex = new RegExp(`(${searchValue})`, 'gi');
+                    const highlightedText = item.replace(regex, '<mark>$1</mark>');
+                    div.innerHTML = highlightedText;
+                } else {
+                    div.textContent = item;
+                }
+
+                div.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    selectItem(item);
+                });
+
+                hmmDropdown.appendChild(div);
+            }
+
+            currentLoadedCount += itemsToAdd;
+
+            // Add load more indicator if there are more items
+            if (currentLoadedCount < currentFilteredItems.length) {
+                addLoadMoreIndicator();
+            }
+
+            console.log(`Loaded ${itemsToAdd} more items. Total: ${currentLoadedCount}/${currentFilteredItems.length}`);
+        }
+
+        function addLoadMoreIndicator() {
+            if (hmmDropdown.querySelector('.load-more-indicator')) {
+                return; // Already exists
+            }
+
+            const indicator = document.createElement('div');
+            indicator.className = 'load-more-indicator';
+            indicator.innerHTML = `
             <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
                 Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
                 <br><small>Scroll down to load more</small>
             </div>
         `;
-        hmmDropdown.appendChild(indicator);
-    }
+            hmmDropdown.appendChild(indicator);
+        }
 
-    function updateLoadMoreIndicator() {
-        const indicator = hmmDropdown.querySelector('.load-more-indicator');
-        if (indicator) {
-            indicator.innerHTML = `
+        function updateLoadMoreIndicator() {
+            const indicator = hmmDropdown.querySelector('.load-more-indicator');
+            if (indicator) {
+                indicator.innerHTML = `
                 <div style="padding: 8px 12px; text-align: center; color: #666; font-style: italic; border-top: 1px solid #eee;">
                     Showing ${currentLoadedCount} of ${currentFilteredItems.length} items
                     <br><small>Scroll down to load more</small>
                 </div>
             `;
-        }
-    }
-
-    function removeLoadMoreIndicator() {
-        const indicator = hmmDropdown.querySelector('.load-more-indicator');
-        if (indicator) {
-            indicator.remove();
-        }
-    }
-
-    function addScrollListener() {
-        // Remove existing listener to avoid duplicates
-        hmmDropdown.removeEventListener('scroll', handleScroll);
-        hmmDropdown.addEventListener('scroll', handleScroll);
-    }
-
-    function handleScroll() {
-        const dropdown = hmmDropdown;
-        const scrollTop = dropdown.scrollTop;
-        const scrollHeight = dropdown.scrollHeight;
-        const clientHeight = dropdown.clientHeight;
-        
-        // Load more when near bottom (within 50px)
-        if (scrollTop + clientHeight >= scrollHeight - 50) {
-            loadMoreItems();
-        }
-    }
-
-    function hideDropdown() {
-        hmmDropdown.style.display = 'none';
-        currentHighlight = -1;
-        currentLoadedCount = 0;
-        // Remove scroll listener
-        hmmDropdown.removeEventListener('scroll', handleScroll);
-    }
-
-    function updateHighlight(items) {
-        items.forEach((item, index) => {
-            if (index === currentHighlight) {
-                item.classList.add('highlighted');
-                // Scroll highlighted item into view
-                item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-            } else {
-                item.classList.remove('highlighted');
             }
-        });
-    }
+        }
 
-    function selectItem(value) {
-        console.log('Selecting HMM item:', value);
-        const trimmedValue = value.trim();
-        hmmInput.value = trimmedValue;
-        hideDropdown();
-        
-        // Update ranges based on selected HMM
-        updateRangesForHMM(trimmedValue);
-    }
+        function removeLoadMoreIndicator() {
+            const indicator = hmmDropdown.querySelector('.load-more-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
 
-    // UPDATE the updateRangesForHMM function with safety checks:
-    function updateRangesForHMM(hmmName) {
-        // Get ALL current form values
-        const sourceRadio = document.querySelector('input[name="source"]:checked');
-        const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
-        
-        const params = new URLSearchParams();
-        
-        // Add all current filter values
-        if (hmmName && hmmName.trim() !== '') {
-            params.append('hmm_name', hmmName.trim());
+        function addScrollListener() {
+            // Remove existing listener to avoid duplicates
+            hmmDropdown.removeEventListener('scroll', handleScroll);
+            hmmDropdown.addEventListener('scroll', handleScroll);
         }
-        
-        if (sourceRadio && sourceRadio.value) {
-            params.append('source', sourceRadio.value);
+
+        function handleScroll() {
+            const dropdown = hmmDropdown;
+            const scrollTop = dropdown.scrollTop;
+            const scrollHeight = dropdown.scrollHeight;
+            const clientHeight = dropdown.clientHeight;
+
+            // Load more when near bottom (within 50px)
+            if (scrollTop + clientHeight >= scrollHeight - 50) {
+                loadMoreItems();
+            }
         }
-        
-        if (dataTypeRadio && dataTypeRadio.value) {
-            params.append('data_type', dataTypeRadio.value);
+
+        function hideDropdown() {
+            hmmDropdown.style.display = 'none';
+            currentHighlight = -1;
+            currentLoadedCount = 0;
+            // Remove scroll listener
+            hmmDropdown.removeEventListener('scroll', handleScroll);
         }
-        
-        // FIXED: Safety check for dataset name input
-        const datasetNameInput = document.getElementById('dataset-name-filter');
-        if (datasetNameInput && datasetNameInput.value) {
-            params.append('dataset_name', datasetNameInput.value);
+
+        function updateHighlight(items) {
+            items.forEach((item, index) => {
+                if (index === currentHighlight) {
+                    item.classList.add('highlighted');
+                    // Scroll highlighted item into view
+                    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else {
+                    item.classList.remove('highlighted');
+                }
+            });
         }
-        
-        // Add numeric ranges if they have values
-        const minProteins = document.getElementById('min-proteins').value;
-        if (minProteins) params.append('min_proteins', minProteins);
-        
-        const maxProteins = document.getElementById('max-proteins').value;
-        if (maxProteins) params.append('max_proteins', maxProteins);
-        
-        const minCharacterized = document.getElementById('min-characterized').value;
-        if (minCharacterized) params.append('min_characterized', minCharacterized);
-        
-        const maxCharacterized = document.getElementById('max-characterized').value;
-        if (maxCharacterized) params.append('max_characterized', maxCharacterized);
-        
-        const minNpVal = document.getElementById('min-np-val').value;
-        if (minNpVal) params.append('min_np_val', minNpVal);
-        
-        const maxNpVal = document.getElementById('max-np-val').value;
-        if (maxNpVal) params.append('max_np_val', maxNpVal);
-        
-        const minNpPred = document.getElementById('min-np-pred').value;
-        if (minNpPred) params.append('min_np_pred', minNpPred);
-        
-        const maxNpPred = document.getElementById('max-np-pred').value;
-        if (maxNpPred) params.append('max_np_pred', maxNpPred);
-        
-        const apiUrl = `/api/filter_options?${params.toString()}`;
-        
-        console.log('=== DYNAMIC RANGE UPDATE ===');
-        console.log('Fetching filtered ranges with URL:', apiUrl);
-        
-        fetch(apiUrl)
-            .then(response => response.json())
-            .then(data => {
-                console.log('Filtered ranges response:', data);
-                updateRangeDisplays(data);
-                
-                // IMPORTANT: Update HMM names dropdown with filtered list
-                if (data.hmm_names && Array.isArray(data.hmm_names)) {
-                    // Only update if we're not currently filtering by HMM name
-                    if (!hmmName || hmmName.trim() === '') {
-                        hmmNames = data.hmm_names;
-                        console.log('Updated HMM names list:', hmmNames.length, 'items');
-                        
-                        // If dropdown is currently open, refresh it
-                        if (hmmDropdown.style.display === 'block') {
-                            const currentValue = hmmInput.value.toLowerCase();
-                            let filtered = hmmNames;
-                            
-                            if (currentValue) {
-                                filtered = hmmNames.filter(name => 
-                                    name.toLowerCase().includes(currentValue)
-                                );
+
+        function selectItem(value) {
+            console.log('Selecting HMM item:', value);
+            const trimmedValue = value.trim();
+            hmmInput.value = trimmedValue;
+            hideDropdown();
+
+            // Update ranges based on selected HMM
+            updateRangesForHMM(trimmedValue);
+        }
+
+        // UPDATE the updateRangesForHMM function with safety checks:
+        function updateRangesForHMM(hmmName) {
+            // Get ALL current form values
+            const sourceRadio = document.querySelector('input[name="source"]:checked');
+            const dataTypeRadio = document.querySelector('input[name="data_type"]:checked');
+
+            const params = new URLSearchParams();
+
+            // Add all current filter values
+            if (hmmName && hmmName.trim() !== '') {
+                params.append('hmm_name', hmmName.trim());
+            }
+
+            if (sourceRadio && sourceRadio.value) {
+                params.append('source', sourceRadio.value);
+            }
+
+            if (dataTypeRadio && dataTypeRadio.value) {
+                params.append('data_type', dataTypeRadio.value);
+            }
+
+            // FIXED: Safety check for dataset name input
+            const datasetNameInput = document.getElementById('dataset-name-filter');
+            if (datasetNameInput && datasetNameInput.value) {
+                params.append('dataset_name', datasetNameInput.value);
+            }
+
+            // Add numeric ranges if they have values
+            const minProteins = document.getElementById('min-proteins').value;
+            if (minProteins) params.append('min_proteins', minProteins);
+
+            const maxProteins = document.getElementById('max-proteins').value;
+            if (maxProteins) params.append('max_proteins', maxProteins);
+
+            const minCharacterized = document.getElementById('min-characterized').value;
+            if (minCharacterized) params.append('min_characterized', minCharacterized);
+
+            const maxCharacterized = document.getElementById('max-characterized').value;
+            if (maxCharacterized) params.append('max_characterized', maxCharacterized);
+
+            const minNpVal = document.getElementById('min-np-val').value;
+            if (minNpVal) params.append('min_np_val', minNpVal);
+
+            const maxNpVal = document.getElementById('max-np-val').value;
+            if (maxNpVal) params.append('max_np_val', maxNpVal);
+
+            const minNpPred = document.getElementById('min-np-pred').value;
+            if (minNpPred) params.append('min_np_pred', minNpPred);
+
+            const maxNpPred = document.getElementById('max-np-pred').value;
+            if (maxNpPred) params.append('max_np_pred', maxNpPred);
+
+            const apiUrl = `/api/filter_options?${params.toString()}`;
+
+            console.log('=== DYNAMIC RANGE UPDATE ===');
+            console.log('Fetching filtered ranges with URL:', apiUrl);
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Filtered ranges response:', data);
+                    updateRangeDisplays(data);
+
+                    // IMPORTANT: Update HMM names dropdown with filtered list
+                    if (data.hmm_names && Array.isArray(data.hmm_names)) {
+                        // Only update if we're not currently filtering by HMM name
+                        if (!hmmName || hmmName.trim() === '') {
+                            hmmNames = data.hmm_names;
+                            console.log('Updated HMM names list:', hmmNames.length, 'items');
+
+                            // If dropdown is currently open, refresh it
+                            if (hmmDropdown.style.display === 'block') {
+                                const currentValue = hmmInput.value.toLowerCase();
+                                let filtered = hmmNames;
+
+                                if (currentValue) {
+                                    filtered = hmmNames.filter(name =>
+                                        name.toLowerCase().includes(currentValue)
+                                    );
+                                }
+
+                                showDropdown(filtered, currentValue, true);
                             }
-                            
-                            showDropdown(filtered, currentValue, true);
                         }
                     }
+                })
+                .catch(error => {
+                    console.error('Error fetching filtered ranges:', error);
+                });
+        }
+
+        // UPDATE the updateRangeDisplays function:
+        function updateRangeDisplays(data) {
+            console.log('Updating range displays with data:', data);
+
+            // Update protein stats
+            if (data.protein_stats) {
+                const proteinStatsDiv = document.querySelector('.col-3:nth-child(1) .stats-info-compact');
+                if (proteinStatsDiv) {
+                    const newText = `${data.protein_stats.min}-${Math.round(data.protein_stats.max)}`;
+                    proteinStatsDiv.textContent = newText;
+                    proteinStatsDiv.style.color = '#28a745';
+                    proteinStatsDiv.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        proteinStatsDiv.style.color = '#6c757d';
+                        proteinStatsDiv.style.fontWeight = 'normal';
+                    }, 2000);
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching filtered ranges:', error);
+
+                // Update input placeholders and limits
+                const minProteins = document.getElementById('min-proteins');
+                const maxProteins = document.getElementById('max-proteins');
+                if (minProteins && maxProteins) {
+                    minProteins.setAttribute('min', data.protein_stats.min);
+                    minProteins.setAttribute('max', data.protein_stats.max);
+                    minProteins.placeholder = `${data.protein_stats.min}`;
+
+                    maxProteins.setAttribute('min', data.protein_stats.min);
+                    maxProteins.setAttribute('max', data.protein_stats.max);
+                    maxProteins.placeholder = `${Math.round(data.protein_stats.max)}`;
+                }
+            }
+
+            // Update characterized stats
+            if (data.characterized_stats) {
+                const characterizedStatsDiv = document.querySelector('.col-3:nth-child(2) .stats-info-compact');
+                if (characterizedStatsDiv) {
+                    const newText = `${data.characterized_stats.min}-${Math.round(data.characterized_stats.max)}`;
+                    characterizedStatsDiv.textContent = newText;
+                    characterizedStatsDiv.style.color = '#28a745';
+                    characterizedStatsDiv.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        characterizedStatsDiv.style.color = '#6c757d';
+                        characterizedStatsDiv.style.fontWeight = 'normal';
+                    }, 2000);
+                }
+
+                // Update input placeholders and limits
+                const minCharacterized = document.getElementById('min-characterized');
+                const maxCharacterized = document.getElementById('max-characterized');
+                if (minCharacterized && maxCharacterized) {
+                    minCharacterized.setAttribute('min', data.characterized_stats.min);
+                    minCharacterized.setAttribute('max', data.characterized_stats.max);
+                    minCharacterized.placeholder = `${data.characterized_stats.min}`;
+
+                    maxCharacterized.setAttribute('min', data.characterized_stats.min);
+                    maxCharacterized.setAttribute('max', data.characterized_stats.max);
+                    maxCharacterized.placeholder = `${Math.round(data.characterized_stats.max)}`;
+                }
+            }
+
+            // Update NP validation stats
+            if (data.np_val_stats) {
+                const npValStatsDiv = document.querySelector('.col-3:nth-child(3) .stats-info-compact');
+                if (npValStatsDiv) {
+                    const newText = `${data.np_val_stats.min}-${Math.round(data.np_val_stats.max)}`;
+                    npValStatsDiv.textContent = newText;
+                    npValStatsDiv.style.color = '#28a745';
+                    npValStatsDiv.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        npValStatsDiv.style.color = '#6c757d';
+                        npValStatsDiv.style.fontWeight = 'normal';
+                    }, 2000);
+                }
+
+                // Update input placeholders and limits
+                const minNpVal = document.getElementById('min-np-val');
+                const maxNpVal = document.getElementById('max-np-val');
+                if (minNpVal && maxNpVal) {
+                    minNpVal.setAttribute('min', data.np_val_stats.min);
+                    minNpVal.setAttribute('max', data.np_val_stats.max);
+                    minNpVal.placeholder = `${data.np_val_stats.min}`;
+
+                    maxNpVal.setAttribute('min', data.np_val_stats.min);
+                    maxNpVal.setAttribute('max', data.np_val_stats.max);
+                    maxNpVal.placeholder = `${Math.round(data.np_val_stats.max)}`;
+                }
+            }
+
+            // Update NP prediction stats
+            if (data.np_pred_stats) {
+                const npPredStatsDiv = document.querySelector('.col-3:nth-child(4) .stats-info-compact');
+                if (npPredStatsDiv) {
+                    const newText = `${data.np_pred_stats.min}-${Math.round(data.np_pred_stats.max)}`;
+                    npPredStatsDiv.textContent = newText;
+                    npPredStatsDiv.style.color = '#28a745';
+                    npPredStatsDiv.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        npPredStatsDiv.style.color = '#6c757d';
+                        npPredStatsDiv.style.fontWeight = 'normal';
+                    }, 2000);
+                }
+
+                // Update input placeholders and limits
+                const minNpPred = document.getElementById('min-np-pred');
+                const maxNpPred = document.getElementById('max-np-pred');
+                if (minNpPred && maxNpPred) {
+                    minNpPred.setAttribute('min', data.np_pred_stats.min);
+                    minNpPred.setAttribute('max', data.np_pred_stats.max);
+                    minNpPred.placeholder = `${data.np_pred_stats.min}`;
+
+                    maxNpPred.setAttribute('min', data.np_pred_stats.min);
+                    maxNpPred.setAttribute('max', data.np_pred_stats.max);
+                    maxNpPred.placeholder = `${Math.round(data.np_pred_stats.max)}`;
+                }
+            }
+        }
+
+        // ADD this event listener after the existing HMM input event listeners:
+        hmmInput.addEventListener('change', function () {
+            const value = this.value.trim();
+            updateRangesForHMM(value);
+        });
+
+        // Also update ranges when input is cleared
+        hmmInput.addEventListener('input', function () {
+            const value = this.value.toLowerCase();
+
+            // Update dropdown as before
+            if (value === '') {
+                showDropdown(hmmNames, '', true);
+                // Also reset ranges when input is cleared
+                updateRangesForHMM('');
+            } else {
+                const filtered = hmmNames.filter(name =>
+                    name.toLowerCase().includes(value)
+                );
+                showDropdown(filtered, value, true);
+            }
+        });
+
+        // Update ranges when Source radio buttons change
+        document.querySelectorAll('input[name="source"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const hmmValue = document.getElementById('hmm-name-filter').value;
+                updateRangesForHMM(hmmValue);
             });
-    }
-
-    // UPDATE the updateRangeDisplays function:
-    function updateRangeDisplays(data) {
-        console.log('Updating range displays with data:', data);
-        
-        // Update protein stats
-        if (data.protein_stats) {
-            const proteinStatsDiv = document.querySelector('.col-3:nth-child(1) .stats-info-compact');
-            if (proteinStatsDiv) {
-                const newText = `${data.protein_stats.min}-${Math.round(data.protein_stats.max)}`;
-                proteinStatsDiv.textContent = newText;
-                proteinStatsDiv.style.color = '#28a745';
-                proteinStatsDiv.style.fontWeight = 'bold';
-                setTimeout(() => {
-                    proteinStatsDiv.style.color = '#6c757d';
-                    proteinStatsDiv.style.fontWeight = 'normal';
-                }, 2000);
-            }
-            
-            // Update input placeholders and limits
-            const minProteins = document.getElementById('min-proteins');
-            const maxProteins = document.getElementById('max-proteins');
-            if (minProteins && maxProteins) {
-                minProteins.setAttribute('min', data.protein_stats.min);
-                minProteins.setAttribute('max', data.protein_stats.max);
-                minProteins.placeholder = `${data.protein_stats.min}`;
-                
-                maxProteins.setAttribute('min', data.protein_stats.min);
-                maxProteins.setAttribute('max', data.protein_stats.max);
-                maxProteins.placeholder = `${Math.round(data.protein_stats.max)}`;
-            }
-        }
-        
-        // Update characterized stats
-        if (data.characterized_stats) {
-            const characterizedStatsDiv = document.querySelector('.col-3:nth-child(2) .stats-info-compact');
-            if (characterizedStatsDiv) {
-                const newText = `${data.characterized_stats.min}-${Math.round(data.characterized_stats.max)}`;
-                characterizedStatsDiv.textContent = newText;
-                characterizedStatsDiv.style.color = '#28a745';
-                characterizedStatsDiv.style.fontWeight = 'bold';
-                setTimeout(() => {
-                    characterizedStatsDiv.style.color = '#6c757d';
-                    characterizedStatsDiv.style.fontWeight = 'normal';
-                }, 2000);
-            }
-            
-            // Update input placeholders and limits
-            const minCharacterized = document.getElementById('min-characterized');
-            const maxCharacterized = document.getElementById('max-characterized');
-            if (minCharacterized && maxCharacterized) {
-                minCharacterized.setAttribute('min', data.characterized_stats.min);
-                minCharacterized.setAttribute('max', data.characterized_stats.max);
-                minCharacterized.placeholder = `${data.characterized_stats.min}`;
-                
-                maxCharacterized.setAttribute('min', data.characterized_stats.min);
-                maxCharacterized.setAttribute('max', data.characterized_stats.max);
-                maxCharacterized.placeholder = `${Math.round(data.characterized_stats.max)}`;
-            }
-        }
-        
-        // Update NP validation stats
-        if (data.np_val_stats) {
-            const npValStatsDiv = document.querySelector('.col-3:nth-child(3) .stats-info-compact');
-            if (npValStatsDiv) {
-                const newText = `${data.np_val_stats.min}-${Math.round(data.np_val_stats.max)}`;
-                npValStatsDiv.textContent = newText;
-                npValStatsDiv.style.color = '#28a745';
-                npValStatsDiv.style.fontWeight = 'bold';
-                setTimeout(() => {
-                    npValStatsDiv.style.color = '#6c757d';
-                    npValStatsDiv.style.fontWeight = 'normal';
-                }, 2000);
-            }
-            
-            // Update input placeholders and limits
-            const minNpVal = document.getElementById('min-np-val');
-            const maxNpVal = document.getElementById('max-np-val');
-            if (minNpVal && maxNpVal) {
-                minNpVal.setAttribute('min', data.np_val_stats.min);
-                minNpVal.setAttribute('max', data.np_val_stats.max);
-                minNpVal.placeholder = `${data.np_val_stats.min}`;
-                
-                maxNpVal.setAttribute('min', data.np_val_stats.min);
-                maxNpVal.setAttribute('max', data.np_val_stats.max);
-                maxNpVal.placeholder = `${Math.round(data.np_val_stats.max)}`;
-            }
-        }
-        
-        // Update NP prediction stats
-        if (data.np_pred_stats) {
-            const npPredStatsDiv = document.querySelector('.col-3:nth-child(4) .stats-info-compact');
-            if (npPredStatsDiv) {
-                const newText = `${data.np_pred_stats.min}-${Math.round(data.np_pred_stats.max)}`;
-                npPredStatsDiv.textContent = newText;
-                npPredStatsDiv.style.color = '#28a745';
-                npPredStatsDiv.style.fontWeight = 'bold';
-                setTimeout(() => {
-                    npPredStatsDiv.style.color = '#6c757d';
-                    npPredStatsDiv.style.fontWeight = 'normal';
-                }, 2000);
-            }
-            
-            // Update input placeholders and limits
-            const minNpPred = document.getElementById('min-np-pred');
-            const maxNpPred = document.getElementById('max-np-pred');
-            if (minNpPred && maxNpPred) {
-                minNpPred.setAttribute('min', data.np_pred_stats.min);
-                minNpPred.setAttribute('max', data.np_pred_stats.max);
-                minNpPred.placeholder = `${data.np_pred_stats.min}`;
-                
-                maxNpPred.setAttribute('min', data.np_pred_stats.min);
-                maxNpPred.setAttribute('max', data.np_pred_stats.max);
-                maxNpPred.placeholder = `${Math.round(data.np_pred_stats.max)}`;
-            }
-        }
-    }
-    
-    // ADD this event listener after the existing HMM input event listeners:
-    hmmInput.addEventListener('change', function() {
-        const value = this.value.trim();
-        updateRangesForHMM(value);
-    });
-
-    // Also update ranges when input is cleared
-    hmmInput.addEventListener('input', function() {
-        const value = this.value.toLowerCase();
-        
-        // Update dropdown as before
-        if (value === '') {
-            showDropdown(hmmNames, '', true);
-            // Also reset ranges when input is cleared
-            updateRangesForHMM('');
-        } else {
-            const filtered = hmmNames.filter(name => 
-                name.toLowerCase().includes(value)
-            );
-            showDropdown(filtered, value, true);
-        }
-    });
-    
-    // Update ranges when Source radio buttons change
-    document.querySelectorAll('input[name="source"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const hmmValue = document.getElementById('hmm-name-filter').value;
-            updateRangesForHMM(hmmValue);
         });
+
+        // Update ranges when Data Type radio buttons change
+        document.querySelectorAll('input[name="data_type"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const hmmValue = document.getElementById('hmm-name-filter').value;
+                updateRangesForHMM(hmmValue);
+            });
+        });
+
+        // Update ranges when Dataset Name changes
+        // const datasetNameInput = document.getElementById('dataset-name-filter');
+        // if (datasetNameInput) {
+        //     datasetNameInput.addEventListener('input', debounce(function() {
+        //         const hmmValue = document.getElementById('hmm-name-filter').value;
+        //         updateRangesForHMM(hmmValue);
+        //     }, 500));
+        // }
+
+        // Update ranges when numeric fields change
+        ['min-proteins', 'max-proteins', 'min-characterized', 'max-characterized',
+            'min-np-val', 'max-np-val', 'min-np-pred', 'max-np-pred'].forEach(fieldId => {
+                document.getElementById(fieldId).addEventListener('change', function () {
+                    const hmmValue = document.getElementById('hmm-name-filter').value;
+                    updateRangesForHMM(hmmValue);
+                });
+
+                // Also trigger on blur (when user leaves the field)
+                document.getElementById(fieldId).addEventListener('blur', function () {
+                    const hmmValue = document.getElementById('hmm-name-filter').value;
+                    updateRangesForHMM(hmmValue);
+                });
+            });
     });
 
-    // Update ranges when Data Type radio buttons change
-    document.querySelectorAll('input[name="data_type"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const hmmValue = document.getElementById('hmm-name-filter').value;
-            updateRangesForHMM(hmmValue);
-        });
-    });
-
-    // Update ranges when Dataset Name changes
-    // const datasetNameInput = document.getElementById('dataset-name-filter');
-    // if (datasetNameInput) {
-    //     datasetNameInput.addEventListener('input', debounce(function() {
-    //         const hmmValue = document.getElementById('hmm-name-filter').value;
-    //         updateRangesForHMM(hmmValue);
-    //     }, 500));
-    // }
-
-    // Update ranges when numeric fields change
-    ['min-proteins', 'max-proteins', 'min-characterized', 'max-characterized',
-     'min-np-val', 'max-np-val', 'min-np-pred', 'max-np-pred'].forEach(fieldId => {
-        document.getElementById(fieldId).addEventListener('change', function() {
-            const hmmValue = document.getElementById('hmm-name-filter').value;
-            updateRangesForHMM(hmmValue);
-        });
-        
-        // Also trigger on blur (when user leaves the field)
-        document.getElementById(fieldId).addEventListener('blur', function() {
-            const hmmValue = document.getElementById('hmm-name-filter').value;
-            updateRangesForHMM(hmmValue);
-        });
-    });
-});
-
-// ADD this debounce function at the top of your script section (around line 300):
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
+    // ADD this debounce function at the top of your script section (around line 300):
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
             clearTimeout(timeout);
-            func(...args);
+            timeout = setTimeout(later, wait);
         };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
@@ -1198,20 +1226,22 @@ function debounce(func, wait) {
         --background-dark: var(--background-dark, #3D3D3D);
         --background-light: var(--background-light, #E0E0E0);
     }
-    
+
     /* Simple button overrides - no need for complex selectors */
-    .btn-bright, .show-tree-btn {
+    .btn-bright,
+    .show-tree-btn {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
     }
-    
-    .btn-bright:hover, .show-tree-btn:hover {
+
+    .btn-bright:hover,
+    .show-tree-btn:hover {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
     }
-    
+
     /* UPDATE the Apply Filters button styling: */
     #apply-filters {
         background-color: var(--bright-color) !important;
@@ -1222,7 +1252,7 @@ function debounce(func, wait) {
         font-size: 1.1rem;
         border-radius: 8px;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     #apply-filters:hover {
@@ -1230,72 +1260,86 @@ function debounce(func, wait) {
         border-color: var(--background-dark) !important;
         color: white !important;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    
+
     .selected-superfamily {
         background-color: #B69E6C !important;
         color: black !important;
     }
-    
+
     .show-button {
         outline: none !important;
     }
-    
+
     .show-button:focus {
         outline: none !important;
         box-shadow: none !important;
     }
-    
+
     .fixed-table {
         width: 100%;
     }
-    
-    .fixed-table th, .fixed-table td {
+
+    .fixed-table th,
+    .fixed-table td {
         word-wrap: break-word;
         max-width: 200px;
     }
-    
+
     .filter-section {
         background-color: var(--background-light);
-        padding: 10px 15px; /* REDUCED from 15px */
+        padding: 10px 15px;
+        /* REDUCED from 15px */
         border-radius: 8px;
-        margin-bottom: 12px; /* REDUCED from 15px */
+        margin-bottom: 12px;
+        /* REDUCED from 15px */
         border: 1px solid #dee2e6;
-        overflow: visible; /* IMPORTANT: Allow dropdown to show outside */
+        overflow: visible;
+        /* IMPORTANT: Allow dropdown to show outside */
     }
-    
+
     .filter-row {
-        margin-bottom: 10px; /* REDUCED from 15px */
+        margin-bottom: 10px;
+        /* REDUCED from 15px */
     }
-    
+
     /* COMPACT form controls */
-    .form-control, .form-select {
-        padding: 6px 12px; /* REDUCED from default */
-        font-size: 0.9rem; /* Slightly smaller text */
+    .form-control,
+    .form-select {
+        padding: 6px 12px;
+        /* REDUCED from default */
+        font-size: 0.9rem;
+        /* Slightly smaller text */
     }
 
     .form-label {
-        margin-bottom: 4px; /* REDUCED from default 8px */
+        margin-bottom: 4px;
+        /* REDUCED from default 8px */
         font-size: 0.9rem;
         font-weight: 500;
     }
 
     .stats-info {
-        font-size: 0.8em; /* REDUCED from 0.9em */
+        font-size: 0.8em;
+        /* REDUCED from 0.9em */
         color: #6c757d;
-        margin-top: 3px; /* REDUCED from 5px */
+        margin-top: 3px;
+        /* REDUCED from 5px */
     }
 
     .range-input-group {
         display: flex;
         align-items: center;
-        gap: 4px; /* REDUCED from 5px */
+        gap: 4px;
+        /* REDUCED from 5px */
     }
 
     .range-input-group input {
-        width: 75px; /* REDUCED from 80px */
-        padding: 4px 8px; /* Smaller padding */
+        width: 75px;
+        /* REDUCED from 80px */
+        padding: 4px 8px;
+        /* Smaller padding */
     }
 
     .range-input-group span {
@@ -1305,19 +1349,23 @@ function debounce(func, wait) {
 
     /* Compact buttons */
     #apply-filters {
-        padding: 10px 30px; /* REDUCED from 12px 40px */
-        font-size: 1rem; /* REDUCED from 1.1rem */
+        padding: 10px 30px;
+        /* REDUCED from 12px 40px */
+        font-size: 1rem;
+        /* REDUCED from 1.1rem */
     }
 
     #clear-filters {
-        padding: 6px 16px; /* Smaller clear button */
+        padding: 6px 16px;
+        /* Smaller clear button */
         font-size: 0.9rem;
     }
-    
+
     .btn-group-sm .btn {
         font-size: 0.8rem;
         padding: 0.25rem 0.5rem;
     }
+
     /* ADD this CSS for radio button styling: */
     .radio-group {
         display: flex;
@@ -1351,10 +1399,11 @@ function debounce(func, wait) {
         cursor: pointer;
     }
 
-    .form-check-input[type="radio"]:checked + .form-check-label {
+    .form-check-input[type="radio"]:checked+.form-check-label {
         color: var(--bright-color);
         font-weight: 600;
     }
+
     /* UPDATED: Bright buttons for Tree and Apply Filters - maintain white text */
     .btn-bright {
         background-color: var(--bright-color) !important;
@@ -1362,28 +1411,28 @@ function debounce(func, wait) {
         color: white !important;
         font-weight: 500;
     }
-    
+
     .btn-bright:hover {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
         transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
-    
+
     .btn-bright:focus {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
         box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25) !important;
     }
-    
+
     .btn-bright:active {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
     }
-    
+
     /* Tree button specific styling */
     .show-tree-btn {
         background-color: var(--bright-color) !important;
@@ -1392,54 +1441,54 @@ function debounce(func, wait) {
         font-weight: 500;
         transition: all 0.2s ease;
     }
-    
+
     .show-tree-btn:hover {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
         transform: scale(1.05);
     }
-    
+
     .show-tree-btn:focus,
     .show-tree-btn:active {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
     }
-    
+
     /* Dark buttons for all other actions */
     .btn-dark {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
     }
-    
+
     .btn-dark:hover {
         background-color: var(--bright-color) !important;
         border-color: var(--bright-color) !important;
         color: white !important;
     }
-    
+
     .btn-dark:focus {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
         box-shadow: 0 0 0 0.2rem rgba(61, 61, 61, 0.25) !important;
     }
-    
+
     /* Override default button styles */
     .btn-outline-secondary {
         color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         background-color: transparent !important;
     }
-    
+
     .btn-outline-secondary:hover {
         background-color: var(--background-dark) !important;
         border-color: var(--background-dark) !important;
         color: white !important;
     }
-    
+
     /* REMOVE the old alert-info styling */
     .alert-info {
         background-color: transparent !important;
@@ -1447,13 +1496,13 @@ function debounce(func, wait) {
         padding: 0 !important;
         margin: 0 !important;
     }
-    
+
     /* Style the per-page dropdown like HMM input */
     #per-page-filter:focus {
         border-color: var(--bright-color) !important;
         box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25) !important;
     }
-    
+
     /* Style the dropdown button like HMM dropdown button */
     #results-summary .input-group .btn-outline-secondary {
         border-left: 0;
@@ -1468,7 +1517,7 @@ function debounce(func, wait) {
         color: white !important;
     }
 
-    #results-summary .input-group #per-page-filter:focus + .btn-outline-secondary {
+    #results-summary .input-group #per-page-filter:focus+.btn-outline-secondary {
         border-color: var(--bright-color) !important;
     }
 
@@ -1479,54 +1528,59 @@ function debounce(func, wait) {
         padding: 0 !important;
         margin: 0 0 15px 0 !important;
     }
-    
+
     h1 {
         color: var(--bright-color);
         margin-bottom: 30px;
     }
-    
+
     h4 {
         color: var(--bright-color);
     }
-    
+
     .table-striped tbody tr:nth-of-type(odd) {
         background-color: rgba(224, 224, 224, 0.3);
     }
-    
+
     .pagination .page-link {
         color: var(--bright-color);
     }
-    
+
     .pagination .page-item.active .page-link {
         background-color: var(--bright-color);
         border-color: var(--bright-color);
         color: white;
     }
-    
+
     .pagination .page-link:hover {
         color: white;
         background-color: var(--background-dark);
         border-color: var(--background-dark);
     }
-    
+
     /* Autocomplete dropdown styling */
     .autocomplete-dropdown {
         position: absolute;
-        top: calc(100% + 1px); /* Position exactly below the input with small gap */
+        top: calc(100% + 1px);
+        /* Position exactly below the input with small gap */
         left: 0;
         right: 0;
         background: white;
-        border: 2px solid var(--bright-color); /* STRONGER border */
+        border: 2px solid var(--bright-color);
+        /* STRONGER border */
         border-top: none;
         border-radius: 0 0 6px 6px;
         max-height: 300px;
         overflow-y: auto;
-        z-index: 1060; /* HIGHER z-index */
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* STRONGER shadow */
+        z-index: 1060;
+        /* HIGHER z-index */
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        /* STRONGER shadow */
     }
 
     .autocomplete-item {
-        padding: 10px 12px; /* Slightly more padding */
+        padding: 10px 12px;
+        /* Slightly more padding */
         cursor: pointer;
         border-bottom: 1px solid #eee;
         transition: background-color 0.2s ease;
@@ -1601,8 +1655,10 @@ function debounce(func, wait) {
     /* Compact filter row */
     .filter-row-compact {
         margin-bottom: 8px;
-        align-items: flex-end; /* Align items to bottom for better button placement */
-        overflow: visible; /* IMPORTANT: Allow dropdown to show outside */
+        align-items: flex-end;
+        /* Align items to bottom for better button placement */
+        overflow: visible;
+        /* IMPORTANT: Allow dropdown to show outside */
     }
 
     /* Vertical radio button styling */
@@ -1620,7 +1676,8 @@ function debounce(func, wait) {
 
     .radio-group-vertical .form-check-input {
         margin-left: -18px;
-        transform: scale(0.9); /* Slightly smaller radio buttons */
+        transform: scale(0.9);
+        /* Slightly smaller radio buttons */
     }
 
     .radio-group-vertical .form-check-label {
@@ -1631,7 +1688,7 @@ function debounce(func, wait) {
         line-height: 1.2;
     }
 
-    .radio-group-vertical .form-check-input[type="radio"]:checked + .form-check-label {
+    .radio-group-vertical .form-check-input[type="radio"]:checked+.form-check-label {
         color: var(--bright-color);
         font-weight: 600;
     }
@@ -1702,13 +1759,16 @@ function debounce(func, wait) {
     /* Reduce overall filter section padding */
     .filter-section {
         background-color: var(--background-light);
-        padding: 10px 15px; /* REDUCED from 15px */
+        padding: 10px 15px;
+        /* REDUCED from 15px */
         border-radius: 8px;
-        margin-bottom: 12px; /* REDUCED from 15px */
+        margin-bottom: 12px;
+        /* REDUCED from 15px */
         border: 1px solid #dee2e6;
-        overflow: visible; /* IMPORTANT: Allow dropdown to show outside */
+        overflow: visible;
+        /* IMPORTANT: Allow dropdown to show outside */
     }
-    
+
     /* Adjust HMM input for compact layout */
     .col-md-2 .form-control {
         padding: 5px 8px;
@@ -1727,73 +1787,90 @@ function debounce(func, wait) {
 
     /* UPDATE the HMM dropdown positioning CSS: */
     .col-md-2 {
-        position: relative; /* Ensure this is set for proper dropdown positioning */
+        position: relative;
+        /* Ensure this is set for proper dropdown positioning */
     }
 
     /* Fix autocomplete dropdown positioning */
     .autocomplete-dropdown {
         position: absolute;
-        top: calc(100% + 1px); /* Position exactly below the input with small gap */
+        top: calc(100% + 1px);
+        /* Position exactly below the input with small gap */
         left: 0;
         right: 0;
         background: white;
-        border: 2px solid var(--bright-color); /* STRONGER border */
+        border: 2px solid var(--bright-color);
+        /* STRONGER border */
         border-top: none;
         border-radius: 0 0 6px 6px;
         max-height: 300px;
         overflow-y: auto;
-        z-index: 1060; /* HIGHER z-index */
-        box-shadow: 0 6px 12px rgba(0,0,0,0.15); /* STRONGER shadow */
+        z-index: 1060;
+        /* HIGHER z-index */
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        /* STRONGER shadow */
     }
 
     /* Ensure the input group container has proper positioning */
     .col-md-2 .input-group {
         position: relative;
-        z-index: 2; /* Keep input above other elements but below dropdown */
+        z-index: 2;
+        /* Keep input above other elements but below dropdown */
     }
 
     /* Make sure the HMM column has enough space */
     .col-md-2 {
-        min-height: 80px; /* Give some space for the dropdown to show */
-        overflow: visible; /* Allow content to overflow */
+        min-height: 80px;
+        /* Give some space for the dropdown to show */
+        overflow: visible;
+        /* Allow content to overflow */
     }
 
     /* ADD these styles to make text and fields bigger - DON'T replace anything */
 
     /* Make filter labels bigger to match table text */
     .form-label {
-        font-size: 1rem !important; /* OVERRIDE existing 0.9rem */
-        font-weight: 600 !important; /* OVERRIDE existing 500 */
+        font-size: 1rem !important;
+        /* OVERRIDE existing 0.9rem */
+        font-weight: 600 !important;
+        /* OVERRIDE existing 500 */
     }
 
     /* Make HMM Name input bigger */
     .col-md-2 .form-control {
-        padding: 6px 10px !important; /* OVERRIDE existing 5px 8px */
-        font-size: 0.9rem !important; /* OVERRIDE existing 0.8rem */
+        padding: 6px 10px !important;
+        /* OVERRIDE existing 5px 8px */
+        font-size: 0.9rem !important;
+        /* OVERRIDE existing 0.8rem */
     }
 
     .col-md-2 .form-label {
-        font-size: 1rem !important; /* OVERRIDE existing 0.8rem */
+        font-size: 1rem !important;
+        /* OVERRIDE existing 0.8rem */
     }
 
     /* Make radio button labels bigger */
     .radio-group-vertical .form-check-label {
-        font-size: 0.9rem !important; /* OVERRIDE existing 0.75rem */
+        font-size: 0.9rem !important;
+        /* OVERRIDE existing 0.75rem */
     }
 
     /* Make range filter labels bigger */
     .form-label-compact {
-        font-size: 0.9rem !important; /* OVERRIDE existing 0.75rem */
+        font-size: 0.9rem !important;
+        /* OVERRIDE existing 0.75rem */
     }
 
     /* Make range stats bigger */
     .stats-info-compact {
-        font-size: 0.8rem !important; /* OVERRIDE existing 0.65rem */
+        font-size: 0.8rem !important;
+        /* OVERRIDE existing 0.65rem */
     }
 
     /* Make range input fields bigger */
     .form-control-compact {
-        width: 60px !important; /* INCREASED from 50px */
+        width: 60px !important;
+        /* INCREASED from 50px */
         padding: 4px 6px !important;
         font-size: 0.85rem !important;
     }
@@ -1807,22 +1884,26 @@ function debounce(func, wait) {
 
     /* Adjust column widths for better space usage */
     .filter-row-compact .col-md-2:first-child {
-        flex: 0 0 20% !important; /* HMM Name - slightly more space */
+        flex: 0 0 20% !important;
+        /* HMM Name - slightly more space */
         max-width: 20% !important;
     }
 
     .filter-row-compact .col-md-1 {
-        flex: 0 0 12% !important; /* Source and Data Type - more space */
+        flex: 0 0 12% !important;
+        /* Source and Data Type - more space */
         max-width: 12% !important;
     }
 
     .filter-row-compact .col-md-6 {
-        flex: 0 0 48% !important; /* Range filters - utilize more space */
+        flex: 0 0 48% !important;
+        /* Range filters - utilize more space */
         max-width: 48% !important;
     }
 
     .filter-row-compact .col-md-2:last-child {
-        flex: 0 0 16% !important; /* Buttons - adequate space */
+        flex: 0 0 16% !important;
+        /* Buttons - adequate space */
         max-width: 16% !important;
     }
 
@@ -1830,14 +1911,16 @@ function debounce(func, wait) {
     .range-input-group-compact {
         display: flex;
         align-items: center;
-        gap: 4px !important; /* INCREASED from 2px */
+        gap: 4px !important;
+        /* INCREASED from 2px */
         justify-content: center;
     }
 
     .range-input-group-compact span {
         font-size: 0.75rem;
         color: #6c757d;
-        padding: 0 3px !important; /* INCREASED from 0 1px */
+        padding: 0 3px !important;
+        /* INCREASED from 0 1px */
     }
 
     /* Add more spacing between range columns */
@@ -1845,32 +1928,40 @@ function debounce(func, wait) {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        padding-left: 8px !important; /* INCREASED from default */
-        padding-right: 8px !important; /* INCREASED from default */
+        padding-left: 8px !important;
+        /* INCREASED from default */
+        padding-right: 8px !important;
+        /* INCREASED from default */
     }
 
     /* Slightly more spacing for the range stats */
     .stats-info-compact {
         font-size: 0.8rem !important;
         color: #6c757d;
-        margin-bottom: 6px !important; /* INCREASED from 5px */
+        margin-bottom: 6px !important;
+        /* INCREASED from 5px */
         text-align: center;
     }
+
     /* ADD these styles for horizontal button layout: */
 
     /* Horizontal button group */
     .button-group-horizontal {
         display: flex;
-        gap: 8px; /* Space between buttons */
+        gap: 8px;
+        /* Space between buttons */
         align-items: center;
     }
 
     /* Uniform button sizing - same as Clear All */
     .btn-uniform {
-        padding: 4px 8px !important; /* Same as btn-sm-compact */
-        font-size: 1.05rem !important; /* Same as btn-sm-compact */
+        padding: 4px 8px !important;
+        /* Same as btn-sm-compact */
+        font-size: 1.05rem !important;
+        /* Same as btn-sm-compact */
         border-radius: 3px !important;
-        min-width: 70px; /* Ensure consistent width */
+        min-width: 70px;
+        /* Ensure consistent width */
         text-align: center;
     }
 
@@ -1880,8 +1971,10 @@ function debounce(func, wait) {
         border-color: var(--bright-color) !important;
         color: white !important;
         font-weight: 600 !important;
-        padding: 4px 8px !important; /* Same as Clear All */
-        font-size: 1.05rem !important; /* Same as Clear All */
+        padding: 4px 8px !important;
+        /* Same as Clear All */
+        font-size: 1.05rem !important;
+        /* Same as Clear All */
     }
 
     #apply-filters.btn-uniform:hover {
@@ -1892,7 +1985,8 @@ function debounce(func, wait) {
 
     /* Ensure the button column is positioned to the right */
     .col-md-2.d-flex.justify-content-end {
-        padding-left: 15px !important; /* Push buttons more to the right */
+        padding-left: 15px !important;
+        /* Push buttons more to the right */
     }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
