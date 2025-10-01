@@ -1795,29 +1795,26 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
 
     if (imageType === 'Reaction') {
-      console.log('Scanning for Reaction images based on MITE_ID or Uniprot_ID');
+      console.log('Scanning for Reaction images based on mite column');
 
-      // Check if columns exist
-      const hasMiteColumn = metadata[0].hasOwnProperty('MITE_ID');
-      const hasUniprotColumn = metadata[0].hasOwnProperty('Uniprot_ID');
+      // Check if mite column exists
+      const hasMiteColumn = metadata[0].hasOwnProperty('MITE_ID') || metadata[0].hasOwnProperty('mite');
 
-      console.log('Has MITE_ID column:', hasMiteColumn);
-      console.log('Has Uniprot_ID column:', hasUniprotColumn);
+      console.log('Has mite column:', hasMiteColumn);
 
-      if (!hasMiteColumn && !hasUniprotColumn) {
-        console.log('Neither MITE_ID nor Uniprot_ID columns found in metadata');
+      if (!hasMiteColumn) {
+        console.log('No mite column found in metadata');
         return false;
       }
 
       // Take a reasonable sample size to avoid checking every entry
-      const sampleSize = Math.min(50, metadata.length);
+      const sampleSize = Math.min(450, metadata.length);
       const sampleEntries = metadata.slice(0, sampleSize);
 
       for (let i = 0; i < sampleEntries.length; i++) {
         const item = sampleEntries[i];
 
-        // Try MITE_ID first if available
-        if (hasMiteColumn && item.MITE_ID &&
+        if (item.MITE_ID &&
           item.MITE_ID !== 'NaN' &&
           item.MITE_ID !== 'nan' &&
           item.MITE_ID !== '' &&
@@ -1827,55 +1824,36 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           const miteIds = item.MITE_ID.split(/[;,|]/).map(id => id.trim()).filter(id => id);
 
           for (const miteId of miteIds) {
-            const image = "/static/images_reactions/" + miteId + ".png";
-            console.log(`Checking MITE_ID image: ${image}`);
-            try {
-              const response = await fetch(image, { method: 'HEAD' });
-              if (response.ok) {
-                console.log('Found valid reaction image for MITE_ID:', miteId);
-                return true;
+            // Check for standard reaction image patterns
+            const imagePaths = [
+              `/static/images_reactions/${miteId}_reaction_1.png`,
+              `/static/images_reactions/${miteId}_reaction_1_1.png`,
+              `/static/images_reactions/${miteId}_reaction_2.png`
+            ];
+
+            for (const imagePath of imagePaths) {
+              console.log(`Checking MITE reaction image: ${imagePath}`);
+              try {
+                const response = await fetch(imagePath, { method: 'HEAD' });
+                if (response.ok) {
+                  console.log('Found valid reaction image for MITE ID:', miteId);
+                  return true;
+                }
+              } catch (error) {
+                console.log('Error checking MITE reaction image:', error);
               }
-            } catch (error) {
-              console.log('Error checking MITE image:', error);
-            }
-          }
-        }
-
-        // Try Uniprot_ID if available
-        if (hasUniprotColumn && item.Uniprot_ID &&
-          item.Uniprot_ID !== 'NaN' &&
-          item.Uniprot_ID !== 'nan' &&
-          item.Uniprot_ID !== '' &&
-          item.Uniprot_ID !== null) {
-
-          // Handle multiple IDs separated by delimiters
-          const uniprotIds = item.Uniprot_ID.split(/[;,|]/).map(id => id.trim()).filter(id => id);
-
-          for (const uniprotId of uniprotIds) {
-            const image = "/static/images_reactions/" + uniprotId + ".png";
-            console.log(`Checking Uniprot_ID image: ${image}`);
-
-            try {
-              const response = await fetch(image, { method: 'HEAD' });
-              if (response.ok) {
-                console.log('Found valid reaction image for Uniprot_ID:', uniprotId);
-                return true;
-              }
-            } catch (error) {
-              console.log('Error checking UniProt image:', error);
             }
           }
         }
 
         // Log progress periodically
         if (i % 10 === 0 && i > 0) {
-          console.log(`Checked ${i}/${sampleEntries.length} entries for reaction images`);
+          console.log(`Checked ${i}/${sampleEntries.length} entries for MITE reaction images`);
         }
       }
 
-      console.log('No reaction images found for MITE_ID or Uniprot_ID');
+      console.log('No reaction images found for MITE IDs');
       return false;
-
     }
 
     console.log('No images found for imageType:', imageType);
@@ -2274,54 +2252,563 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
 
     columnSlots[slotIndex] = 'Reaction';
-
-    // Add this line:
     createColumnHeader('Reactions', slotIndex);
 
-    let nodes = d3.selectAll('.node').filter(d => !d.data.name.startsWith("AS0"));
+    // Check which columns are available
+    const hasMiteColumn = metadata[0] && metadata[0].hasOwnProperty('MITE_ID');
+    const hasRheaColumn = metadata[0] && metadata[0].hasOwnProperty('rhea');
+
+    console.log('Has mite column:', hasMiteColumn);
+    console.log('Has rhea column:', hasRheaColumn);
+
+    // Create annotation object based on available columns
+    let annot = {};
+    if (hasMiteColumn) {
+      metadata.forEach(item => {
+        annot[item["ID"]] = { mite: item["MITE_ID"] };
+      });
+    }
+
+    // TODO: Add rhea column support later
+    // if (hasRheaColumn) {
+    //   metadata.forEach(item => {
+    //     if (!annot[item["ID"]]) annot[item["ID"]] = {};
+    //     annot[item["ID"]].rhea = item["rhea"];
+    //   });
+    // }
+
+    let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+
     nodes.each(function (d) {
       let transformValue = d3.select(this).attr('transform');
-      // Fix: Use the same approach as metadata
       let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
       let translateValues = parseFloat(match[1]);
 
-      let id = d.data.name;
-      let image = "static/images_reactions/" + id + ".png";
-      if (image) {
-        fetch(image)
-          .then(response => {
-            if (response.ok) {
-              let img = d3.select(this).append("image")
-                .attr('xlink:href', image)
-                .attr('x', (d) => {
-                  return getColumnStartX() + slotIndex * 200 - translateValues; // Now translateValues is a number
-                })
-                .attr('y', -50)
-                .attr('width', 100)
-                .attr('height', 100)
-                .attr('class', "Reaction")
-                .attr('data-slot', slotIndex);
+      const nodeData = annot[d.data.name];
+      let miteIds = [];
 
-              img.on('click', function () {
-                d3.select('#enlarged-image').attr('src', image);
-              });
-
-            } else {
-              console.log('Image does not exist:', image);
-            }
-          })
-          .catch(error => {
-            console.log('Error checking image:', error);
-          });
+      // Process MITE IDs
+      if (nodeData.mite && nodeData.mite !== 'NaN' && nodeData.mite !== 'nan' && nodeData.mite !== '' && nodeData.mite !== null) {
+        // Handle multiple IDs separated by delimiters
+        const rawMiteIds = String(nodeData.mite).split(/[;,|]/).map(id => id.trim()).filter(id => id);
+        miteIds = rawMiteIds;
       }
+
+      if (miteIds.length === 0) {
+        console.log('No valid MITE IDs found for:', d.data.name);
+        return;
+      }
+
+      // Process each MITE ID to find available images
+      Promise.all(miteIds.map(async (miteId) => {
+        const availableImages = await findAvailableReactionImages(miteId);
+        return { miteId, images: availableImages };
+      })).then(results => {
+        // Filter out MITE IDs with no images
+        const validResults = results.filter(result => result.images.length > 0);
+
+        if (validResults.length === 0) {
+          console.log('No reaction images found for any MITE ID:', miteIds);
+          return;
+        }
+
+        // Use the first MITE ID with images
+        const firstResult = validResults[0];
+        const { miteId, images } = firstResult;
+
+        // Create container for the image and navigation
+        const imageContainer = d3.select(this).append('g')
+          .attr('class', 'reaction-container')
+          .attr('data-slot', slotIndex)
+          .attr('transform', `translate(${getColumnStartX() + slotIndex * 200 - translateValues}, -50)`);
+
+        // Store image data for navigation
+        let currentImageIndex = 0;
+
+        // Create the main image
+        const mainImage = imageContainer.append('image')
+          .attr('xlink:href', images[0])
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('width', 100)
+          .attr('height', 100)
+          .attr('class', 'reaction-image')
+          .style('cursor', 'pointer');
+
+        // Add click handler for enlarged view
+        mainImage.on('click', function () {
+          showReactionImageInEnlargedContainer(images[currentImageIndex], miteId, d.data.name, images, currentImageIndex);
+        });
+
+        // Add navigation arrow if multiple images
+        if (images.length > 1) {
+          const navButton = imageContainer.append('g')
+            .attr('class', 'reaction-nav-button')
+            .style('cursor', 'pointer');
+
+          // Navigation button background
+          navButton.append('circle')
+            .attr('cx', 90)
+            .attr('cy', 15)
+            .attr('r', 8)
+            .attr('fill', '#7B1B38')
+            .attr('opacity', 0.8);
+
+          // Navigation arrow
+          const arrow = navButton.append('text')
+            .attr('x', 90)
+            .attr('y', 19)
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'white')
+            .attr('font-size', '10px')
+            .attr('font-weight', 'bold')
+            .text('▶');
+
+          // Add image counter
+          const counter = imageContainer.append('text')
+            .attr('x', 50)
+            .attr('y', -5)
+            .attr('text-anchor', 'middle')
+            .attr('fill', '#7B1B38')
+            .attr('font-size', '10px')
+            .attr('font-weight', 'bold')
+            .text(`1/${images.length}`);
+
+          // Navigation click handler
+          navButton.on('click', function () {
+            // Prevent event bubbling to main image
+            d3.event.stopPropagation();
+
+            currentImageIndex = (currentImageIndex + 1) % images.length;
+            mainImage.attr('xlink:href', images[currentImageIndex]);
+            counter.text(`${currentImageIndex + 1}/${images.length}`);
+          });
+
+          // Add hover effects
+          navButton.on('mouseenter', function () {
+            navButton.select('circle').attr('opacity', 1);
+          });
+
+          navButton.on('mouseleave', function () {
+            navButton.select('circle').attr('opacity', 0.8);
+          });
+        }
+      });
     });
+
     return true;
   }
 
+  // Helper function to find all available reaction images for a MITE ID
+  async function findAvailableReactionImages(miteId) {
+    const images = [];
+    const basePattern = `static/images_reactions/${miteId}_reaction_`;
+
+    // Common patterns to check
+    const patterns = [
+      `${basePattern}1.png`,
+      `${basePattern}1_1.png`,
+      `${basePattern}2.png`,
+      `${basePattern}2_1.png`,
+      `${basePattern}2_2.png`,
+      `${basePattern}3.png`,
+      `${basePattern}4.png`,
+      `${basePattern}5.png`
+    ];
+
+    // Check for more patterns dynamically (up to reaction 15 like MITE0000037)
+    for (let i = 1; i <= 15; i++) {
+      patterns.push(`${basePattern}${i}.png`);
+      patterns.push(`${basePattern}${i}_1.png`);
+      patterns.push(`${basePattern}${i}_2.png`);
+      patterns.push(`${basePattern}${i}_3.png`);
+    }
+
+    // Remove duplicates
+    const uniquePatterns = [...new Set(patterns)];
+
+    // Check which images exist
+    for (const pattern of uniquePatterns) {
+      try {
+        const response = await fetch(pattern, { method: 'HEAD' });
+        if (response.ok) {
+          images.push(pattern);
+        }
+      } catch (error) {
+        // Image doesn't exist, continue
+      }
+    }
+
+    // Sort images to ensure proper order
+    images.sort((a, b) => {
+      const extractNumbers = (str) => {
+        const match = str.match(/reaction_(\d+)(?:_(\d+))?\.png$/);
+        if (match) {
+          const reactionNum = parseInt(match[1]);
+          const subNum = match[2] ? parseInt(match[2]) : 0;
+          return [reactionNum, subNum];
+        }
+        return [0, 0];
+      };
+
+      const [aReaction, aSub] = extractNumbers(a);
+      const [bReaction, bSub] = extractNumbers(b);
+
+      if (aReaction !== bReaction) {
+        return aReaction - bReaction;
+      }
+      return aSub - bSub;
+    });
+
+    console.log(`Found ${images.length} reaction images for ${miteId}:`, images);
+    return images;
+  }
+
+  // Enhanced enlarged view function for reactions
+  window.showReactionImageInEnlargedContainer = function (imageSrc, miteId, nodeId, allImages, currentIndex) {
+    const enlargedContainer = document.getElementById('enlarged-image-container');
+    const enlargedImage = document.getElementById('enlarged-image');
+
+    if (!enlargedContainer || !enlargedImage) {
+      console.error('Enlarged image container or image element not found');
+      return;
+    }
+
+    // Clear any existing content except the image
+    const existingInfo = enlargedContainer.querySelectorAll('.reaction-info');
+    existingInfo.forEach(info => info.remove());
+
+    // Set the image
+    enlargedImage.src = imageSrc;
+    enlargedImage.style.display = 'block';
+
+    // Add MITE link and navigation info
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'reaction-info';
+    infoDiv.style.cssText = `
+      margin-top: 10px;
+      text-align: center;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+    `;
+
+    // MITE link
+    const miteLink = document.createElement('a');
+    miteLink.href = `https://bioregistry.io/mite:${miteId}`;
+    miteLink.target = '_blank';
+    miteLink.textContent = `MITE: ${miteId}`;
+    miteLink.style.cssText = `
+      color: #7B1B38;
+      text-decoration: none;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid #7B1B38;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-right: 10px;
+      transition: all 0.2s;
+    `;
+
+    miteLink.addEventListener('mouseenter', () => {
+      miteLink.style.backgroundColor = '#7B1B38';
+      miteLink.style.color = 'white';
+    });
+
+    miteLink.addEventListener('mouseleave', () => {
+      miteLink.style.backgroundColor = 'transparent';
+      miteLink.style.color = '#7B1B38';
+    });
+
+    infoDiv.appendChild(miteLink);
+
+    // Add image counter and navigation if multiple images
+    if (allImages && allImages.length > 1) {
+      const navContainer = document.createElement('div');
+      navContainer.style.cssText = `
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      `;
+
+      // Previous button
+      const prevBtn = document.createElement('button');
+      prevBtn.innerHTML = '◀';
+      prevBtn.style.cssText = `
+        background: #7B1B38;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 12px;
+      `;
+
+      // Image counter
+      const counter = document.createElement('span');
+      counter.textContent = `${currentIndex + 1} / ${allImages.length}`;
+      counter.style.cssText = `
+        font-weight: bold;
+        color: #7B1B38;
+        font-size: 14px;
+        min-width: 60px;
+        text-align: center;
+      `;
+
+      // Next button
+      const nextBtn = document.createElement('button');
+      nextBtn.innerHTML = '▶';
+      nextBtn.style.cssText = `
+        background: #7B1B38;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 12px;
+      `;
+
+      // Navigation functionality
+      let currentIdx = currentIndex;
+
+      const updateImage = () => {
+        enlargedImage.src = allImages[currentIdx];
+        counter.textContent = `${currentIdx + 1} / ${allImages.length}`;
+      };
+
+      prevBtn.addEventListener('click', () => {
+        currentIdx = (currentIdx - 1 + allImages.length) % allImages.length;
+        updateImage();
+      });
+
+      nextBtn.addEventListener('click', () => {
+        currentIdx = (currentIdx + 1) % allImages.length;
+        updateImage();
+      });
+
+      navContainer.appendChild(prevBtn);
+      navContainer.appendChild(counter);
+      navContainer.appendChild(nextBtn);
+      infoDiv.appendChild(navContainer);
+    }
+
+    enlargedContainer.appendChild(infoDiv);
+
+    // Add click handler to enlarged image for full-screen view
+    enlargedImage.onclick = function () {
+      showLargeReactionOverlay(imageSrc, miteId, nodeId, allImages, currentIndex);
+    };
+
+    enlargedImage.style.cursor = 'pointer';
+    enlargedImage.title = 'Click to enlarge further';
+  };
+
+  // Full-screen overlay for reactions
+  window.showLargeReactionOverlay = function (imageSrc, miteId, nodeId, allImages, currentIndex) {
+    // Remove any existing overlay
+    const existingOverlay = document.getElementById('large-image-overlay');
+    if (existingOverlay) {
+      existingOverlay.remove();
+      return;
+    }
+
+    // Create overlay similar to BGC but for reactions
+    const overlay = document.createElement('div');
+    overlay.id = 'large-image-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      cursor: pointer;
+    `;
+
+    const contentContainer = document.createElement('div');
+    contentContainer.style.cssText = `
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      max-width: 90vw;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: default;
+    `;
+
+    contentContainer.addEventListener('click', (e) => e.stopPropagation());
+
+    // Header with MITE link
+    const header = document.createElement('div');
+    header.style.cssText = `
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      gap: 15px;
+    `;
+
+    const idLabel = document.createElement('span');
+    idLabel.textContent = 'MITE ID: ';
+    idLabel.style.fontWeight = 'bold';
+
+    const idLink = document.createElement('a');
+    idLink.href = `https://bioregistry.io/mite:${miteId}`;
+    idLink.target = '_blank';
+    idLink.textContent = miteId;
+    idLink.style.cssText = `
+      color: #7B1B38;
+      text-decoration: none;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid #7B1B38;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    `;
+
+    header.appendChild(idLabel);
+    header.appendChild(idLink);
+
+    // Large image with navigation
+    const imageNavContainer = document.createElement('div');
+    imageNavContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    `;
+
+    const largeImage = document.createElement('img');
+    largeImage.src = imageSrc;
+    largeImage.style.cssText = `
+      max-width: 70vw;
+      max-height: 60vh;
+      object-fit: contain;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    `;
+
+    imageNavContainer.appendChild(largeImage);
+
+    // Add navigation if multiple images
+    if (allImages && allImages.length > 1) {
+      let currentIdx = currentIndex || 0;
+
+      const navControls = document.createElement('div');
+      navControls.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+      `;
+
+      const prevBtnLarge = document.createElement('button');
+      prevBtnLarge.innerHTML = '▲';
+      prevBtnLarge.style.cssText = `
+        background: #7B1B38;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 16px;
+      `;
+
+      const counterLarge = document.createElement('div');
+      counterLarge.textContent = `${currentIdx + 1}\n${allImages.length}`;
+      counterLarge.style.cssText = `
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        white-space: pre-line;
+        color: #7B1B38;
+      `;
+
+      const nextBtnLarge = document.createElement('button');
+      nextBtnLarge.innerHTML = '▼';
+      nextBtnLarge.style.cssText = `
+        background: #7B1B38;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        font-size: 16px;
+      `;
+
+      const updateLargeImage = () => {
+        largeImage.src = allImages[currentIdx];
+        counterLarge.textContent = `${currentIdx + 1}\n${allImages.length}`;
+      };
+
+      prevBtnLarge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentIdx = (currentIdx - 1 + allImages.length) % allImages.length;
+        updateLargeImage();
+      });
+
+      nextBtnLarge.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentIdx = (currentIdx + 1) % allImages.length;
+        updateLargeImage();
+      });
+
+      navControls.appendChild(prevBtnLarge);
+      navControls.appendChild(counterLarge);
+      navControls.appendChild(nextBtnLarge);
+      imageNavContainer.appendChild(navControls);
+    }
+
+    contentContainer.appendChild(header);
+    contentContainer.appendChild(imageNavContainer);
+
+    const closeInstruction = document.createElement('p');
+    closeInstruction.textContent = 'Click outside to close';
+    closeInstruction.style.cssText = `
+      margin-top: 10px;
+      color: #666;
+      font-size: 12px;
+      font-style: italic;
+    `;
+    contentContainer.appendChild(closeInstruction);
+
+    overlay.appendChild(contentContainer);
+
+    // Close handlers
+    overlay.addEventListener('click', () => overlay.remove());
+
+    const escapeHandler = (e) => {
+      if (e.key === 'Escape') {
+        overlay.remove();
+        document.removeEventListener('keydown', escapeHandler);
+      }
+    };
+    document.addEventListener('keydown', escapeHandler);
+
+    document.body.appendChild(overlay);
+  };
+
   function hideReaction() {
     const freedSlot = freeColumnSlot('Reaction');
-    removeColumnHeader(freedSlot); // Add this line
+    removeColumnHeader(freedSlot);
+    // Remove both old individual images and new container groups
     d3.selectAll('image.Reaction').remove();
+    d3.selectAll('g.reaction-container').remove();
     console.log(`Freed Reaction from slot ${freedSlot}`);
   }
 
