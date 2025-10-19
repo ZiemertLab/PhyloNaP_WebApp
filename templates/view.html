@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header text-center">
+                    <h2 style="color: var(--bright-color);">View Your Own Data</h2>
+                    <p class="text-muted">Upload your phylogenetic tree and associated data to visualize it
+                        interactively</p>
+                </div>
+                <div class="card-body">
+                    <!-- Error/Success Messages -->
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Error:</strong> {{ error }}
+                    </div>
+                    {% endif %}
+
+                    {% if success %}
+                    <div class="alert alert-success" role="alert">
+                        <strong>Success:</strong> {{ success }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Upload Form -->
+                    <form id="view-upload-form">
+                        <!-- Tree File -->
+                        <div class="mb-4">
+                            <label for="tree_file" class="form-label">
+                                <i class="fa fa-tree"></i> Phylogenetic Tree <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" class="form-control" id="tree_file" name="tree_file"
+                                accept=".nwk,.newick,.tree,.contree,.txt,.phy,.nhx,text/plain" required>
+                            <div class="form-text">
+                                Upload your phylogenetic tree in Newick format. Accepts .nwk, .newick, .tree, .contree,
+                                .txt, .phy files or any text file.
+                            </div>
+                        </div>
+
+                        <!-- Metadata File -->
+                        <div class="mb-4">
+                            <label for="metadata_file" class="form-label">
+                                <i class="fa fa-table"></i> Metadata <span class="text-danger">*</span>
+                            </label>
+                            <input type="file" class="form-control" id="metadata_file" name="metadata_file"
+                                accept=".tsv,.csv,.txt,.tab,text/plain,text/csv,text/tab-separated-values" required>
+                            <div class="form-text">
+                                Upload metadata in TSV or CSV format. Accepts .tsv, .csv, .txt, .tab files or any text
+                                file. Must contain an ID column matching tree leaf names.
+                            </div>
+                        </div>
+
+                        <!-- Alignment File (Optional) -->
+                        <div class="mb-4">
+                            <label for="alignment_file" class="form-label">
+                                <i class="fa fa-align-left"></i> Sequence Alignment (Optional)
+                            </label>
+                            <input type="file" class="form-control" id="alignment_file" name="alignment_file"
+                                accept=".fasta,.fa,.faa,.fas,.seq,.aln,.txt,text/plain">
+                            <div class="form-text">
+                                Optional: Upload sequence alignment in FASTA format. Accepts .fasta, .fa, .faa, .fas,
+                                .seq, .aln, .txt files or any text file.
+                            </div>
+                        </div>
+
+                        <!-- Dataset Information -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="dataset_name" class="form-label">Dataset Name</label>
+                                <input type="text" class="form-control" id="dataset_name" name="dataset_name"
+                                    placeholder="My Dataset" maxlength="100">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="superfamily_name" class="form-label">Superfamily/Category</label>
+                                <input type="text" class="form-control" id="superfamily_name" name="superfamily_name"
+                                    placeholder="Protein Family" maxlength="100">
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                placeholder="Describe your dataset..."></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="button" class="btn btn-bright btn-lg" id="submit-btn">
+                                <i class="fa fa-eye"></i> View Tree
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fa fa-info-circle"></i> Instructions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6><i class="fa fa-tree text-success"></i> Tree File</h6>
+                            <ul class="small">
+                                <li>Newick format (.nwk, .newick, .tree)</li>
+                                <li>Must contain leaf names that match metadata IDs</li>
+                                <li>Can be rooted or unrooted</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fa fa-table text-info"></i> Metadata File</h6>
+                            <ul class="small">
+                                <li>TSV or CSV format</li>
+                                <li>Must have an ID column (id, ids, identifier, name, etc.)</li>
+                                <li>IDs must match tree leaf names exactly</li>
+                                <li>Can contain any additional annotation columns</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
+                            <h6><i class="fa fa-align-left text-warning"></i> Alignment File</h6>
+                            <ul class="small">
+                                <li>FASTA format (.fasta, .fa, .faa)</li>
+                                <li>Sequence IDs should match tree leaf names</li>
+                                <li>All sequences must have same length</li>
+                                <li>Optional - for downloading only</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-3">
+                        <strong><i class="fa fa-shield"></i> Privacy Notice:</strong>
+                        Your uploaded files are processed in memory only and are not saved to our servers.
+                        The data is temporarily held in memory during your session for visualization purposes only.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: var(--background-light);
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .btn-bright {
+        background-color: var(--bright-color) !important;
+        border-color: var(--bright-color) !important;
+        color: white !important;
+        font-weight: 600;
+        padding: 12px 30px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-bright:hover {
+        background-color: var(--background-dark) !important;
+        border-color: var(--background-dark) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--background-dark);
+    }
+
+    .form-control:focus {
+        border-color: var(--bright-color);
+        box-shadow: 0 0 0 0.2rem rgba(123, 27, 56, 0.25);
+    }
+
+    .text-danger {
+        color: var(--bright-color) !important;
+    }
+
+    .fa {
+        margin-right: 5px;
+    }
+
+    h2 {
+        margin-bottom: 0;
+    }
+
+    .alert-info {
+        background-color: rgba(123, 27, 56, 0.1);
+        border-color: var(--bright-color);
+        color: var(--background-dark);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('=== VIEW.HTML JAVASCRIPT STARTED ===');
+        alert('JavaScript is working on upload page!');
+
+        const form = document.getElementById('view-upload-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        submitBtn.addEventListener('click', function (e) {
+            console.log('=== SUBMIT BUTTON CLICKED ===');
+            alert('Submit button clicked!');
+            e.preventDefault();
+            processFilesClientSide();
+        });
+
+        async function processFilesClientSide() {
+            // Show loading state
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+            submitBtn.disabled = true;
+
+            try {
+                // Get files
+                const treeFile = document.getElementById('tree_file').files[0];
+                const metadataFile = document.getElementById('metadata_file').files[0];
+                const alignmentFile = document.getElementById('alignment_file').files[0];
+
+                // Basic validation
+                if (!treeFile) {
+                    throw new Error('Please select a tree file');
+                }
+
+                if (!metadataFile) {
+                    throw new Error('Please select a metadata file');
+                }
+
+                // Check file sizes (10MB limit)
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (treeFile.size > maxSize || metadataFile.size > maxSize) {
+                    throw new Error('File size must be less than 10MB');
+                }
+
+                // Read files
+                const treeContent = await readFileAsText(treeFile);
+                const metadataContent = await readFileAsText(metadataFile);
+                const alignmentContent = alignmentFile ? await readFileAsText(alignmentFile) : null;
+
+                // Get form data
+                const datasetName = document.getElementById('dataset_name').value || 'User Dataset';
+                const superfamilyName = document.getElementById('superfamily_name').value || 'User Data';
+                const description = document.getElementById('description').value || 'User uploaded dataset';
+
+                // Basic validation
+                if (!treeContent.trim()) {
+                    throw new Error('Tree file is empty');
+                }
+
+                if (!metadataContent.trim()) {
+                    throw new Error('Metadata file is empty');
+                }
+
+                // Parse metadata
+                const metadata = parseMetadata(metadataContent);
+                if (!metadata || metadata.length === 0) {
+                    throw new Error('Could not parse metadata file');
+                }
+
+                // Basic tree validation
+                if (!treeContent.includes('(') || !treeContent.includes(')')) {
+                    throw new Error('Tree file does not appear to be in Newick format');
+                }
+
+                // Store data in sessionStorage (client-side only)
+                const sessionId = generateSessionId();
+                const userData = {
+                    sessionId: sessionId,
+                    treeContent: treeContent,
+                    metadataJson: JSON.stringify(metadata),
+                    metadataColumns: Object.keys(metadata[0] || {}),
+                    datasetName: datasetName,
+                    superfamilyName: superfamilyName,
+                    description: description,
+                    alignmentContent: alignmentContent,
+                    timestamp: new Date().toISOString()
+                };
+
+                sessionStorage.setItem('phylonap_user_data', JSON.stringify(userData));
+                // Also store in localStorage as backup
+                localStorage.setItem('phylonap_user_data', JSON.stringify(userData));
+
+                console.log('Data stored in sessionStorage:', userData);
+                console.log('SessionStorage verification:', sessionStorage.getItem('phylonap_user_data') ? 'SUCCESS' : 'FAILED');
+                console.log('LocalStorage backup:', localStorage.getItem('phylonap_user_data') ? 'SUCCESS' : 'FAILED');
+                console.log('Redirecting to:', `/view_client?session=${sessionId}`);
+
+                // Add a small delay to ensure sessionStorage is written
+                setTimeout(() => {
+                    const verification = sessionStorage.getItem('phylonap_user_data');
+                    console.log('Pre-redirect verification:', verification ? 'Data exists' : 'Data missing');
+
+                    // Redirect to working viewer
+                    window.location.href = `/view_client_working?session=${sessionId}`;
+                }, 100);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                resetSubmitButton();
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+
+        function parseMetadata(content) {
+            try {
+                const lines = content.trim().split('\n');
+                if (lines.length < 2) {
+                    throw new Error('Metadata must have at least a header and one data row');
+                }
+
+                // Try TSV first
+                let separator = '\t';
+                let headers = lines[0].split(separator);
+
+                // If only one column, try comma separator
+                if (headers.length === 1) {
+                    separator = ',';
+                    headers = lines[0].split(separator);
+                }
+
+                if (headers.length === 1) {
+                    throw new Error('Could not detect column separator (tried tab and comma)');
+                }
+
+                // Parse data rows
+                const data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(separator);
+                    if (values.length === headers.length) {
+                        const row = {};
+                        headers.forEach((header, index) => {
+                            row[header.trim()] = values[index].trim();
+                        });
+                        data.push(row);
+                    }
+                }
+
+                return data;
+            } catch (error) {
+                throw new Error('Failed to parse metadata: ' + error.message);
+            }
+        }
+
+        function generateSessionId() {
+            return 'client_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function resetSubmitButton() {
+            submitBtn.innerHTML = '<i class="fa fa-eye"></i> View Tree';
+            submitBtn.disabled = false;
+        }
+
+        // Reset button on page load (in case of back button)
+        resetSubmitButton();
+    });
+</script>
+
+{% endblock %}

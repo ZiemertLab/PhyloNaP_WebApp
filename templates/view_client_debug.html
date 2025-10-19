@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}PhyloNaP - Debug Client View{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Debug Client View</h1>
+    <p>Session ID: {{ session_id }}</p>
+
+    <div id="debug-info">
+        <h3>Debug Information</h3>
+        <div id="debug-messages"></div>
+    </div>
+
+    <div class="back-button">
+        <a href="{{ url_for('view') }}">Back to Upload</a>
+    </div>
+</div>
+
+<script>
+    // Simple test script without any dependencies
+    try {
+        alert('SIMPLE JAVASCRIPT WORKS!');
+        console.log('=== SIMPLE DEBUG SCRIPT STARTED ===');
+
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('=== DOM LOADED ===');
+
+            const debugDiv = document.getElementById('debug-messages');
+
+            function addDebugMessage(message) {
+                const p = document.createElement('p');
+                p.textContent = new Date().toISOString() + ': ' + message;
+                debugDiv.appendChild(p);
+                console.log(message);
+            }
+
+            addDebugMessage('JavaScript is working!');
+            addDebugMessage('Session ID: {{ session_id }}');
+
+            // Check sessionStorage
+            const userData = sessionStorage.getItem('phylonap_user_data');
+            addDebugMessage('SessionStorage data: ' + (userData ? 'FOUND' : 'NOT FOUND'));
+
+            if (userData) {
+                try {
+                    const data = JSON.parse(userData);
+                    addDebugMessage('Data keys: ' + Object.keys(data).join(', '));
+                    addDebugMessage('Tree content length: ' + (data.treeContent ? data.treeContent.length : 'NO TREE'));
+                    addDebugMessage('Metadata length: ' + (data.metadataJson ? JSON.parse(data.metadataJson).length : 'NO METADATA'));
+                } catch (e) {
+                    addDebugMessage('Error parsing data: ' + e.message);
+                }
+            }
+
+            // Check localStorage
+            const localData = localStorage.getItem('phylonap_user_data');
+            addDebugMessage('LocalStorage data: ' + (localData ? 'FOUND' : 'NOT FOUND'));
+
+            addDebugMessage('Debug complete!');
+        });
+
+    } catch (error) {
+        alert('ERROR: ' + error.message);
+        console.error('Script error:', error);
+    }
+</script>
+{% endblock %}

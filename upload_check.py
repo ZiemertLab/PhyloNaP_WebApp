@@ -16,6 +16,42 @@ logger = logging.getLogger(__name__)
 class ValidationError(Exception):
     """Custom exception for validation errors"""
     pass
+
+def validate_email(email):
+    """
+    Validate email format
+    
+    Args:
+        email (str): Email address to validate
+        
+    Returns:
+        dict: {'valid': bool, 'message': str}
+    """
+    if not email or not email.strip():
+        return {'valid': True, 'message': 'No email provided (optional)'}
+    
+    email = email.strip()
+    
+    # Allow dummy/test emails
+    if email in ['user@temp.com', 'test@test.com', 'dummy@dummy.com']:
+        return {'valid': True, 'message': 'Test email accepted'}
+    
+    # Basic email regex pattern
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    
+    if not re.match(email_pattern, email):
+        return {'valid': False, 'message': 'Invalid email format'}
+    
+    # Additional checks
+    if len(email) > 254:  # RFC 5321 limit
+        return {'valid': False, 'message': 'Email address too long'}
+    
+    local_part, domain = email.rsplit('@', 1)
+    if len(local_part) > 64:  # RFC 5321 limit
+        return {'valid': False, 'message': 'Email local part too long'}
+    
+    return {'valid': True, 'message': 'Valid email format'}
+
 def validate_tree_file(tree_file_path):
     """
     Validate phylogenetic tree file
@@ -322,7 +358,9 @@ def validate_all_files(tree_path, metadata_path, alignment_path, email, addition
     }
     
     try:
-
+        # Validate email
+        results['email'] = validate_email(email)
+        
         # Validate tree
         results['tree'] = validate_tree_file(tree_path)
         
@@ -330,33 +368,40 @@ def validate_all_files(tree_path, metadata_path, alignment_path, email, addition
         tree_leaves = results['tree'].get('leaf_names', []) if results['tree']['valid'] else None
         results['metadata'] = validate_metadata_file(metadata_path, tree_leaves)
         
-        # Validate alignment (with tree leaf names if tree is valid)
-        results['alignment'] = validate_alignment_file(alignment_path, tree_leaves)
+        # Validate alignment (with tree leaf names if tree is valid) - only if alignment_path is different from metadata_path
+        alignment_provided = alignment_path and alignment_path != metadata_path
+        if alignment_provided:
+            results['alignment'] = validate_alignment_file(alignment_path, tree_leaves)
+        else:
+            results['alignment'] = {'valid': True, 'message': 'No alignment file provided (optional)', 'sequence_count': 0}
         
         # Cross-validation checks
         consistency_issues = []
         
-        if results['tree']['valid'] and results['metadata']['valid'] and results['alignment']['valid']:
+        if results['tree']['valid'] and results['metadata']['valid']:
             tree_leaves = set(results['tree']['leaf_names'])
             metadata_ids = set(results['metadata']['ids'])
-            alignment_ids = set(results['alignment']['sequence_ids'])
             
-            # Check if all three match
+            # Check if tree leaves match metadata IDs
             if tree_leaves != metadata_ids:
                 consistency_issues.append('Tree leaves and metadata IDs do not match completely')
             
-            if tree_leaves != alignment_ids:
-                consistency_issues.append('Tree leaves and alignment sequence IDs do not match completely')
-            
-            if metadata_ids != alignment_ids:
-                consistency_issues.append('Metadata IDs and alignment sequence IDs do not match completely')
+            # Check alignment only if provided
+            if alignment_provided and results['alignment']['valid']:
+                alignment_ids = set(results['alignment']['sequence_ids'])
+                
+                if tree_leaves != alignment_ids:
+                    consistency_issues.append('Tree leaves and alignment sequence IDs do not match completely')
+                
+                if metadata_ids != alignment_ids:
+                    consistency_issues.append('Metadata IDs and alignment sequence IDs do not match completely')
         
         results['consistency_checks'] = {
             'valid': len(consistency_issues) == 0,
             'issues': consistency_issues
         }
         
-        # Overall validation
+        # Overall validation - alignment is optional
         all_valid = (
             results['email']['valid'] and
             results['tree']['valid'] and
@@ -369,7 +414,8 @@ def validate_all_files(tree_path, metadata_path, alignment_path, email, addition
         
         # Create summary message
         if all_valid:
-            results['summary'] = f"All files validated successfully! Tree: {results['tree']['leaf_count']} leaves, Alignment: {results['alignment']['sequence_count']} sequences, Metadata: {results['metadata']['row_count']} entries"
+            alignment_msg = f", Alignment: {results['alignment']['sequence_count']} sequences" if alignment_provided else ""
+            results['summary'] = f"All files validated successfully! Tree: {results['tree']['leaf_count']} leaves, Metadata: {results['metadata']['row_count']} entries{alignment_msg}"
         else:
             errors = []
             if not results['email']['valid']:
@@ -378,7 +424,7 @@ def validate_all_files(tree_path, metadata_path, alignment_path, email, addition
                 errors.append(f"Tree: {results['tree']['message']}")
             if not results['metadata']['valid']:
                 errors.append(f"Metadata: {results['metadata']['message']}")
-            if not results['alignment']['valid']:
+            if alignment_provided and not results['alignment']['valid']:
                 errors.append(f"Alignment: {results['alignment']['message']}")
             if not results['consistency_checks']['valid']:
                 errors.extend([f"Consistency: {issue}" for issue in consistency_issues])

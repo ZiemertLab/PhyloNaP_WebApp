@@ -89,20 +89,39 @@ window.getTreeData = function () {
 // Add download dataset functionality
 window.setupDownloadDataset = function (nwk, metadata) {
   const datasetId = getDatasetId();
+
+  // Check if this is user-uploaded data (session-based)
+  const isUserData = window.location.pathname.includes('/view_render/');
+  const sessionId = isUserData ? window.location.pathname.split('/view_render/')[1] : null;
+
   // Download tree file (.nwk)
   window.downloadTreeFile = function () {
     try {
-      const fileName = prompt('Enter a name for the tree file (default: {datasetId}.nwk):', `${datasetId}.nwk`) || `${datasetId}.nwk`;
-      if (!nwk) throw new Error('Tree data not found');
-      const blob = new Blob([nwk], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const fileName = prompt('Enter a name for the tree file (default: dataset.nwk):', 'dataset.nwk') || 'dataset.nwk';
+
+      if (isUserData && sessionId) {
+        // For user data, use session-based download
+        const downloadUrl = `/download/user/tree/${sessionId}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // For database data, use blob download
+        if (!nwk) throw new Error('Tree data not found');
+        const blob = new Blob([nwk], { type: 'text/plain' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
     } catch (error) {
       alert('Failed to download tree file: ' + error.message);
     }
@@ -111,27 +130,41 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download metadata file (.tsv)
   window.downloadMetadataFile = function () {
     try {
-      const fileName = prompt('Enter a name for the metadata file (default: {datasetId}.tsv):', `${datasetId}.tsv`) || `${datasetId}.tsv`;
-      if (!metadata || metadata.length === 0) throw new Error('No metadata available');
-      const headers = Object.keys(metadata[0]);
-      const tsvContent = [
-        headers.join('\t'),
-        ...metadata.map(row =>
-          headers.map(header => {
-            const value = row[header];
-            return value == null ? '' : String(value).replace(/\t/g, ' ');
-          }).join('\t')
-        )
-      ].join('\n');
-      const blob = new Blob([tsvContent], { type: 'text/tab-separated-values' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const fileName = prompt('Enter a name for the metadata file (default: dataset_metadata.tsv):', 'dataset_metadata.tsv') || 'dataset_metadata.tsv';
+
+      if (isUserData && sessionId) {
+        // For user data, use session-based download
+        const downloadUrl = `/download/user/metadata/${sessionId}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // For database data, use blob download
+        if (!metadata || metadata.length === 0) throw new Error('No metadata available');
+        const headers = Object.keys(metadata[0]);
+        const tsvContent = [
+          headers.join('\t'),
+          ...metadata.map(row =>
+            headers.map(header => {
+              const value = row[header];
+              return value == null ? '' : String(value).replace(/\t/g, ' ');
+            }).join('\t')
+          )
+        ].join('\n');
+        const blob = new Blob([tsvContent], { type: 'text/tab-separated-values' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
     } catch (error) {
       alert('Failed to download metadata file: ' + error.message);
     }
@@ -169,26 +202,36 @@ window.setupDownloadDataset = function (nwk, metadata) {
   // Download alignment file (.fasta)
   window.downloadAlignmentFile = function () {
     try {
-      const fileName = prompt('Enter a name for the alignment file (default: {datasetId}.faa):', `${datasetId}.faa`) || `${datasetId}.faa`;
+      const fileName = prompt('Enter a name for the alignment file (default: dataset_alignment.fasta):', 'dataset_alignment.fasta') || 'dataset_alignment.fasta';
 
-      // Get dataset ID from current page
-      // const datasetId = getDatasetId(); // You'll need to implement this helper
+      if (isUserData && sessionId) {
+        // For user data, use session-based download
+        const downloadUrl = `/download/user/alignment/${sessionId}`;
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } else {
+        // For database data, use dataset ID
+        if (!datasetId) {
+          throw new Error('Dataset ID not found');
+        }
 
-      if (!datasetId) {
-        throw new Error('Dataset ID not found');
+        // Create download URL
+        const downloadUrl = `/download/alignment/${datasetId}`;
+
+        // Create temporary link and trigger download
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
-
-      // Create download URL
-      const downloadUrl = `/download/alignment/${datasetId}`;
-
-      // Create temporary link and trigger download
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = fileName;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
 
     } catch (error) {
       alert('Failed to download alignment file: ' + error.message);

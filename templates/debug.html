@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}PhyloNaP - Debug{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>SessionStorage Debug</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5>SessionStorage Contents:</h5>
+            <pre id="storage-contents">Loading...</pre>
+
+            <hr>
+
+            <h5>Actions:</h5>
+            <button class="btn btn-primary" onclick="refreshStorage()">Refresh</button>
+            <button class="btn btn-warning" onclick="clearStorage()">Clear Storage</button>
+            <a href="{{ url_for('view') }}" class="btn btn-secondary">Back to Upload</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    function displayStorage() {
+        const storageDiv = document.getElementById('storage-contents');
+        const userData = sessionStorage.getItem('phylonap_user_data');
+
+        if (!userData) {
+            storageDiv.textContent = 'No phylonap_user_data found in sessionStorage';
+            return;
+        }
+
+        try {
+            const data = JSON.parse(userData);
+            storageDiv.textContent = JSON.stringify(data, null, 2);
+        } catch (error) {
+            storageDiv.textContent = 'Error parsing data: ' + error.message;
+        }
+    }
+
+    function refreshStorage() {
+        displayStorage();
+    }
+
+    function clearStorage() {
+        sessionStorage.removeItem('phylonap_user_data');
+        displayStorage();
+    }
+
+    document.addEventListener('DOMContentLoaded', displayStorage);
+</script>
+{% endblock %}

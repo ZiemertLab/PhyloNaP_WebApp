@@ -237,6 +237,171 @@ def register_routes(app):
     def help_page():
         return render_template('help.html')
 
+    @app.route('/view', methods=['GET', 'POST'])
+    def view():
+        if request.method == 'GET':
+            print("Rendering view.html")
+            return render_template('view.html')
+        
+        if request.method == 'POST':
+            try:
+                # Import validation functions
+                from .upload_check import validate_all_files
+                
+                # Get uploaded files
+                tree_file = request.files.get('tree_file')
+                metadata_file = request.files.get('metadata_file')
+                alignment_file = request.files.get('alignment_file')
+                
+                # Get form data
+                dataset_name = request.form.get('dataset_name', 'User Dataset')
+                superfamily_name = request.form.get('superfamily_name', 'User Data')
+                description = request.form.get('description', 'User uploaded dataset')
+                
+                # Validate required files
+                if not tree_file or not metadata_file:
+                    return render_template('view.html', error="Tree file and metadata file are required")
+                
+                # Read file contents into memory (don't save to disk)
+                try:
+                    tree_content = tree_file.read().decode('utf-8')
+                    metadata_content = metadata_file.read().decode('utf-8')
+                    alignment_content = alignment_file.read().decode('utf-8') if alignment_file else None
+                except UnicodeDecodeError:
+                    return render_template('view.html', error="Files must be in UTF-8 text format")
+                
+                # Create temporary file-like objects for validation
+                import tempfile
+                import os
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.nwk', delete=False) as tmp_tree:
+                    tmp_tree.write(tree_content)
+                    tmp_tree_path = tmp_tree.name
+                
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as tmp_metadata:
+                    tmp_metadata.write(metadata_content)
+                    tmp_metadata_path = tmp_metadata.name
+                
+                tmp_alignment_path = None
+                if alignment_content:
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False) as tmp_alignment:
+                        tmp_alignment.write(alignment_content)
+                        tmp_alignment_path = tmp_alignment.name
+                
+                try:
+                    # Validate files using our validation functions
+                    validation_result = validate_all_files(
+                        tmp_tree_path, 
+                        tmp_metadata_path, 
+                        tmp_alignment_path if tmp_alignment_path else tmp_metadata_path,  # Use metadata path if no alignment
+                        "user@temp.com"  # Dummy email for validation
+                    )
+                    
+                    if not validation_result['overall_valid']:
+                        return render_template('view.html', error=f"File validation failed: {validation_result['summary']}")
+                    
+                    # Parse metadata to get column names
+                    import pandas as pd
+                    from io import StringIO
+                    
+                    # Try TSV first, then CSV
+                    try:
+                        df = pd.read_csv(StringIO(metadata_content), sep='\t')
+                    except:
+                        try:
+                            df = pd.read_csv(StringIO(metadata_content), sep=',')
+                        except Exception as e:
+                            return render_template('view.html', error=f"Could not parse metadata file: {str(e)}")
+                    
+                    # Convert metadata to JSON format
+                    metadata_json = df.to_json(orient='records')
+                    metadata_columns = df.columns.tolist()
+                    
+                    # Store data in session for view_render route
+                    session_id = str(uuid.uuid4())
+                    session['view_data'] = {
+                        'session_id': session_id,
+                        'tree_content': tree_content,
+                        'metadata_json': metadata_json,
+                        'metadata_columns': metadata_columns,
+                        'dataset_name': dataset_name,
+                        'superfamily_name': superfamily_name,
+                        'description': description,
+                        'alignment_content': alignment_content
+                    }
+                    
+                    # Redirect to view_render with session ID
+                    return redirect(url_for('view_render', session_id=session_id))
+                    
+                finally:
+                    # Clean up temporary files
+                    try:
+                        os.unlink(tmp_tree_path)
+                        os.unlink(tmp_metadata_path)
+                        if tmp_alignment_path:
+                            os.unlink(tmp_alignment_path)
+                    except:
+                        pass
+                
+            except Exception as e:
+                app.logger.error(f"Error in view upload: {e}", exc_info=True)
+                return render_template('view.html', error=f"Error processing files: {str(e)}")
+
+    @app.route('/view_render/<session_id>')
+    def view_render(session_id):
+        try:
+            # Get data from session
+            view_data = session.get('view_data')
+            
+            if not view_data or view_data.get('session_id') != session_id:
+                return render_template('error.html', error_message="Session expired or invalid. Please upload your files again."), 404
+            
+            # Render using phylotree_render template with session data
+            return render_template('phylotree_render.html',
+                             nwk_data=view_data['tree_content'],
+                             metadata=view_data['metadata_json'],
+                             metadata_list=view_data['metadata_columns'],
+                             datasetDescr=view_data['description'],
+                             superfamily_name=view_data['superfamily_name'],
+                             dataset_name=view_data['dataset_name'],
+                             source='user',
+                             cite=None)
+            
+        except Exception as e:
+            app.logger.error(f"Error in view_render: {e}", exc_info=True)
+            return render_template('error.html', error_message=f"Error displaying tree: {str(e)}"), 500
+
+    @app.route('/view_client')
+    def view_client():
+        """Client-side viewer that reads data from sessionStorage without backend processing"""
+        try:
+            # Get session parameter for identification
+            session_id = request.args.get('session', 'unknown')
+            
+            # Render a special template that will read from sessionStorage
+            return render_template('view_client.html', session_id=session_id)
+            
+        except Exception as e:
+            app.logger.error(f"Error in view_client: {e}", exc_info=True)
+            return render_template('error.html', error_message=f"Error loading client viewer: {str(e)}"), 500
+
+    @app.route('/debug')
+    def debug():
+        """Debug page to check sessionStorage"""
+        return render_template('debug.html')
+    
+    @app.route('/view_client_debug')
+    def view_client_debug():
+        """Simple debug version of client viewer"""
+        session_id = request.args.get('session', 'unknown')
+        return render_template('view_client_debug.html', session_id=session_id)
+    
+    @app.route('/view_client_working')
+    def view_client_working():
+        """Working version of client viewer"""
+        session_id = request.args.get('session', 'unknown')
+        return render_template('view_client_working.html', session_id=session_id)
+
     @app.route('/api/datasets')
     def api_datasets():
         """API endpoint to get paginated dataset data"""
@@ -585,6 +750,82 @@ def register_routes(app):
             
         except Exception as e:
             app.logger.error(f"Error downloading sequences for {dataset_id}: {e}")
+            return "Download error", 500
+
+    # User data download routes (for view page uploaded data)
+    @app.route('/download/user/tree/<session_id>')
+    def download_user_tree(session_id):
+        try:
+            view_data = session.get('view_data')
+            if not view_data or view_data.get('session_id') != session_id:
+                return "Session expired", 404
+            
+            tree_content = view_data.get('tree_content')
+            if not tree_content:
+                return "No tree data found", 404
+            
+            from flask import make_response
+            response = make_response(tree_content)
+            response.headers['Content-Disposition'] = f'attachment; filename={view_data.get("dataset_name", "dataset")}.nwk'
+            response.headers['Content-Type'] = 'text/plain'
+            return response
+            
+        except Exception as e:
+            app.logger.error(f"Error downloading user tree: {e}")
+            return "Download error", 500
+
+    @app.route('/download/user/metadata/<session_id>')
+    def download_user_metadata(session_id):
+        try:
+            view_data = session.get('view_data')
+            if not view_data or view_data.get('session_id') != session_id:
+                return "Session expired", 404
+            
+            # Convert JSON back to TSV format for download
+            import pandas as pd
+            import json
+            from io import StringIO
+            
+            metadata_json = view_data.get('metadata_json')
+            if not metadata_json:
+                return "No metadata found", 404
+            
+            # Parse JSON and convert to TSV
+            metadata_data = json.loads(metadata_json)
+            df = pd.DataFrame(metadata_data)
+            
+            # Convert to TSV string
+            tsv_content = df.to_csv(sep='\t', index=False)
+            
+            from flask import make_response
+            response = make_response(tsv_content)
+            response.headers['Content-Disposition'] = f'attachment; filename={view_data.get("dataset_name", "dataset")}_metadata.tsv'
+            response.headers['Content-Type'] = 'text/tab-separated-values'
+            return response
+            
+        except Exception as e:
+            app.logger.error(f"Error downloading user metadata: {e}")
+            return "Download error", 500
+
+    @app.route('/download/user/alignment/<session_id>')
+    def download_user_alignment(session_id):
+        try:
+            view_data = session.get('view_data')
+            if not view_data or view_data.get('session_id') != session_id:
+                return "Session expired", 404
+            
+            alignment_content = view_data.get('alignment_content')
+            if not alignment_content:
+                return "No alignment data found", 404
+            
+            from flask import make_response
+            response = make_response(alignment_content)
+            response.headers['Content-Disposition'] = f'attachment; filename={view_data.get("dataset_name", "dataset")}_alignment.fasta'
+            response.headers['Content-Type'] = 'text/plain'
+            return response
+            
+        except Exception as e:
+            app.logger.error(f"Error downloading user alignment: {e}")
             return "Download error", 500
 
 

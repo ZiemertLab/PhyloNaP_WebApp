@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+{% block content %}
+
+<head>
+    <!-- Latest compiled and minified CSS -->
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"></script>
+
+    {% block css %}
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet" />
+    <link href="/static/js/phylotree.css" rel="stylesheet" />
+    <link href="/static/js/overall.css" rel="stylesheet" />
+    {% endblock %}
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/split.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"
+        defer></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"
+        defer></script>
+
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="/static/js/phylotree.js"></script>
+    <script src="/static/js/palette.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body,
+        html {
+            background-color: transparent;
+        }
+
+        .layout {
+            display: flex;
+            width: 100%;
+            /* Use full viewport width */
+            height: 100vh;
+            /* Use full viewport height */
+        }
+
+        .tree-panel {
+            display: flex;
+            flex-direction: column;
+            flex: 4;
+            /* Take up 1 part of the available space */
+            /* background-color: #fff;  */
+            /* White background */
+            /* overflow: auto; */
+            margin: 0;
+            padding: 0;
+        }
+
+        .tree-controls {
+            flex-shrink: 0;
+            /* background-color: peachpuff;  */
+            /* White background */
+            height: 30px;
+            /* overflow: auto; */
+        }
+
+        .tree {
+            height: calc(100% - 50px);
+            width: 100% !important;
+            flex-grow: 1;
+            /* background-color: beige; */
+            /* overflow: auto; */
+            /* margin: 0;
+      padding: 0; */
+            overflow: auto;
+        }
+
+        .details {
+            flex: 1;
+            /* Take up 2 parts of the available space */
+            /* background-color: #D1E7E0; 
+      Grey background */
+            /* background-color: #CCDDE2; */
+            /* background-color:#6BA292; */
+            /* background-color: #e8e4d8; */
+            background-color: #E0E0E0;
+            /* background-color: #7D84B2; */
+            overflow: auto;
+            /* Add scrollbars if necessary */
+            margin: 0;
+            /* Remove all margins */
+            padding: 0;
+            /* Remove all padding */
+            box-sizing: border-box;
+            /* Include padding in the element's total width and height */
+        }
+
+        .details>div {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .details>div>div {
+            padding: 10px;
+            margin-top: 1rem;
+            width: 100%;
+            /* Ensure the inner content takes the full width */
+        }
+
+        .details h3,
+        .details h10,
+        .details h4 {
+            margin: 0;
+            /* Remove default margins */
+        }
+
+        #enlarged-image-container {
+            position: relative;
+            width: 100%;
+            /* Adjust as needed */
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #enlarged-image {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .no-overlap {
+            position: relative;
+            z-index: 1;
+        }
+
+        #tree-container {
+            width: 100%;
+            height: 100%;
+            /* Adjust this value as needed */
+        }
+
+        /* overflow: auto; Add scrollbars if the content is larger than the container */
+        #tree_name {
+            font-size: 1.75rem;
+        }
+
+        /* Add a class for JavaScript-controlled sizing */
+        #tree_name.js-resized {
+            font-size: var(--js-font-size) !important;
+        }
+    </style>
+</head>
+<script src="/static/js/phylotree.js"></script>
+<script src="/static/js/palette.js"></script>
+
+<div id="loading-message"
+    style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+    <h3>Loading your phylogenetic data...</h3>
+</div>
+
+<div id="error-container"
+    style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: #f8d7da; padding: 20px; border: 1px solid #f5c6cb; border-radius: 5px;">
+    <h3>Error</h3>
+    <p id="error-message">An error occurred while loading your data.</p>
+    <p><a href="{{ url_for('view') }}">Back to Upload</a></p>
+</div>
+
+<div class="layout" id="content-container" style="display: none;">
+    <div class="tree-panel">
+        <div class="tree-controls">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light btn-sm" data-direction="vertical" data-amount="1"
+                        title="Expand vertical spacing">
+                        <i class="fa fa-arrows-v"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" data-direction="vertical" data-amount="-1"
+                        title="Compress vertical spacing">
+                        <i class="fa  fa-compress fa-rotate-135"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" data-direction="horizontal" data-amount="1"
+                        title="Expand horizonal spacing">
+                        <i class="fa fa-arrows-h"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" data-direction="horizontal" data-amount="-1"
+                        title="Compress horizonal spacing">
+                        <i class="fa  fa-compress fa-rotate-45"></i>
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm" id="save_image" title="Save image"> <i
+                            class="fa fa-picture-o"></i>
+                    </button>
+                    <div class="btn-group" role="group">
+                    </div>
+                    <button class="btn btn-light btn-sm active phylotree-align-toggler" data-align="left">
+                        <i class="fa fa-align-left"></i>
+                    </button>
+                    <button class="btn btn-light btn-sm phylotree-align-toggler" data-align="right">
+                        <i class="fa fa-align-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tree" id="tree">
+            <div id="tree_data" nwk_data="" metadata="" metadata_list="" datasetDescr="" superfamily_name=""
+                dataset_name="" source="user" cite="">
+            </div>
+        </div>
+    </div>
+    <div class="details">
+        <div style="display: flex; justify-content: flex-end;">
+            <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
+                <div style="display: flex; justify-content: center;">
+                    <div style="display: flex; justify-content: center;">
+                        <h3 id="tree_name">User Dataset</h3>
+                    </div>
+                </div>
+                <h10 id="description">User uploaded phylogenetic tree</h10>
+
+                <div id="button-container">
+                    <h4>Annotation</h4>
+
+                    <script>
+                        const color_buttons = "#982B1C";
+                        const color_old = "#a61e37";
+                        const color_active_button = "#a61e37";
+                        const color_nonactive_button = "#B69E6C";
+                    </script>
+
+                    <script>
+                        // This will be handled by our client-side initialization
+                        // Metadata buttons are created dynamically in the main script
+                    </script>
+                </div>
+                <div id="colour_button-container">
+                    <h4>Colour annotation</h4>
+                    <button id="cluster" class="btn m-1 non-active-button">Proteins from the same cluster</button>
+                    <button id="panbgc" class="btn m-1 non-active-button">Proteins from the same GCF</button>
+                </div>
+                <div class="external-links-section">
+                    <h4 id="external-links-heading"
+                        style="cursor: pointer; display: flex; align-items: center; user-select: none;">
+                        External links
+                        <span id="external-links-toggle"
+                            style="margin-left: 8px; font-size: 14px; transition: transform 0.2s ease;">
+                            ▼
+                        </span>
+                    </h4>
+                    <div id="hyperlink-container">
+                        <!-- Table and button will be added here by createExternalLinksTable -->
+                    </div>
+                </div>
+                <h4>Structures</h4>
+                <button id="BGC_product" class="btn m-1 non-active-button">BGC product</button>
+                <button id="Reaction" class="btn m-1 non-active-button">Reaction</button>
+                <div id="enlarged-image-container">
+                    <img id="enlarged-image" src="" />
+                </div>
+                <h4 id="metadata-summary-heading" style="display: none;">Metadata summary</h4>
+                <div id="summary-container"></div>
+                <h4>Download Dataset</h4>
+                <div class="download-buttons">
+                    <button id="download-tree-btn" class="btn btn-sm non-active-button m-1">
+                        Tree (.nwk)
+                    </button>
+                    <button id="download-metadata-btn" class="btn btn-sm non-active-button m-1">
+                        Metadata (.tsv)
+                    </button>
+                    <button id="download-alignment-btn" class="btn btn-sm non-active-button m-1">
+                        Alignment (.faa)
+                    </button>
+                    <button id="download-sequences-btn" class="btn btn-sm non-active-button m-1">
+                        Sequences (.fasta)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+<!-- Client-side initialization script -->
+<script>
+    // Initialize client data when page loads
+    document.addEventListener('DOMContentLoaded', function () {
+        try {
+            // Get data from sessionStorage
+            const userData = sessionStorage.getItem('phylonap_user_data');
+
+            if (!userData) {
+                throw new Error('No data found in browser storage');
+            }
+
+            const data = JSON.parse(userData);
+            console.log('Loading user data:', Object.keys(data));
+
+            // Update description text
+            const datasetDescr = data.description || 'User uploaded phylogenetic tree';
+            document.getElementById('description').textContent = datasetDescr;
+
+            // Update tree name
+            const superfamilyName = data.superfamilyName || 'User Dataset';
+            const datasetName = data.datasetName || '';
+            const treeName = superfamilyName + (datasetName ? ' - ' + datasetName : '');
+            document.getElementById('tree_name').textContent = treeName;
+
+            // Parse metadata to ensure it's proper JSON
+            let metadataArray;
+            if (typeof data.metadataJson === 'string') {
+                metadataArray = JSON.parse(data.metadataJson);
+            } else {
+                metadataArray = data.metadataJson;
+            }
+
+            // Create global variables that tree_general.js can access
+            // This avoids HTML attribute encoding issues
+            window.phylonapClientData = {
+                nwk_data: data.treeContent,
+                metadata: metadataArray,
+                metadata_list: data.metadataColumns,
+                datasetDescr: datasetDescr,
+                superfamily_name: superfamilyName,
+                dataset_name: datasetName,
+                source: 'user',
+                cite: ''
+            };
+
+            // Set tree_data attributes and override getAttribute for reliable JSON parsing
+            const treeDataDiv = document.getElementById('tree_data');
+
+            // Store the original getAttribute method
+            const originalGetAttribute = treeDataDiv.getAttribute.bind(treeDataDiv);
+
+            // Store our data in a way that's accessible
+            const clientTreeData = {
+                'nwk_data': data.treeContent,
+                'metadata': JSON.stringify(metadataArray),
+                'metadata_list': JSON.stringify(data.metadataColumns),
+                'datasetDescr': datasetDescr,
+                'superfamily_name': superfamilyName,
+                'dataset_name': datasetName,
+                'source': 'user',
+                'cite': ''
+            };
+
+            // Override getAttribute to return our clean JSON data
+            treeDataDiv.getAttribute = function (name) {
+                if (clientTreeData.hasOwnProperty(name)) {
+                    console.log('Getting attribute', name, ':', clientTreeData[name].substring(0, 50) + (clientTreeData[name].length > 50 ? '...' : ''));
+                    return clientTreeData[name];
+                }
+                return originalGetAttribute(name);
+            };
+
+            // Also set the attributes normally for backup
+            Object.keys(clientTreeData).forEach(key => {
+                treeDataDiv.setAttribute(key, clientTreeData[key]);
+            });
+
+            console.log('Tree data setup complete. Client data keys:', Object.keys(clientTreeData));
+
+            console.log('Metadata array:', metadataArray);
+            console.log('Metadata columns:', data.metadataColumns);
+            console.log('Global phylonapClientData created:', window.phylonapClientData);
+
+            // Create metadata buttons (same logic as phylotree_render.html)
+            const metadataListArray = data.metadataColumns;
+            const buttonContainer = document.getElementById('button-container');
+
+            metadataListArray.forEach(function (item) {
+                const button = document.createElement('button');
+                button.id = item;
+                button.className = 'btn m-1 non-active-button';
+                button.textContent = item.replace('_', ' ');
+                buttonContainer.appendChild(button);
+            });
+
+            // Hide loading message and show content
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('content-container').style.display = 'flex';
+
+            console.log('Client view initialized successfully');
+
+            // Load tree scripts - give D3 a moment to load first
+            console.log('Waiting briefly for D3, then loading tree scripts...');
+            setTimeout(function () {
+                console.log('D3 status before loading tree scripts:', typeof d3);
+                loadTreeScriptsNow();
+            }, 1000); // Wait 1 second for D3 to load
+
+        } catch (error) {
+            console.error('Error loading data:', error);
+            document.getElementById('loading-message').style.display = 'none';
+            document.getElementById('error-message').textContent = error.message;
+            document.getElementById('error-container').style.display = 'block';
+        }
+    });
+
+    // Function to load tree scripts after ensuring D3 is available
+    function loadTreeScripts() {
+        // Check if D3 is available
+        console.log('Checking for d3...', typeof d3);
+        console.log('Window object keys containing d3:', Object.keys(window).filter(key => key.toLowerCase().includes('d3')));
+
+        if (typeof d3 === 'undefined') {
+            console.log('D3 not ready yet, waiting...');
+            // Don't wait indefinitely - stop after 10 seconds
+            if (!loadTreeScripts.attempts) loadTreeScripts.attempts = 0;
+            loadTreeScripts.attempts++;
+
+            if (loadTreeScripts.attempts > 100) {
+                console.error('D3 failed to load after 10 seconds, giving up');
+                return;
+            }
+
+            setTimeout(loadTreeScripts, 100);
+            return;
+        }
+
+        console.log('D3 is available! Version:', d3.version);
+        loadTreeScriptsNow();
+    }
+
+    // Function to actually load the tree scripts
+    function loadTreeScriptsNow() {
+        console.log('Loading tree scripts now...');
+
+        // Load tree_general.js
+        const script1 = document.createElement('script');
+        script1.src = 'static/js/tree_general.js';
+        script1.onload = function () {
+            console.log('tree_general.js loaded');
+
+            // Load tree_database.js after tree_general.js
+            const script2 = document.createElement('script');
+            script2.src = 'static/js/tree_database.js';
+            script2.onload = function () {
+                console.log('tree_database.js loaded - all scripts ready!');
+            };
+            script2.onerror = function () {
+                console.error('Failed to load tree_database.js');
+            };
+            document.head.appendChild(script2);
+        };
+        script1.onerror = function () {
+            console.error('Failed to load tree_general.js');
+        };
+        document.head.appendChild(script1);
+    }
+</script>
+
+<script>
+    const content = "User uploaded phylogenetic data";
+    console.log("view_client_working.html content:");
+    console.log(content);
+</script>
+<script src="static/js/tree_general.js"></script>
+<script src="static/js/tree_database.js"></script>
+
+{% endblock %}
