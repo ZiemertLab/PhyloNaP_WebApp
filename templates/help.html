@@ -110,6 +110,7 @@
                         <h5 class="mb-0">Help Topics</h5>
                     </div>
                     <div class="list-group list-group-flush">
+                        <a href="#updates" class="list-group-item list-group-item-action">Recent Updates</a>
                         <a href="#overview" class="list-group-item list-group-item-action">Database Overview</a>
                         <a href="#phylogenetic-trees" class="list-group-item list-group-item-action">Phylogenetic
                             Trees</a>
@@ -126,34 +127,59 @@
         <div class="col-md-9">
             <!-- Introduction -->
             <div class="mb-5">
-                <div class="alert custom-alert">
-                    <h5 class="mt-2"></h5>
-                    <h5><i class="fa fa-info-circle"></i> Motivation</h5>
-                    <p>Natural products are a major source of novel drugs, and with the rise of antibiotic resistance,
-                        there is an urgent need
-                        to discover new compounds. Genome mining enables the rapid identification of biosynthetic gene
-                        clusters (BGCs)
-                        responsible for natural product biosynthesis. Predicting the structures of the synthesized
-                        compounds is key to guiding
-                        their targeted discovery, but this requires detailed knowledge of the enzymatic reactions at
-                        each step of the
-                        biosynthetic pathway. While the core scaffold of many natural products can often be predicted
-                        from the initial
-                        biosynthetic steps, later tailoring modifications remain difficult to model due to the limited
-                        characterization of the
-                        enzymes involved. Reliable reaction prediction requires first gathering functional annotations
-                        and performing
-                        evolutionary analysis of these enzymes—only then can accurate computational predictions be made.
-                        In the absence of
-                        automated tools, this process becomes time-consuming. Although phylogenetic trees with
-                        functional annotations are
-                        occasionally published, reusing them directly is labor-intensive and technically challenging.
-                    </p>
-                    <p>PhyloNaP addresses this gap by providing a centralized collection of annotated phylogenetic trees
-                        for enzymes involved
-                        in natural product biosynthesis.</p>
-                </div>
+
+                <h5 class="mt-2"></h5>
+                <h5><i class="fa fa-info-circle"></i> Motivation</h5>
+                <p>Natural products are a major source of novel drugs, and with the rise of antibiotic resistance,
+                    there is an urgent need
+                    to discover new compounds. Genome mining enables the rapid identification of biosynthetic gene
+                    clusters (BGCs)
+                    responsible for natural product biosynthesis. Predicting the structures of the synthesized
+                    compounds is key to guiding
+                    their targeted discovery, but this requires detailed knowledge of the enzymatic reactions at
+                    each step of the
+                    biosynthetic pathway. While the core scaffold of many natural products can often be predicted
+                    from the initial
+                    biosynthetic steps, later tailoring modifications remain difficult to model due to the limited
+                    characterization of the
+                    enzymes involved. Reliable reaction prediction requires first gathering functional annotations
+                    and performing
+                    evolutionary analysis of these enzymes—only then can accurate computational predictions be made.
+                    In the absence of
+                    automated tools, this process becomes time-consuming. Although phylogenetic trees with
+                    functional annotations are
+                    occasionally published, reusing them directly is labor-intensive and technically challenging.
+                </p>
+                <p>PhyloNaP addresses this gap by providing a centralized collection of annotated phylogenetic trees
+                    for enzymes involved
+                    in natural product biosynthesis.</p>
             </div>
+
+            <!-- Recent Updates -->
+            <section id="updates" class="mb-5">
+                <h2 class="border-bottom pb-2 section-header"><i class="fa fa-newspaper-o"></i> Recent Updates</h2>
+
+                <div class="alert custom-alert">
+                    <h5><i class="fa fa-calendar"></i> October 20, 2025</h5>
+                    <p><strong>New Feature: Personal Tree Visualization</strong></p>
+                    <p>Users can now explore and analyze their own annotated phylogenetic trees directly in the PhyloNaP
+                        interface.
+                        This new functionality allows researchers to:</p>
+                    <ul>
+                        <li>Upload their own tree files (Newick format) along with metadata</li>
+                        <li>Visualize trees using the same interactive interface as the database entries</li>
+                        <li>Analyze clades using the <em>“Get the summary of the clade”</em> function</li>
+                        <li>If the annotation file includes a <code>MIBIG</code> or <code>MITE</code> column with valid
+                            IDs,
+                            corresponding molecular structures can also be displayed</li>
+                        <li>Enjoy private browsing — uploaded trees and metadata are not stored on the server</li>
+
+                    </ul>
+                    <p>Access this feature through the <a href="{{ url_for('view') }}" class="link-custom"><strong>View
+                                page</strong></a>
+                        to start analyzing your phylogenetic data with PhyloNaP's advanced visualization tools.</p>
+                </div>
+            </section>
 
             <!-- 1. Database Overview -->
             <section id="overview" class="mb-5">
