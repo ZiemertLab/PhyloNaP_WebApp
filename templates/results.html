@@ -292,6 +292,7 @@
     if (currentStatus === "queued") initialProgress = 10;
     else if (currentStatus === "running") initialProgress = 50;
     else if (currentStatus === "finished") initialProgress = 100;
+    else if (currentStatus === "error" || currentStatus === "failed") initialProgress = 0;
 
     if (initialProgress > 0) {
       updateProgress(initialProgress);
@@ -310,6 +311,12 @@
       } catch (e) {
         console.error("Error parsing summary data:", e);
       }
+    }
+
+    // Show error message if status indicates failure
+    if (currentStatus === "error" || currentStatus === "failed") {
+      $("#results-section").show();
+      showErrorMessage();
     }
 
     // Show processing info if status is queued or running
@@ -369,6 +376,40 @@
           populateResultsTable(statusData.summary);
         }
       }
+
+      // Show error message if job failed
+      if (statusData.status === 'error' || statusData.status === 'failed') {
+        // Stop polling
+        clearInterval(polling);
+
+        // Hide info message
+        $("#processing-info").hide();
+
+        // Show results section with error message
+        $("#results-section").show();
+        showErrorMessage();
+      }
+    }
+
+    function showErrorMessage() {
+      $("#results-table tbody").empty();
+      $("#results-table tbody").append(`
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 30px;">
+            <div class="alert alert-danger" style="margin: 0;">
+              <h5><i class="fa fa-exclamation-circle"></i> Processing Error</h5>
+              <p><strong>An error occurred while processing your job.</strong></p>
+              <p>Please report this issue along with your <strong>Job ID: ${jobId}</strong> to:</p>
+              <p><a href="mailto:aleksandra.korenskaia@uni-tuebingen.de" class="btn btn-outline-primary">
+                <i class="fa fa-envelope"></i> aleksandra.korenskaia@uni-tuebingen.de
+              </a></p>
+              <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                Including your Job ID will help us identify and resolve the issue quickly.
+              </p>
+            </div>
+          </td>
+        </tr>
+      `);
     }
 
     function populateResultsTable(summary) {
@@ -379,6 +420,34 @@
 
       // Check if summary is an array (your actual structure)
       if (Array.isArray(summary)) {
+        // Check if summary is empty (no matches found) - only show this for successful jobs
+        if (summary.length === 0 && currentStatus === 'finished') {
+          // Show no matches message (only for successful completion, not errors)
+          $("#results-table tbody").append(`
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 30px;">
+                <div class="alert alert-warning" style="margin: 0;">
+                  <h5><i class="fa fa-exclamation-triangle"></i> No reference tree found</h5>
+                  <p><strong>Your protein sequences could not be matched to any reference trees in our database.</strong></p>
+                  <p><strong>Possible reasons:</strong></p>
+                  <ul style="text-align: left; display: inline-block; margin-top: 10px;">
+                    <li><strong>Eukaryotic proteins:</strong> The database excludes explicitly eukaryotic proteins (except for curated datasets)</li>
+                    <li><strong>Poor representation:</strong> Protein families with fewer than 10 proteins are excluded (poorly represented in MiBiG and AntiSMASHdb)</li>
+                    <li><strong>Sequence length:</strong> Very short (&lt;150 amino acids) or very long (&gt;1000 amino acids) sequences are filtered out</li>
+                    <li><strong>Novel protein family:</strong> Your protein may belong to a family not yet included in our reference database</li>
+                  </ul>
+                  <p style="margin-top: 15px;"><strong>Suggestion:</strong> Try submitting sequences from well-characterized bacterial natural product biosynthetic pathways.</p>
+                  <p style="margin-top: 10px;"><strong>Missing your protein?</strong> Feel free to contact us at 
+                    <a href="mailto:aleksandra.korenskaia@uni-tuebingen.de">aleksandra.korenskaia@uni-tuebingen.de</a> 
+                    to inform us about your enzyme of interest - we will try to include it with the next update!
+                  </p>
+                </div>
+              </td>
+            </tr>
+          `);
+          return;
+        }
+
         // Group results by query name
         const groupedResults = {};
         summary.forEach(item => {
