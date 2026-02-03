@@ -8,6 +8,80 @@ let currentTree;
 let treshold_to_display = 0.5;
 let treshold_to_summary = 0.8;
 
+// Function to add placement menu items to nodes
+function addPlacementMenuItems(tree, bubbleData) {
+    tree.phylotree.traverse_and_compute((node) => {
+        const annotation = node.data?.annotation;
+        const placementData = bubbleData[annotation];
+
+        if (placementData !== undefined) {
+            const confidence = placementData.confidence;
+            const pendantLength = placementData.pendantLength;
+            const isLeaf = !node.children || node.children.length === 0;
+            const nodeType = isLeaf ? "Leaf" : "Internal Node";
+
+            // Clear existing menu items related to placement
+            if (!node.menu_items) {
+                node.menu_items = [];
+            } else {
+                // Remove old placement items if they exist
+                node.menu_items = node.menu_items.filter(item => {
+                    const text = typeof item[0] === 'function' ? item[0](node) : item[0];
+                    return !text.includes('Placement') && !text.includes('Confidence') && !text.includes('Pendant');
+                });
+            }
+
+            // Add placement info header (not clickable, just info display)
+            node.menu_items.push([
+                (n) => `━━━ Placement Info (${nodeType}) ━━━`,
+                () => { },
+                () => true
+            ]);
+
+            node.menu_items.push([
+                (n) => `Confidence: ${confidence.toFixed(4)}`,
+                () => { },
+                () => true
+            ]);
+
+            node.menu_items.push([
+                (n) => `Pendant length: ${pendantLength.toFixed(4)}`,
+                () => { },
+                () => true
+            ]);
+
+            // Add clickable option to show details in placement container
+            node.menu_items.push([
+                (n) => "Show placement details →",
+                (n) => {
+                    const details = `
+                        <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                            <h4 style="margin-top: 0; color: #7B1B38;">Placement Details - ${nodeType}</h4>
+                            <p style="margin: 5px 0;"><strong>Node:</strong> ${n.data.name || 'Internal node'}</p>
+                            <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
+                            <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
+                        </div>
+                    `;
+
+                    const placementContainer = document.getElementById('placement-container');
+                    if (placementContainer) {
+                        const detailsDiv = document.createElement('div');
+                        detailsDiv.innerHTML = details;
+                        detailsDiv.style.marginTop = '10px';
+
+                        const existing = placementContainer.querySelector('.placement-details');
+                        if (existing) existing.remove();
+
+                        detailsDiv.className = 'placement-details';
+                        placementContainer.appendChild(detailsDiv);
+                    }
+                },
+                () => true
+            ]);
+        }
+    });
+}
+
 async function main() {
 
     const { container, width, height } = getContainerDimensions();
@@ -63,17 +137,21 @@ async function main() {
 
     // === INITIAL SETUP ===
     // Create initial bubble size function
+    // Store both confidence (placement[2]) and pendant_length (placement[4])
     const initialBubbleData = Object.fromEntries(
-        currentDisplayPlacements.map(placement => [placement[0], placement[2]])
+        currentDisplayPlacements.map(placement => [placement[0], { confidence: placement[2], pendantLength: placement[4] }])
     );
 
     bubbleSize = function (node) {
         const annotation = node.data?.annotation;
-        const confidence = initialBubbleData[annotation];
+        const data = initialBubbleData[annotation];
 
-        if (confidence !== undefined) {
-            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${confidence * 10}`);
-            return parseFloat(confidence) * 10;
+        if (data !== undefined) {
+            const confidence = data.confidence;
+            // Use sqrt scaling to reduce maximum size, with a cap at 8
+            const size = Math.min(Math.sqrt(parseFloat(confidence)) * 5, 5);
+            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${size}`);
+            return size;
         } else {
             console.log(`No matching annotation for node: ${annotation}`);
             return 1;
@@ -86,7 +164,8 @@ async function main() {
         'node-span': bubbleSize,
         'node-styler': function (container, node) {
             const annotation = node.data?.annotation;
-            const hasConfidence = initialBubbleData[annotation] !== undefined;
+            const data = initialBubbleData[annotation];
+            const hasConfidence = data !== undefined;
             const isLeaf = !node.children || node.children.length === 0;
 
             if (hasConfidence) {
@@ -97,6 +176,51 @@ async function main() {
                 if (!isLeaf) {
                     container.classed("internal-bubble", true);
                 }
+
+                // Color based on pendant_length (evolutionary distance)
+                const pendantLength = data.pendantLength;
+                let color;
+                if (pendantLength < 0.5) {
+                    // Use original red color for short distances
+                    color = '#7B1B38'; // Original red
+                } else {
+                    // Gradually darken for larger distances (reduce brightness)
+                    const factor = Math.min((pendantLength - 0.5) / 1.5, 1); // Normalize over range 0.5-2.0
+                    const r = Math.floor(204 * (1 - factor * 0.7)); // Reduce from 204 (CC) towards darker
+                    const g = Math.floor(42 * (1 - factor * 0.5));
+                    const b = Math.floor(54 * (1 - factor * 0.5));
+                    color = `rgb(${r}, ${g}, ${b})`;
+                }
+                container.select('circle').style('fill', color);
+
+                // Make bubble clickable - use namespaced event to avoid conflicts
+                container.style('cursor', 'pointer')
+                    .on('click.placement', function (d) {
+                        if (d3.event) d3.event.stopPropagation();
+                        const confidence = data.confidence;
+                        const details = `
+                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
+                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
+                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
+                            </div>
+                        `;
+
+                        // Display in placement container
+                        const placementContainer = document.getElementById('placement-container');
+                        if (placementContainer) {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.innerHTML = details;
+                            detailsDiv.style.marginTop = '10px';
+
+                            // Remove any existing details
+                            const existing = placementContainer.querySelector('.placement-details');
+                            if (existing) existing.remove();
+
+                            detailsDiv.className = 'placement-details';
+                            placementContainer.appendChild(detailsDiv);
+                        }
+                    });
             } else {
                 container.classed("alternate", true);
                 container.classed("circle", false);
@@ -110,6 +234,12 @@ async function main() {
 
     currentTree = renderedTree; // Store reference to the tree
     console.log("renderedTree: ", renderedTree);
+
+    // Add placement menu items to nodes
+    addPlacementMenuItems(renderedTree, initialBubbleData);
+
+    // Add click handlers to placement bubbles after tree is rendered
+    attachPlacementClickHandlers(initialBubbleData);
 
     document.addEventListener("terminalNodesSelected", function (event) {
         const terminalNodes = event.detail;
@@ -232,6 +362,78 @@ function getTerminalNodesArrayPlacement(tree, metadata, targetNode) {
     return nodeNames;
 }
 
+// Function to attach click handlers to placement bubbles after tree rendering
+function attachPlacementClickHandlers(bubbleData) {
+    console.log("Attaching click handlers to placement bubbles");
+    console.log("bubbleData keys:", Object.keys(bubbleData));
+
+    // Wait a bit for DOM to be ready, then select all circles
+    setTimeout(() => {
+        console.log("Looking for phylotree nodes...");
+        const allNodes = document.querySelectorAll('.phylotree-node');
+        console.log("Found phylotree nodes:", allNodes.length);
+
+        // Try different selectors
+        const allCircles = document.querySelectorAll('.phylotree-node circle');
+        console.log("Found circles:", allCircles.length);
+
+        // Iterate through all node groups
+        allNodes.forEach((nodeGroup, index) => {
+            // Get the node data from D3
+            const d3Node = d3.select(nodeGroup);
+            const nodeData = d3Node.datum();
+
+            if (nodeData && nodeData.data) {
+                const annotation = nodeData.data.annotation;
+                const data = bubbleData[annotation];
+
+                if (data !== undefined) {
+                    console.log(`Node ${index} has placement data, annotation:`, annotation);
+
+                    // Add click handler using native JavaScript
+                    nodeGroup.style.cursor = 'pointer';
+                    nodeGroup.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        event.preventDefault();
+
+                        console.log("CLICKED on placement bubble!", annotation);
+
+                        const confidence = data.confidence;
+                        const pendantLength = data.pendantLength;
+                        const details = `
+                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
+                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
+                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
+                            </div>
+                        `;
+
+                        const placementContainer = document.getElementById('placement-container');
+                        if (placementContainer) {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.innerHTML = details;
+                            detailsDiv.style.marginTop = '10px';
+
+                            const existing = placementContainer.querySelector('.placement-details');
+                            if (existing) existing.remove();
+
+                            detailsDiv.className = 'placement-details';
+                            placementContainer.appendChild(detailsDiv);
+                        }
+                    }, true); // Use capture phase
+
+                    // Also add to the circle element
+                    const circle = nodeGroup.querySelector('circle');
+                    if (circle) {
+                        circle.style.cursor = 'pointer';
+                        circle.style.pointerEvents = 'all';
+                    }
+                }
+            }
+        });
+    }, 500);
+}
+
 // function getTerminalNodesArrayPlacement(tree, metadata, targetNode) {
 //     let nodeNames = [];
 //     document.addEventListener('terminalNodesSelected', event => {
@@ -255,19 +457,22 @@ function getTerminalNodesArrayPlacement(tree, metadata, targetNode) {
 // }
 // === PLACEMENT DISPLAY AND VISUALIZATION ===
 function updatePlacementDisplay(placementsToShow, showAll = false) {
-    // Update bubble data - convert to object for quick lookup [edge_num, like_weight_ratio]
+    // Update bubble data - convert to object for quick lookup [edge_num, confidence, pendant_length]
     const bubbleData = Object.fromEntries(
-        placementsToShow.map(placement => [placement[0], placement[2]])
+        placementsToShow.map(placement => [placement[0], { confidence: placement[2], pendantLength: placement[4] }])
     );
 
     // Update bubble size function
     bubbleSize = function (node) {
         const annotation = node.data?.annotation;
-        const confidence = bubbleData[annotation];
+        const data = bubbleData[annotation];
 
-        if (confidence !== undefined) {
-            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${confidence * 10}`);
-            return parseFloat(confidence) * 10;
+        if (data !== undefined) {
+            const confidence = data.confidence;
+            // Use sqrt scaling to reduce maximum size, with a cap at 8
+            const size = Math.min(Math.sqrt(parseFloat(confidence)) * 8, 8);
+            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${size}`);
+            return size;
         } else {
             console.log(`No matching annotation for node: ${annotation}`);
             return 1;
@@ -280,6 +485,9 @@ function updatePlacementDisplay(placementsToShow, showAll = false) {
 
     // Update tree visualization
     updateTreeVisualization(bubbleData);
+
+    // Re-attach click handlers after tree update
+    setTimeout(() => attachPlacementClickHandlers(bubbleData), 100);
 }
 
 function updatePlacementContainer(placementsToShow, showAll) {
@@ -545,7 +753,8 @@ function updateTreeVisualization(bubbleData) {
         'node-span': bubbleSize,
         'node-styler': function (container, node) {
             const annotation = node.data?.annotation;
-            const hasConfidence = bubbleData[annotation] !== undefined;
+            const data = bubbleData[annotation];
+            const hasConfidence = data !== undefined;
             const isLeaf = !node.children || node.children.length === 0;
 
             if (hasConfidence) {
@@ -557,6 +766,51 @@ function updateTreeVisualization(bubbleData) {
                 if (!isLeaf) {
                     container.classed("internal-bubble", true);
                 }
+
+                // Color based on pendant_length (evolutionary distance)
+                const pendantLength = data.pendantLength;
+                let color;
+                if (pendantLength < 0.5) {
+                    // Use original red color for short distances
+                    color = '#7B1B38'; // Original red
+                } else {
+                    // Gradually darken for larger distances (reduce brightness)
+                    const factor = Math.min((pendantLength - 0.5) / 1.5, 1); // Normalize over range 0.5-2.0
+                    const r = Math.floor(204 * (1 - factor * 0.7)); // Reduce from 204 (CC) towards darker
+                    const g = Math.floor(42 * (1 - factor * 0.5));
+                    const b = Math.floor(54 * (1 - factor * 0.5));
+                    color = `rgb(${r}, ${g}, ${b})`;
+                }
+                container.select('circle').style('fill', color);
+
+                // Make bubble clickable - use namespaced event to avoid conflicts
+                container.style('cursor', 'pointer')
+                    .on('click.placement', function (d) {
+                        if (d3.event) d3.event.stopPropagation();
+                        const confidence = data.confidence;
+                        const details = `
+                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
+                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
+                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
+                            </div>
+                        `;
+
+                        // Display in placement container
+                        const placementContainer = document.getElementById('placement-container');
+                        if (placementContainer) {
+                            const detailsDiv = document.createElement('div');
+                            detailsDiv.innerHTML = details;
+                            detailsDiv.style.marginTop = '10px';
+
+                            // Remove any existing details
+                            const existing = placementContainer.querySelector('.placement-details');
+                            if (existing) existing.remove();
+
+                            detailsDiv.className = 'placement-details';
+                            placementContainer.appendChild(detailsDiv);
+                        }
+                    });
             } else {
                 // Low-confidence or no-confidence nodes
                 container.classed("alternate", true);
@@ -572,6 +826,9 @@ function updateTreeVisualization(bubbleData) {
         Object.keys(customTreeOptions).forEach(key => {
             currentTree.options[key] = customTreeOptions[key];
         });
+
+        // Re-add placement menu items after update
+        addPlacementMenuItems(currentTree, bubbleData);
 
         // Trigger tree update/redraw
         currentTree.update();
