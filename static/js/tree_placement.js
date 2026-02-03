@@ -51,33 +51,7 @@ function addPlacementMenuItems(tree, bubbleData) {
             ]);
 
             // Add clickable option to show details in placement container
-            node.menu_items.push([
-                (n) => "Show placement details →",
-                (n) => {
-                    const details = `
-                        <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
-                            <h4 style="margin-top: 0; color: #7B1B38;">Placement Details - ${nodeType}</h4>
-                            <p style="margin: 5px 0;"><strong>Node:</strong> ${n.data.name || 'Internal node'}</p>
-                            <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
-                            <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
-                        </div>
-                    `;
 
-                    const placementContainer = document.getElementById('placement-container');
-                    if (placementContainer) {
-                        const detailsDiv = document.createElement('div');
-                        detailsDiv.innerHTML = details;
-                        detailsDiv.style.marginTop = '10px';
-
-                        const existing = placementContainer.querySelector('.placement-details');
-                        if (existing) existing.remove();
-
-                        detailsDiv.className = 'placement-details';
-                        placementContainer.appendChild(detailsDiv);
-                    }
-                },
-                () => true
-            ]);
         }
     });
 }

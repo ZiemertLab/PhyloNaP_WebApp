@@ -1814,6 +1814,9 @@
         circles.attr("r", function (d) {
           return d;
         })
+          .on("click", d => {
+            this.handle_node_click(node, d);
+          });
         // .classed("circle-color", true); // Apply the CSS class for color;
 
 
