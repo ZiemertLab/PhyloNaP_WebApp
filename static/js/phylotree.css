@@ -2,11 +2,11 @@
   /* --color-node: steelblue; */
   --color-node: #7B1B38;
   --color-internal-node: #CCC;
-  --color-node-selected: #7B1B38;
+  --color-node-selected: #000;
   --color-node-collapsed: black;
   --color-node-tagged: #00f;
   --color-branch: #999;
-  --color-branch-selected: #7B1B38;
+  --color-branch-selected: #000;
   ;
   --color-branch-tagged: #00f;
   --color-branch-tracer: #bbb;
@@ -95,7 +95,7 @@
 
 .branch-selected {
   stroke: var(--color-branch-selected) !important;
-  stroke-width: 3px;
+  stroke-width: 4px;
 }
 
 .branch-tagged {
