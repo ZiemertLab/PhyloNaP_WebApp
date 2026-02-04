@@ -74,6 +74,7 @@
 
     .tree-controls {
       flex-shrink: 0;
+      position: relative;
       /* background-color: peachpuff;  */
       /* White background */
       height: 30px;
@@ -258,16 +259,12 @@
       </div>
       <!-- Placement colorbar legend -->
       <div id="placement-colorbar"
-        style="margin: 8px 10px; padding: 6px 8px; background: #f8f9fa; border-radius: 4px; border: 1px solid #dee2e6; display: none;">
-        <h6 style="margin: 0 0 4px 0; font-size: 10px; font-weight: 600;">Evol. Distance</h6>
+        style="position: absolute; right: 10px; top: 5px; margin: 0; padding: 3px 5px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6; display: none; z-index: 10;">
+        <span style="font-size: 8px; font-weight: 600; margin-right: 5px;">Evol. Distance: 0.0</span>
         <div
-          style="height: 10px; background: linear-gradient(to right, rgb(123, 27, 56), rgb(154, 89, 104), rgb(189, 165, 171)); border-radius: 2px; border: 1px solid #aaa;">
+          style="display: inline-block; width: 200px; height: 8px; background: linear-gradient(to right, rgb(123, 27, 56), rgb(154, 89, 104), rgb(189, 165, 171)); border-radius: 2px; border: 1px solid #aaa; vertical-align: middle;">
         </div>
-        <div style="display: flex; justify-content: space-between; margin-top: 2px; font-size: 9px; color: #666;">
-          <span>0.0</span>
-          <span>0.5</span>
-          <span>1.0+</span>
-        </div>
+        <span style="font-size: 7px; color: #666; margin-left: 5px;"> 1.0+</span>
       </div>
     </div>
 
