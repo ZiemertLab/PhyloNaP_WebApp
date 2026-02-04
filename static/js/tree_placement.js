@@ -8,6 +8,35 @@ let currentTree;
 let treshold_to_display = 0.5;
 let treshold_to_summary = 0.8;
 
+// Function to calculate color based on pendant length (evolutionary distance)
+function getPlacementColor(pendantLength) {
+    const startColor = { r: 123, g: 27, b: 56 }; // #7B1B38 (original red - good placement)
+    const midColor = { r: 154, g: 89, b: 104 }; // #9a5968 (moderate placement)
+    const endColor = { r: 189, g: 165, b: 171 }; // #bda5ab (bad placement)
+
+    // Clamp pendant length to [0, 1.0] range
+    const normalizedDistance = Math.min(pendantLength / 1.0, 1);
+
+    // Use power curve (^1.5) to make transition faster
+    const adjustedDistance = Math.pow(normalizedDistance, 1.5);
+
+    let r, g, b;
+    // Transition from red to mid color in first half, then mid to end color
+    if (adjustedDistance < 0.5) {
+        const t = adjustedDistance * 2; // 0 to 1
+        r = Math.floor(startColor.r + (midColor.r - startColor.r) * t);
+        g = Math.floor(startColor.g + (midColor.g - startColor.g) * t);
+        b = Math.floor(startColor.b + (midColor.b - startColor.b) * t);
+    } else {
+        const t = (adjustedDistance - 0.5) * 2; // 0 to 1
+        r = Math.floor(midColor.r + (endColor.r - midColor.r) * t);
+        g = Math.floor(midColor.g + (endColor.g - midColor.g) * t);
+        b = Math.floor(midColor.b + (endColor.b - midColor.b) * t);
+    }
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
 // Function to add placement menu items to nodes
 function addPlacementMenuItems(tree, bubbleData) {
     tree.phylotree.traverse_and_compute((node) => {
@@ -153,18 +182,7 @@ async function main() {
 
                 // Color based on pendant_length (evolutionary distance)
                 const pendantLength = data.pendantLength;
-                let color;
-                if (pendantLength < 0.5) {
-                    // Use original red color for short distances
-                    color = '#7B1B38'; // Original red
-                } else {
-                    // Gradually darken for larger distances (reduce brightness)
-                    const factor = Math.min((pendantLength - 0.5) / 1.5, 1); // Normalize over range 0.5-2.0
-                    const r = Math.floor(204 * (1 - factor * 0.7)); // Reduce from 204 (CC) towards darker
-                    const g = Math.floor(42 * (1 - factor * 0.5));
-                    const b = Math.floor(54 * (1 - factor * 0.5));
-                    color = `rgb(${r}, ${g}, ${b})`;
-                }
+                const color = getPlacementColor(pendantLength);
                 container.select('circle').style('fill', color);
 
                 // Make bubble clickable - use namespaced event to avoid conflicts
@@ -225,6 +243,16 @@ async function main() {
     // Display initial placements after tree is rendered
     updatePlacementContainer(currentDisplayPlacements, showingAllPlacements);
     console.log("After updatePlacementContainer");
+
+    // Show colorbar legend
+    const colorbar = document.getElementById('placement-colorbar');
+    console.log('Colorbar element:', colorbar);
+    if (colorbar) {
+        colorbar.style.display = 'block';
+        console.log('Colorbar display set to block');
+    } else {
+        console.warn('Colorbar element not found!');
+    }
 
     // Display MRCA clade summary for current placements
     MRSA_summury(currentDisplayPlacements, placements, tree, metadata);
@@ -743,18 +771,7 @@ function updateTreeVisualization(bubbleData) {
 
                 // Color based on pendant_length (evolutionary distance)
                 const pendantLength = data.pendantLength;
-                let color;
-                if (pendantLength < 0.5) {
-                    // Use original red color for short distances
-                    color = '#7B1B38'; // Original red
-                } else {
-                    // Gradually darken for larger distances (reduce brightness)
-                    const factor = Math.min((pendantLength - 0.5) / 1.5, 1); // Normalize over range 0.5-2.0
-                    const r = Math.floor(204 * (1 - factor * 0.7)); // Reduce from 204 (CC) towards darker
-                    const g = Math.floor(42 * (1 - factor * 0.5));
-                    const b = Math.floor(54 * (1 - factor * 0.5));
-                    color = `rgb(${r}, ${g}, ${b})`;
-                }
+                const color = getPlacementColor(pendantLength);
                 container.select('circle').style('fill', color);
 
                 // Make bubble clickable - use namespaced event to avoid conflicts
