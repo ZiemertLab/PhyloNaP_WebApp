@@ -239,8 +239,8 @@
                 <th>Superfamily</th>
                 <th>Family</th>
                 <th
-                  data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
-                  Confidence<span class="header-help-icon">?</span>
+                  data-tooltip="Likelihood weight ratio (LWR): Statistical confidence of placement (range 0-1). For a query with multiple placements, all LWRs sum to 1.0. Higher values indicate more reliable placements.">
+                  Likelihood weight ratio<span class="header-help-icon">?</span>
                 </th>
                 <th
                   data-tooltip="Branch length connecting query to the reference tree. Values > 1.0 suggest distant relationships and weak functional predictions.">
@@ -506,7 +506,7 @@
           <td>${item.tree_id || "Unknown"}</td>
           <td>${item.superfamily || "Unknown"}</td>
           <td>${item.family || "Unknown"}</td>
-          <td data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+          <td data-tooltip="Likelihood weight ratio (LWR): Statistical confidence of this placement. Higher values (closer to 1.0) indicate more reliable placements.">
             ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
           </td>
           ${branchLengthCell}
@@ -539,7 +539,7 @@
             <td>${item.tree_id || "Unknown"}</td>
             <td>${item.superfamily || "Unknown"}</td>
             <td>${item.family || "Unknown"}</td>
-            <td data-tooltip="Confidence level of placement (1.0 = maximum confidence). Higher values indicate more reliable placements.">
+            <td data-tooltip="Likelihood weight ratio (LWR): Statistical confidence of this placement. Higher values (closer to 1.0) indicate more reliable placements.">
               ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
             </td>
             ${branchLengthCell}

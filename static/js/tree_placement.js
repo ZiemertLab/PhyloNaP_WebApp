@@ -68,7 +68,7 @@ function addPlacementMenuItems(tree, bubbleData) {
             ]);
 
             node.menu_items.push([
-                (n) => `Confidence: ${confidence.toFixed(4)}`,
+                (n) => `Likelihood weight ratio: ${confidence.toFixed(4)}`,
                 () => { },
                 () => true
             ]);
@@ -153,7 +153,7 @@ async function main() {
             const confidence = data.confidence;
             // Use sqrt scaling to reduce maximum size, with a cap at 8
             const size = Math.min(Math.sqrt(parseFloat(confidence)) * 5, 5);
-            console.log(`Node annotation: ${annotation}, Confidence: ${confidence}, Bubble size: ${size}`);
+            console.log(`Node annotation: ${annotation}, Likelihood weight ratio: ${confidence}, Bubble size: ${size}`);
             return size;
         } else {
             console.log(`No matching annotation for node: ${annotation}`);

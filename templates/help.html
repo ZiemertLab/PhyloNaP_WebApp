@@ -424,7 +424,9 @@
                                     <ul>
                                         <li>Placement position (clade or node)</li>
                                         <li>Branch lengths</li>
-                                        <li>Likelihood weight ratio (LWR, 0–1; sum of all LWRs is 1)</li>
+                                        <li><strong>Likelihood weight ratio (LWR)</strong>: Statistical confidence of
+                                            placement (range 0–1). For queries with multiple placements, all LWRs sum to
+                                            1.0. Higher values indicate more reliable placements.</li>
                                     </ul>
                                 </li>
 
@@ -463,7 +465,8 @@
                         style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
                     <ul class="small mt-2">
                         <li>Displays all matching datasets.</li>
-                        <li>Shows the Likelihood weight ratio of the best placement for each.</li>
+                        <li>Shows the <strong>Likelihood weight ratio (LWR)</strong>—the statistical confidence of each
+                            placement.</li>
                         <li>If a query matches multiple trees, only the placement with the shortest pendant length
                             is shown by default.</li>
                         <li>You can toggle to display all alternative placements.</li>

@@ -482,8 +482,9 @@
                         <img src="/static/images/help/results_table.png" class="img-fluid mb-2" alt="Results Table">
                         <ul class="small">
                             <li><strong>Query:</strong> Your input sequence identifier</li>
-                            <li><strong>Confidence:</strong> Placement reliability (0-1)</li>
-                            <li><strong>Branch Length:</strong> Evolutionary distance</li>
+                            <li><strong>Likelihood weight ratio (LWR):</strong> Statistical confidence of placement
+                                (0-1). Higher values indicate more reliable placements.</li>
+                            <li><strong>Branch Length:</strong> Evolutionary distance (pendant length)</li>
                             <li><strong>Family/Superfamily:</strong> Functional classification</li>
                         </ul>
                     </div>
@@ -494,7 +495,8 @@
                         <img src="/static/images/help/tree_placement.png" class="img-fluid mb-2" alt="Tree Placement">
                         <ul class="small">
                             <li><strong>Query Position:</strong> Shows where your sequence fits</li>
-                            <li><strong>Colored Branches:</strong> Highlight placement confidence</li>
+                            <li><strong>Bubble Size:</strong> Reflects likelihood weight ratio (larger = higher
+                                confidence)</li>
                             <li><strong>Annotations:</strong> Display functional context</li>
                             <li><strong>Interactive Exploration:</strong> Navigate and analyze</li>
                         </ul>
@@ -506,11 +508,12 @@
                 <h6><i class="fa fa-lightbulb"></i> Interpreting Results</h6>
                 <div class="row">
                     <div class="col-md-6">
-                        <strong>Confidence Levels:</strong>
+                        <strong>Likelihood Weight Ratio (LWR):</strong>
                         <ul>
                             <li>0.8-1.0: High confidence placement</li>
-                            <li>0.5-0.8: Moderate confidence</li>
-                            <li>&lt;0.5: Low confidence, interpret carefully</li>
+                            <li>0.5-0.8: Moderate confidence - consider alternative placements</li>
+                            <li>&lt;0.5: Low confidence - interpret with caution, likely multiple possible placements
+                            </li>
                         </ul>
                     </div>
                     <div class="col-md-6">
