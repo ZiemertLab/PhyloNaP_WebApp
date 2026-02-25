@@ -1857,14 +1857,17 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       for (let i = 0; i < sampleEntries.length; i++) {
         const item = sampleEntries[i];
 
-        if (item.MITE_ID &&
-          item.MITE_ID !== 'NaN' &&
-          item.MITE_ID !== 'nan' &&
-          item.MITE_ID !== '' &&
-          item.MITE_ID !== null) {
+        // Check both MITE_ID and mite columns
+        const miteValue = item.MITE_ID || item.mite;
+
+        if (miteValue &&
+          miteValue !== 'NaN' &&
+          miteValue !== 'nan' &&
+          miteValue !== '' &&
+          miteValue !== null) {
 
           // Handle multiple IDs separated by delimiters
-          const miteIds = item.MITE_ID.split(/[;,|]/).map(id => id.trim()).filter(id => id);
+          const miteIds = String(miteValue).split(/[;,|]/).map(id => id.trim()).filter(id => id);
 
           for (const miteId of miteIds) {
             // Check for standard reaction image patterns
@@ -2036,7 +2039,16 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     }
 
     // Use a different color palette to distinguish from clusters
-    var panbgc_colors = palette('cb-Set3', Object.keys(famGroups).length);
+    console.log('Requesting palette Set3 with', Object.keys(famGroups).length, 'colors');
+    console.log('typeof palette:', typeof palette);
+    var panbgc_colors = palette('Set3', Object.keys(famGroups).length);
+    console.log('panbgc_colors:', panbgc_colors);
+
+    if (!panbgc_colors) {
+      console.error('Failed to generate palette, falling back to tol-rainbow');
+      panbgc_colors = palette('tol-rainbow', Object.keys(famGroups).length);
+    }
+
     Object.keys(famGroups).forEach((famId, index) => {
       famGroups[famId].forEach(node => {
         let textElement = d3.select(node).select('text');
@@ -2320,9 +2332,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     //   });
     // }
 
+    console.log('Annotation object created, entries:', Object.keys(annot).length);
+    console.log('Sample annot entries:', Object.entries(annot).slice(0, 3));
+
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+    console.log('Nodes found for rendering:', nodes.size());
 
     nodes.each(function (d) {
+      console.log('Processing node:', d.data.name);
       let transformValue = d3.select(this).attr('transform');
       let match = transformValue.match(/translate\s*\(\s*([0-9.-]+)/);
       let translateValues = parseFloat(match[1]);
@@ -3484,19 +3501,27 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   // Check Reaction images and conditionally show button
   (async function () {
+    console.log('=== Starting Reaction button setup ===');
     let hasReactionImages = false;
     if (metadata && metadata.length > 0) {
+      console.log('Metadata available, checking for Reaction images...');
       hasReactionImages = await checkImagesExist(metadata, 'Reaction');
-      console.log('Checking for Reaction images:', hasReactionImages);
+      console.log('Checking for Reaction images result:', hasReactionImages);
+    } else {
+      console.log('No metadata available for Reaction check');
     }
 
     ["Reaction"].forEach(id => {
       let button = document.getElementById(id);
+      console.log('Reaction button element:', button);
 
       if (hasReactionImages && button) {
+        console.log('Setting up Reaction button with images found');
         button.dataset.active = 'false';
 
         button.addEventListener('click', function () {
+          console.log('Reaction button clicked! Active state:', button.dataset.active);
+
           if (button.dataset.active === 'false' && getNextAvailableSlot() === -1) {
             console.warn('No available slots for new columns');
             showCustomWarning(`Maximum ${maxColumns} columns reached. Remove some annotations to add new ones.`);
@@ -3504,13 +3529,18 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           }
 
           if (button.dataset.active === 'false') {
+            console.log('Attempting to render Reaction...');
             if (renderReaction()) {
+              console.log('Reaction rendered successfully');
               tree.display.spacing_x(50).update();
               button.dataset.active = 'true';
               button.classList.add('active-button');
               button.classList.remove('non-active-button');
+            } else {
+              console.log('Reaction render failed');
             }
           } else {
+            console.log('Hiding Reaction...');
             hideReaction();
             button.dataset.active = 'false';
             button.classList.remove('active-button');
@@ -3518,16 +3548,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           }
         });
 
-        // ADD THIS LINE:
-        // buttonContainer.appendChild(button);
-        console.log('Reaction button created and added');
+        console.log('Reaction button listener added successfully');
       } else {
-        console.log('Reaction images not found - button hidden');
+        console.log('Reaction images not found or button missing - button hidden. hasReactionImages:', hasReactionImages, 'button:', button);
         if (button) {
           button.style.display = 'none';
         }
       }
     });
+    console.log('=== Reaction button setup complete ===');
   })();
 
   setTimeout(function () {
