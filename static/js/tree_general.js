@@ -1269,6 +1269,60 @@ function cleanIdentifier(id, columnName) {
 }
 
 /**
+ * Build an element (DocumentFragment) for a metadata value.
+ * Turns known ID columns (HYPERLINK_CONFIG) into hyperlinks, handles raw URLs,
+ * and falls back to plain text. Handles multiple IDs separated by ; , or |.
+ * @param {string} columnName - Metadata column name (e.g. 'Uniprot_ID')
+ * @param {*} value - Cell value
+ * @returns {DocumentFragment}
+ */
+function makeLinkedValueElement(columnName, value) {
+  var strVal = String(value);
+  var fragment = document.createDocumentFragment();
+
+  // Case 1: known ID column with a URL template
+  if (HYPERLINK_CONFIG[columnName]) {
+    var template = HYPERLINK_CONFIG[columnName];
+    var ids = strVal.split(/[;,|]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    ids.forEach(function (rawId, i) {
+      var cleanId = cleanIdentifier(rawId, columnName);
+      if (cleanId) {
+        var a = document.createElement('a');
+        a.href = template.url.replace('{id}', cleanId);
+        a.target = '_blank';
+        a.textContent = cleanId;
+        a.title = template.name + ' — ' + template.description;
+        a.style.color = '#3D3D3D';
+        a.style.textDecoration = 'underline';
+        fragment.appendChild(a);
+      } else {
+        fragment.appendChild(document.createTextNode(rawId));
+      }
+      if (i < ids.length - 1) {
+        fragment.appendChild(document.createTextNode(', '));
+      }
+    });
+    return fragment;
+  }
+
+  // Case 2: raw URL value
+  if (strVal.match(/^https?:\/\//)) {
+    var a = document.createElement('a');
+    a.href = strVal;
+    a.target = '_blank';
+    a.textContent = strVal;
+    a.style.color = '#3D3D3D';
+    a.style.textDecoration = 'underline';
+    fragment.appendChild(a);
+    return fragment;
+  }
+
+  // Case 3: plain text
+  fragment.appendChild(document.createTextNode(strVal));
+  return fragment;
+}
+
+/**
  * Remove duplicate links based on ID and source
  * @param {Array} links - Array of link objects
  * @returns {Array} - Array of unique links
@@ -3680,19 +3734,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               tr.appendChild(th);
 
               var td = document.createElement('td');
-              // Check if value looks like a URL
-              var strVal = String(value);
-              if (strVal.match(/^https?:\/\//)) {
-                var a = document.createElement('a');
-                a.href = strVal;
-                a.target = '_blank';
-                a.textContent = strVal;
-                a.style.color = '#3D3D3D';
-                a.style.textDecoration = 'underline';
-                td.appendChild(a);
-              } else {
-                td.textContent = strVal;
-              }
+              td.appendChild(makeLinkedValueElement(key, value));
               tr.appendChild(td);
               table.appendChild(tr);
             });
