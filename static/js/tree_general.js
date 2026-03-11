@@ -1322,6 +1322,73 @@ function makeLinkedValueElement(columnName, value) {
   return fragment;
 }
 
+// ── Leaf highlight helpers ─────────────────────────────────────────────────────
+
+/** Inject the pulse-ring CSS animation once into <head>. */
+function injectLeafHighlightCSS() {
+  if (document.getElementById('leaf-highlight-style')) return;
+  var s = document.createElement('style');
+  s.id = 'leaf-highlight-style';
+  s.textContent = [
+    '@keyframes leafRingPulse {',
+    '  0%   { opacity: 1;    stroke-width: 2.5px; }',
+    '  50%  { opacity: 0.35; stroke-width: 6px;   }',
+    '  100% { opacity: 1;    stroke-width: 2.5px; }',
+    '}',
+    '.leaf-highlight-ring {',
+    '  animation: leafRingPulse 1.5s ease-in-out infinite;',
+    '  pointer-events: none;',
+    '}',
+    '.leaf-text-highlighted {',
+    '  font-weight: 700 !important;',
+    '  fill: #d45f00 !important;',
+    '}'
+  ].join('\n');
+  document.head.appendChild(s);
+}
+
+/**
+ * Remove all leaf highlight rings and text styling added by highlightLeafNode().
+ * Safe to call at any time.
+ */
+window.clearLeafHighlight = function () {
+  d3.selectAll('.leaf-highlight-ring').remove();
+  d3.selectAll('.leaf-text-highlighted')
+    .classed('leaf-text-highlighted', false)
+    .style('font-weight', null)
+    .style('fill', null);
+};
+
+/**
+ * Highlight a leaf node in the tree by name.
+ * Adds a pulsing orange ring inside the node's <g> element and bolds its label.
+ * Does not modify rect / panbgc coloring or placement bubbles.
+ * @param {string} leafName - The node name (matches d.data.name)
+ */
+window.highlightLeafNode = function (leafName) {
+  injectLeafHighlightCSS();
+  window.clearLeafHighlight();
+
+  d3.selectAll('.node').filter(function (d) {
+    return d.data && d.data.name === leafName;
+  }).each(function () {
+    var g = d3.select(this);
+
+    // Insert ring as first child so it renders behind existing node elements
+    g.insert('circle', ':first-child')
+      .attr('class', 'leaf-highlight-ring')
+      .attr('r', 10)
+      .attr('fill', 'none')
+      .attr('stroke', '#e85d04')   // orange – clearly distinct from red GCF / blue placements
+      .attr('stroke-width', 2.5);
+
+    // Bold + recolor the text label
+    g.selectAll('text').classed('leaf-text-highlighted', true);
+  });
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+
 /**
  * Remove duplicate links based on ID and source
  * @param {Array} links - Array of link objects
@@ -3744,6 +3811,9 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
           // Show the panel overlay
           panel.style.display = 'block';
+
+          // Highlight the leaf node in the tree
+          window.highlightLeafNode(leafName);
 
           // Scroll the details panel to top to show it
           if (detailsDiv) {

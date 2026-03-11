@@ -368,7 +368,8 @@
       <div class="panel-header">
         <h4><i class="fa fa-leaf" style="margin-right: 6px; color: #5a9e6f;"></i><span
             id="leaf-annotation-title"></span></h4>
-        <button class="close-btn" onclick="document.getElementById('leaf-annotation-panel').style.display='none';"
+        <button class="close-btn"
+          onclick="document.getElementById('leaf-annotation-panel').style.display='none'; if(window.clearLeafHighlight) window.clearLeafHighlight();"
           title="Close">&times;</button>
       </div>
       <div id="leaf-annotation-body"></div>
