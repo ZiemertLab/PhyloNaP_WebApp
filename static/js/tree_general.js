@@ -4149,41 +4149,37 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
     const maxAutoExpanded = 3;
     let autoExpandedCount = 0;
 
+    // ── Shared drag state (must live outside forEach) ──
+    let draggedElement = null;
+
     validColumns.forEach((column, index) => {
       const { key, values, uniqueValues, totalCount } = column;
 
       const columnDiv = document.createElement('div');
       columnDiv.classList.add('summary-column');
-      columnDiv.setAttribute('draggable', 'true');
       columnDiv.setAttribute('data-column-key', key);
+      columnDiv.setAttribute('draggable', 'true');
       columnDiv.style.cssText = `
-        margin-bottom: 8px;
-        border-left: 2px solid #7B1B38;
-        padding-left: 8px;
-        background-color: white;
-        border-radius: 4px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-        cursor: grab;
+        margin-bottom: 6px;
+        background: #fafafa;
+        border-radius: 6px;
+        padding: 0;
+        transition: box-shadow 0.2s, opacity 0.2s;
         position: relative;
+        overflow: hidden;
       `;
 
-      // Add drag & drop styling and functionality
-      let draggedElement = null;
-
+      // ── Drag & Drop ──
       columnDiv.addEventListener('dragstart', (e) => {
         draggedElement = columnDiv;
-        columnDiv.style.opacity = '0.6';
-        columnDiv.style.cursor = 'grabbing';
+        columnDiv.style.opacity = '0.5';
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', columnDiv.outerHTML);
+        e.dataTransfer.setData('text/plain', key);
       });
 
-      columnDiv.addEventListener('dragend', (e) => {
+      columnDiv.addEventListener('dragend', () => {
         columnDiv.style.opacity = '1';
-        columnDiv.style.cursor = 'grab';
-        columnDiv.style.transform = 'none';
-        // Remove all drag indicators
+        draggedElement = null;
         document.querySelectorAll('.summary-column').forEach(col => {
           col.style.borderTop = '';
           col.style.borderBottom = '';
@@ -4193,12 +4189,9 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       columnDiv.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-
         if (draggedElement && draggedElement !== columnDiv) {
           const rect = columnDiv.getBoundingClientRect();
           const midpoint = rect.top + rect.height / 2;
-
-          // Show drop indicator
           if (e.clientY < midpoint) {
             columnDiv.style.borderTop = '2px solid #7B1B38';
             columnDiv.style.borderBottom = '';
@@ -4210,7 +4203,6 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       });
 
       columnDiv.addEventListener('dragleave', (e) => {
-        // Only remove borders if we're really leaving the element
         const rect = columnDiv.getBoundingClientRect();
         if (e.clientX < rect.left || e.clientX > rect.right ||
           e.clientY < rect.top || e.clientY > rect.bottom) {
@@ -4221,260 +4213,192 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
 
       columnDiv.addEventListener('drop', (e) => {
         e.preventDefault();
-
         if (draggedElement && draggedElement !== columnDiv) {
           const rect = columnDiv.getBoundingClientRect();
           const midpoint = rect.top + rect.height / 2;
-
-          // Insert the dragged element
           if (e.clientY < midpoint) {
             summaryContainer.insertBefore(draggedElement, columnDiv);
           } else {
             summaryContainer.insertBefore(draggedElement, columnDiv.nextSibling);
           }
         }
-
-        // Clean up styles
         columnDiv.style.borderTop = '';
         columnDiv.style.borderBottom = '';
       });
 
-      // Create header with statistics and move controls
+      // ── Header row ──
+      const shouldExpand = (autoExpandedCount < maxAutoExpanded && uniqueValues <= 4) || uniqueValues <= 2;
+      if (shouldExpand) autoExpandedCount++;
+
       const headerDiv = document.createElement('div');
       headerDiv.style.cssText = `
         display: flex;
         align-items: center;
+        padding: 8px 10px;
         cursor: pointer;
-        padding: 4px 0;
-        border-radius: 3px;
-        transition: background-color 0.2s;
-        position: relative;
+        user-select: none;
+        gap: 6px;
+        transition: background-color 0.15s;
       `;
+      headerDiv.addEventListener('mouseenter', () => { headerDiv.style.backgroundColor = '#f0f0f0'; });
+      headerDiv.addEventListener('mouseleave', () => { headerDiv.style.backgroundColor = 'transparent'; });
 
-      // Add hover effect
-      headerDiv.addEventListener('mouseenter', () => {
-        headerDiv.style.backgroundColor = '#f5f5f5';
-      });
-      headerDiv.addEventListener('mouseleave', () => {
-        headerDiv.style.backgroundColor = 'transparent';
-      });
-
-      // Add drag handle icon
+      // Drag handle
       const dragHandle = document.createElement('span');
-      dragHandle.innerHTML = '⋮⋮'; // Vertical dots
+      dragHandle.innerHTML = '⠿';
       dragHandle.style.cssText = `
-        color: #999;
-        font-size: 16px;
-        margin-right: 6px;
+        color: #bbb;
+        font-size: 14px;
         cursor: grab;
         user-select: none;
-        line-height: 1;
-        letter-spacing: -2px;
+        flex-shrink: 0;
       `;
-      dragHandle.addEventListener('mousedown', () => {
-        dragHandle.style.cursor = 'grabbing';
-      });
-      dragHandle.addEventListener('mouseup', () => {
-        dragHandle.style.cursor = 'grab';
-      });
+      dragHandle.addEventListener('mousedown', () => { dragHandle.style.cursor = 'grabbing'; });
+      dragHandle.addEventListener('mouseup', () => { dragHandle.style.cursor = 'grab'; });
 
-      const columnTitle = document.createElement('h3');
+      // Toggle chevron
+      const toggleBtn = document.createElement('span');
+      toggleBtn.textContent = shouldExpand ? '▾' : '▸';
+      toggleBtn.style.cssText = `
+        color: #7B1B38;
+        font-size: 12px;
+        flex-shrink: 0;
+        width: 12px;
+        text-align: center;
+        transition: transform 0.2s;
+      `;
+
+      // Title
+      const columnTitle = document.createElement('span');
       columnTitle.textContent = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       columnTitle.style.cssText = `
-        font-size: 16px;
-        margin: 0;
+        font-size: 13px;
         font-weight: 600;
         color: #333;
         flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       `;
 
-      // Add statistics badge
-      const statsSpan = document.createElement('span');
-      statsSpan.textContent = `(${uniqueValues} ${uniqueValues === 1 ? 'value' : 'values'})`;
-      statsSpan.style.cssText = `
-        font-size: 12px;
-        color: #666;
-        margin-left: 6px;
-        font-weight: normal;
-      `;
-
-      // Color code based on diversity
-      if (uniqueValues <= 2) {
-        statsSpan.style.color = '#7B1B38'; // Red for most interesting (least diverse)
-        statsSpan.style.fontWeight = '500';
-      } else if (uniqueValues <= 4) {
-        statsSpan.style.color = '#f57c00'; // Orange for moderately interesting
-      }
-
-      // Add arrow buttons for manual reordering
-      const arrowContainer = document.createElement('div');
-      arrowContainer.style.cssText = `
-        display: flex;
-        flex-direction: column;
-        margin-left: 6px;
-        gap: 1px;
-      `;
-
-      const upArrow = document.createElement('button');
-      upArrow.innerHTML = '▲';
-      upArrow.style.cssText = `
-        background: none;
-        border: none;
-        color: #7B1B38;
-        cursor: pointer;
+      // Stats badge
+      const statsBadge = document.createElement('span');
+      statsBadge.textContent = `${uniqueValues}`;
+      statsBadge.title = `${uniqueValues} unique ${uniqueValues === 1 ? 'value' : 'values'} across ${totalCount} entries`;
+      let badgeBg = '#999';
+      if (uniqueValues <= 2) badgeBg = '#7B1B38';
+      else if (uniqueValues <= 4) badgeBg = '#c46a1a';
+      statsBadge.style.cssText = `
+        background: ${badgeBg};
+        color: #fff;
         font-size: 10px;
-        padding: 1px 3px;
-        border-radius: 2px;
-        transition: background-color 0.2s;
-        line-height: 1;
-      `;
-      upArrow.addEventListener('mouseenter', () => upArrow.style.backgroundColor = '#e8e8e8');
-
-      upArrow.addEventListener('mouseleave', () => upArrow.style.backgroundColor = 'transparent');
-      upArrow.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const prevSibling = columnDiv.previousElementSibling;
-        if (prevSibling && prevSibling.classList.contains('summary-column')) {
-          summaryContainer.insertBefore(columnDiv, prevSibling);
-        }
-      });
-
-      const downArrow = document.createElement('button');
-      downArrow.innerHTML = '▼';
-      downArrow.style.cssText = `
-        background: none;
-        border: none;
-        color: #7B1B38;
-        cursor: pointer;
-        font-size: 10px;
-        padding: 1px 3px;
-        border-radius: 2px;
-        transition: background-color 0.2s;
-        line-height: 1;
-      `;
-      downArrow.addEventListener('mouseenter', () => downArrow.style.backgroundColor = '#e8e8e8');
-      downArrow.addEventListener('mouseleave', () => downArrow.style.backgroundColor = 'transparent');
-      downArrow.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const nextSibling = columnDiv.nextElementSibling;
-        if (nextSibling && nextSibling.classList.contains('summary-column')) {
-          summaryContainer.insertBefore(nextSibling, columnDiv);
-        }
-      });
-
-      arrowContainer.appendChild(upArrow);
-      arrowContainer.appendChild(downArrow);
-
-      // Create toggle button
-      const shouldExpand = (autoExpandedCount < maxAutoExpanded && uniqueValues <= 4) || uniqueValues <= 2;
-      if (shouldExpand) autoExpandedCount++;
-
-      const toggleButton = document.createElement('button');
-      toggleButton.innerHTML = shouldExpand ? '&#9660;' : '&#9654;'; // Down or right arrow
-      toggleButton.classList.add('toggle-button');
-      toggleButton.style.cssText = `
-        background: none;
-        border: none;
-        font-size: 14px;
-        color: #7B1B38;
-        cursor: pointer;
-        padding: 2px 4px;
-        border-radius: 3px;
-        transition: background-color 0.2s;
-        margin-left: 4px;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 10px;
+        min-width: 18px;
+        text-align: center;
+        flex-shrink: 0;
       `;
 
-      // Toggle button hover effect
-      toggleButton.addEventListener('mouseenter', () => {
-        toggleButton.style.backgroundColor = '#e8e8e8';
-      });
-      toggleButton.addEventListener('mouseleave', () => {
-        toggleButton.style.backgroundColor = 'transparent';
-      });
-
-      // Assemble header
       headerDiv.appendChild(dragHandle);
+      headerDiv.appendChild(toggleBtn);
       headerDiv.appendChild(columnTitle);
-      headerDiv.appendChild(statsSpan);
-      headerDiv.appendChild(arrowContainer);
-      headerDiv.appendChild(toggleButton);
+      headerDiv.appendChild(statsBadge);
       columnDiv.appendChild(headerDiv);
 
-      // Create content div
+      // ── Content (value list with proportional bars) ──
       const contentDiv = document.createElement('div');
       contentDiv.classList.add('content');
-      contentDiv.style.display = shouldExpand ? 'block' : 'none';
-      contentDiv.style.marginTop = '8px';
+      contentDiv.style.cssText = `
+        display: ${shouldExpand ? 'block' : 'none'};
+        padding: 0 10px 8px 10px;
+      `;
 
-      // Sort values by count (descending) for better readability
       const sortedValues = Object.entries(values).sort(([, a], [, b]) => b - a);
+      const maxCount = sortedValues.length > 0 ? sortedValues[0][1] : 1;
 
       sortedValues.forEach(([value, count]) => {
-        const valueDiv = document.createElement('div');
-        valueDiv.classList.add('value-entry');
-        valueDiv.style.cssText = `
+        const row = document.createElement('div');
+        row.style.cssText = `
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          padding: 2px 6px;
-          margin: 1px 0;
-          background-color: #f8f9fa;
-          border-radius: 3px;
-          font-size: 13px;
+          gap: 8px;
+          padding: 3px 0;
+          font-size: 12px;
         `;
 
-        const valueSpan = document.createElement('span');
-        valueSpan.textContent = value || '(empty)';
-        valueSpan.style.color = '#333';
-        // valueSpan.style.fontWeight = '500';
-        valueSpan.style.cssText = `
-          color: #333;
-          font-weight: 500;
-          max-width: 60%;
+        // Proportional bar
+        const barWrap = document.createElement('div');
+        barWrap.style.cssText = `
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        `;
+
+        const label = document.createElement('span');
+        label.textContent = value || '(empty)';
+        label.title = value || '(empty)';
+        label.style.cssText = `
+          color: #444;
+          white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          white-space: nowrap;
+          max-width: 55%;
+          flex-shrink: 0;
         `;
 
+        const barOuter = document.createElement('div');
+        barOuter.style.cssText = `
+          flex: 1;
+          height: 4px;
+          background: #e8e8e8;
+          border-radius: 2px;
+          overflow: hidden;
+          min-width: 20px;
+        `;
+
+        const barInner = document.createElement('div');
+        const pct = Math.round((count / maxCount) * 100);
+        barInner.style.cssText = `
+          height: 100%;
+          width: ${pct}%;
+          background: #7B1B38;
+          border-radius: 2px;
+          transition: width 0.3s ease;
+        `;
+        barOuter.appendChild(barInner);
+
+        barWrap.appendChild(label);
+        barWrap.appendChild(barOuter);
+
+        // Count
         const countSpan = document.createElement('span');
         countSpan.textContent = count;
         countSpan.style.cssText = `
-          background-color: #7B1B38;
-          color: white;
-          padding: 1px 4px;
-          border-radius: 6px;
+          color: #888;
           font-size: 11px;
           font-weight: 600;
-          min-width: 16px;
-          text-align: center;
+          min-width: 20px;
+          text-align: right;
+          flex-shrink: 0;
         `;
 
-        valueDiv.appendChild(valueSpan);
-        valueDiv.appendChild(countSpan);
-        contentDiv.appendChild(valueDiv);
+        row.appendChild(barWrap);
+        row.appendChild(countSpan);
+        contentDiv.appendChild(row);
       });
 
-      // Toggle functionality
+      // ── Toggle ──
       const toggleContent = () => {
-        if (contentDiv.style.display === 'none') {
-          contentDiv.style.display = 'block';
-          toggleButton.innerHTML = '&#9660;'; // Down arrow
-        } else {
-          contentDiv.style.display = 'none';
-          toggleButton.innerHTML = '&#9654;'; // Right arrow
-        }
+        const isHidden = contentDiv.style.display === 'none';
+        contentDiv.style.display = isHidden ? 'block' : 'none';
+        toggleBtn.textContent = isHidden ? '▾' : '▸';
       };
 
       headerDiv.addEventListener('click', (e) => {
-        // Don't toggle if clicking on drag handle or arrow buttons
-        if (e.target === dragHandle || e.target === upArrow || e.target === downArrow) {
-          return;
-        }
-        toggleContent();
-      });
-
-      toggleButton.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent double toggle
+        if (e.target === dragHandle) return;
         toggleContent();
       });
 
@@ -4482,19 +4406,16 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       summaryContainer.appendChild(columnDiv);
     });
 
-    // Add a summary footer if there are many columns
+    // Footer hint when many columns
     if (validColumns.length > 5) {
       const footerDiv = document.createElement('div');
       footerDiv.style.cssText = `
-        margin-top: 12px;
-        padding: 6px;
-        background-color: #f0f0f0;
-        border-radius: 4px;
-        font-size: 12px;
-        color: #666;
+        margin-top: 8px;
+        font-size: 11px;
+        color: #999;
         text-align: center;
       `;
-      footerDiv.textContent = `Showing ${validColumns.length} metadata columns • Drag cards to reorder or use ▲▼ arrows`;
+      footerDiv.textContent = `${validColumns.length} metadata fields · drag to reorder`;
       summaryContainer.appendChild(footerDiv);
     }
   } else {
