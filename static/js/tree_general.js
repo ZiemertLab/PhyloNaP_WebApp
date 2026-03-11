@@ -3559,6 +3559,162 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     console.log('=== Reaction button setup complete ===');
   })();
 
+  // === ADD LEAF NODE CONTEXT MENU ITEMS ===
+  // "Download sequence" and "Show annotations" for leaf nodes
+  (function addLeafContextMenuItems() {
+    console.log('=== Setting up leaf node context menu items ===');
+
+    // Build a lookup from metadata: { ID -> {col1: val1, col2: val2, ...} }
+    const metadataById = {};
+    if (metadata && Array.isArray(metadata)) {
+      metadata.forEach(function (row) {
+        if (row.ID) {
+          metadataById[row.ID] = row;
+        }
+      });
+    }
+
+    // Get the dataset ID for sequence download
+    const url = window.location.href;
+    let datasetId = null;
+    const treeIdMatch = url.match(/[?&]treeId=([^&]+)/);
+    if (treeIdMatch) datasetId = treeIdMatch[1];
+    if (!datasetId) {
+      const dsMatch = url.match(/[?&]dataset_id=([^&]+)/);
+      if (dsMatch) datasetId = dsMatch[1];
+    }
+
+    // Traverse all leaf nodes and add custom menu items
+    var leafNodes = tree.getTips();
+    leafNodes.forEach(function (node) {
+      if (!node.menu_items) {
+        node.menu_items = [];
+      }
+
+      // Separator
+      node.menu_items.push([
+        function () { return '━━━ Leaf Actions ━━━'; },
+        function () { },
+        function () { return true; }
+      ]);
+
+      // "Download sequence" menu item
+      node.menu_items.push([
+        function (n) { return '⬇ Download sequence'; },
+        function (n) {
+          const leafName = n.data ? n.data.name : n.name;
+          if (!datasetId) {
+            alert('Dataset ID not found — cannot download sequence.');
+            return;
+          }
+          // Fetch single sequence from the backend
+          const fetchUrl = '/api/sequence/' + encodeURIComponent(datasetId) + '/' + encodeURIComponent(leafName);
+          fetch(fetchUrl)
+            .then(function (resp) {
+              if (!resp.ok) {
+                return resp.json().then(function (data) {
+                  throw new Error(data.error || 'Failed to retrieve sequence');
+                });
+              }
+              return resp.text();
+            })
+            .then(function (fastaContent) {
+              // Trigger download as file
+              var blob = new Blob([fastaContent], { type: 'text/plain' });
+              var downloadUrl = window.URL.createObjectURL(blob);
+              var a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = leafName + '.fasta';
+              a.style.display = 'none';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(downloadUrl);
+            })
+            .catch(function (err) {
+              alert('Could not download sequence: ' + err.message);
+            });
+        },
+        function () { return !!datasetId; }
+      ]);
+
+      // "Show annotations" menu item
+      node.menu_items.push([
+        function (n) { return '📋 Show annotations'; },
+        function (n) {
+          var leafName = n.data ? n.data.name : n.name;
+          var rowData = metadataById[leafName];
+
+          // Build the annotation panel content
+          var panel = document.getElementById('leaf-annotation-panel');
+          var panelBody = document.getElementById('leaf-annotation-body');
+          var panelTitle = document.getElementById('leaf-annotation-title');
+          var detailsDiv = document.querySelector('.details');
+
+          if (!panel) {
+            console.error('leaf-annotation-panel not found in DOM');
+            return;
+          }
+
+          // Set title
+          panelTitle.textContent = leafName;
+
+          // Clear previous content
+          panelBody.innerHTML = '';
+
+          if (!rowData) {
+            panelBody.innerHTML = '<p style="color: #6c757d; font-style: italic;">No annotation data available for this sequence.</p>';
+          } else {
+            // Build a nice table of annotations
+            var table = document.createElement('table');
+            table.className = 'leaf-annotation-table';
+
+            Object.keys(rowData).forEach(function (key) {
+              var value = rowData[key];
+              if (value === null || value === undefined || value === '' || value === 'N/A' || value === 'nan') return;
+
+              var tr = document.createElement('tr');
+
+              var th = document.createElement('th');
+              th.textContent = key.replace(/_/g, ' ');
+              tr.appendChild(th);
+
+              var td = document.createElement('td');
+              // Check if value looks like a URL
+              var strVal = String(value);
+              if (strVal.match(/^https?:\/\//)) {
+                var a = document.createElement('a');
+                a.href = strVal;
+                a.target = '_blank';
+                a.textContent = strVal;
+                a.style.color = '#3D3D3D';
+                a.style.textDecoration = 'underline';
+                td.appendChild(a);
+              } else {
+                td.textContent = strVal;
+              }
+              tr.appendChild(td);
+              table.appendChild(tr);
+            });
+
+            panelBody.appendChild(table);
+          }
+
+          // Show the panel overlay
+          panel.style.display = 'block';
+
+          // Scroll the details panel to top to show it
+          if (detailsDiv) {
+            detailsDiv.scrollTop = 0;
+          }
+        },
+        function () { return true; }
+      ]);
+    });
+
+    console.log('=== Leaf node context menu items added ===');
+  })();
+
   setTimeout(function () {
     // Initialize external links with the metadata we already have
     console.log('Initializing external links with metadata from addImagesAndMetadata');

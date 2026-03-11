@@ -752,6 +752,54 @@ def register_routes(app):
             app.logger.error(f"Error downloading sequences for {dataset_id}: {e}")
             return "Download error", 500
 
+    @app.route('/api/sequence/<dataset_id>/<leaf_id>')
+    def get_single_sequence(dataset_id, leaf_id):
+        """Return a single sequence from a dataset's FASTA file by leaf/sequence ID."""
+        try:
+            from .db import get_dataset_by_id
+
+            dataset = get_dataset_by_id(dataset_id)
+            if not dataset:
+                return jsonify({"error": "Dataset not found"}), 404
+
+            # Try sequences file first, then alignment
+            fasta_file = dataset.get('sequences', '') or dataset.get('alignment', '')
+            if not fasta_file:
+                return jsonify({"error": "No sequence file available for this dataset"}), 404
+
+            database_dir = app.config['DATABASE_DIR']
+            fasta_path = os.path.join(database_dir, fasta_file)
+
+            if not os.path.exists(fasta_path):
+                return jsonify({"error": "Sequence file not found on server"}), 404
+
+            # Parse FASTA and find the matching sequence
+            found_record = None
+            fasta_io = open(fasta_path, 'r')
+            try:
+                for record in SeqIO.parse(fasta_io, "fasta"):
+                    if record.id == leaf_id or record.name == leaf_id or record.description.startswith(leaf_id):
+                        found_record = record
+                        break
+            finally:
+                fasta_io.close()
+
+            if not found_record:
+                return jsonify({"error": f"Sequence '{leaf_id}' not found in dataset"}), 404
+
+            # Return as FASTA
+            fasta_content = f">{found_record.description}\n{str(found_record.seq)}\n"
+
+            from flask import make_response
+            response = make_response(fasta_content)
+            response.headers['Content-Disposition'] = f'attachment; filename={leaf_id}.fasta'
+            response.headers['Content-Type'] = 'text/plain'
+            return response
+
+        except Exception as e:
+            app.logger.error(f"Error getting sequence {leaf_id} from {dataset_id}: {e}")
+            return jsonify({"error": "Server error retrieving sequence"}), 500
+
     # User data download routes (for view page uploaded data)
     @app.route('/download/user/tree/<session_id>')
     def download_user_tree(session_id):
@@ -1579,7 +1627,7 @@ def process_job(job_id, filename, app):
             # '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
-            'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+            'sashakorenskaia/phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
