@@ -3809,16 +3809,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             panelBody.appendChild(table);
           }
 
-          // Show the panel overlay
+          // Show the panel inline (card style)
           panel.style.display = 'block';
 
           // Highlight the leaf node in the tree
           window.highlightLeafNode(leafName);
 
-          // Scroll the details panel to top to show it
-          if (detailsDiv) {
-            detailsDiv.scrollTop = 0;
-          }
+          // Scroll the leaf annotation panel into view smoothly
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         },
         function () { return true; }
       ]);
@@ -4094,6 +4092,7 @@ const getMetadataSummary = function (filteredTable) {
 const displayMetadataSummary = function (summary, showPlacementHeader = false) {
   const summaryContainer = document.getElementById('summary-container');
   const metadataHeading = document.getElementById('metadata-summary-heading');
+  const metadataSummaryCard = document.getElementById('metadata-summary-card');
 
   if (summaryContainer) {
     summaryContainer.innerHTML = ''; // Clear previous content
@@ -4120,11 +4119,13 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       }
     }
 
-    // Show the heading only if we have valid content
-    if (metadataHeading && validColumns.length > 0) {
-      metadataHeading.style.display = 'block';
-    } else if (metadataHeading) {
-      metadataHeading.style.display = 'none';
+    // Show the heading and card only if we have valid content
+    if (validColumns.length > 0) {
+      if (metadataHeading) metadataHeading.style.display = 'block';
+      if (metadataSummaryCard) metadataSummaryCard.style.display = 'block';
+    } else {
+      if (metadataHeading) metadataHeading.style.display = 'none';
+      if (metadataSummaryCard) metadataSummaryCard.style.display = 'none';
       return; // Exit early if no valid columns
     }
 
