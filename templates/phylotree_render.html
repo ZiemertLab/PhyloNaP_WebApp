@@ -164,14 +164,14 @@
     .section-card {
       background: #fff;
       border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
       padding: 16px 18px;
       margin-bottom: 14px;
       transition: box-shadow 0.2s;
     }
 
     .section-card:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
     }
 
     .section-heading {
@@ -194,9 +194,20 @@
     }
 
     @keyframes leafCardHighlight {
-      0%   { box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12); border-left-color: #e85d04; }
-      50%  { box-shadow: 0 2px 12px rgba(232, 93, 4, 0.25); border-left-color: #d45f00; }
-      100% { box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12); border-left-color: #e85d04; }
+      0% {
+        box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12);
+        border-left-color: #e85d04;
+      }
+
+      50% {
+        box-shadow: 0 2px 12px rgba(232, 93, 4, 0.25);
+        border-left-color: #d45f00;
+      }
+
+      100% {
+        box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12);
+        border-left-color: #e85d04;
+      }
     }
 
     #leaf-annotation-panel .panel-header {
@@ -271,6 +282,7 @@
       padding: 5px 12px;
       transition: background 0.15s, transform 0.1s;
     }
+
     .details .btn.non-active-button:hover {
       transform: translateY(-1px);
     }
@@ -378,8 +390,10 @@
         <p id="description" style="font-size: 13px; color: #666; margin: 0; line-height: 1.5;">Loading description…</p>
 
         {% if source == 'curated' and cite %}
-        <div id="cite" style="margin-top: 12px; padding: 10px 14px; background: #fafafa; border-left: 3px solid #7B1B38; border-radius: 4px; font-size: 13px; line-height: 1.5;">
-          <span style="font-weight: 600; color: #7B1B38; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;">Citation</span>
+        <div id="cite"
+          style="margin-top: 12px; padding: 10px 14px; background: #fafafa; border-left: 3px solid #7B1B38; border-radius: 4px; font-size: 13px; line-height: 1.5;">
+          <span
+            style="font-weight: 600; color: #7B1B38; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;">Citation</span>
           {% if cite.name %}
           <div style="margin-top: 6px; color: #555;">
             <span style="font-weight: 600;">Authors:</span> {{ cite.name }}
@@ -389,11 +403,18 @@
           <div style="margin-top: 4px;">
             <span style="font-weight: 600; color: #555;">DOI:</span>
             {% if cite.doi.startswith('DOI: ') %}
-            <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
+            <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank"
+              style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
             {% elif cite.doi.startswith('http') %}
-            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
+            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
             {% else %}
-            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">DOI: {{ cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
+            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">DOI: {{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
             {% endif %}
           </div>
           {% endif %}
@@ -457,9 +478,11 @@
 
       <!-- ===== External Links ===== -->
       <div class="section-card external-links-section">
-        <h4 id="external-links-heading" class="section-heading" style="cursor: pointer; display: flex; align-items: center; user-select: none; margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+        <h4 id="external-links-heading" class="section-heading"
+          style="cursor: pointer; display: flex; align-items: center; user-select: none; margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
           External Links
-          <span id="external-links-toggle" style="margin-left: 8px; font-size: 12px; transition: transform 0.2s ease;">▼</span>
+          <span id="external-links-toggle"
+            style="margin-left: 8px; font-size: 12px; transition: transform 0.2s ease;">▼</span>
         </h4>
         <div id="hyperlink-container" style="margin-top: 8px;"></div>
       </div>
