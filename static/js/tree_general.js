@@ -1674,6 +1674,44 @@ window.showLargeImageOverlay = function (imageSrc, bgcId, nodeId) {
   // Add to page
   document.body.appendChild(overlay);
 };
+/**
+ * Truncate an SVG <text> element with "..." and add click-to-expand.
+ * @param {d3.Selection} textEl - A d3-selected SVG <text> element
+ * @param {string} fullText - The complete annotation string
+ * @param {number} maxChars - Maximum characters before truncation (default 30)
+ */
+function applyTruncation(textEl, fullText, maxChars) {
+  if (maxChars === undefined) maxChars = 30;
+  if (!fullText || fullText.length <= maxChars) {
+    textEl.text(fullText || '');
+    return;
+  }
+  // Start truncated
+  var truncated = fullText.substring(0, maxChars) + '…';
+  textEl.text(truncated);
+  textEl.attr('data-full-text', fullText);
+  textEl.attr('data-truncated', 'true');
+  textEl.style('cursor', 'pointer');
+  textEl.append('title').text(fullText + '\n\nClick to expand / collapse');
+
+  textEl.on('click.truncation', function (event) {
+    event.stopPropagation();
+    var el = d3.select(this);
+    var isTruncated = el.attr('data-truncated') === 'true';
+    // Remove existing title
+    el.select('title').remove();
+    if (isTruncated) {
+      el.text(fullText);
+      el.attr('data-truncated', 'false');
+      el.append('title').text('Click to collapse');
+    } else {
+      el.text(truncated);
+      el.attr('data-truncated', 'true');
+      el.append('title').text(fullText + '\n\nClick to expand');
+    }
+  });
+}
+
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   let activeColoringButton = null; // Track which coloring button is currently active
@@ -3057,10 +3095,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               .attr('data-slot', slotIndex)
               .attr('fill', '#3D3D3D')
               .style('cursor', 'pointer')
-              .style('text-decoration', 'underline') // **NEW**: Make it look like a link
-              .text(linkTexts);
+              .style('text-decoration', 'underline');
+            // For hyperlinks: truncate visually but keep click for opening links
+            if (linkTexts.length > 30) {
+              textElement.text(linkTexts.substring(0, 30) + '\u2026');
+            } else {
+              textElement.text(linkTexts);
+            }
 
-            // **NEW**: Add click handler for hyperlinks
+            // Add click handler for hyperlinks
             textElement.on('click', function () {
               if (ids.length === 1) {
                 // Single link - open directly
@@ -3101,10 +3144,11 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               }
             });
 
-            // **NEW**: Add tooltip
+            // Add tooltip (includes full text when truncated)
+            const tooltipPrefix = linkTexts.length > 30 ? linkTexts + '\n\n' : '';
             const tooltipText = ids.length === 1
-              ? `Click to open ${template.name}: ${template.url.replace('{id}', cleanIdentifier(ids[0], columnName))}`
-              : `${ids.length} ${template.name} links found. Click for options.`;
+              ? `${tooltipPrefix}Click to open ${template.name}: ${template.url.replace('{id}', cleanIdentifier(ids[0], columnName))}`
+              : `${tooltipPrefix}${ids.length} ${template.name} links found. Click for options.`;
 
             textElement.append('title').text(tooltipText);
 
@@ -3115,27 +3159,16 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             // let textElement = d3.select(this).append('text').attr('x', 200+activeColumns*200+translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize);
             // let textElement = d3.select(this).append('text').attr('x', activeColumns*200-translateValues).attr('y', 0).attr('class', columnName).attr("font-size", leaveFontSize).attr("debugging", translateValues);
             let textElement = d3.select(this).append('text')
-              // .attr('x', 200 + slotIndex * 200 - translateValues) // Use slotIndex
               .attr('x', (d) => {
-
                 return getColumnStartX() + slotIndex * 200 - translateValues;
-
               })
               .attr('y', 0)
               .attr('class', columnName)
               .attr("font-size", leaveFontSize)
               .attr("debugging", translateValues)
-              .attr('data-slot', slotIndex); // Add slot tracking
+              .attr('data-slot', slotIndex);
 
-            if (text.length > 80) {
-              let firstLine = text.substring(0, 80);
-              let secondLine = text.substring(80);
-
-              textElement.append('tspan').text(firstLine);
-              textElement.append('tspan').attr('x', 400).attr('dy', '1em').text(secondLine);
-            } else {
-              textElement.text(text);
-            }
+            applyTruncation(textElement, text, 30);
           }
         }
       });
@@ -3328,15 +3361,9 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               .style('cursor', 'pointer')
               .style('text-decoration', 'underline');
 
-            // Handle long text
-            if (linkTexts.length > 80) {
-              let firstLine = linkTexts.substring(0, 80);
-              let secondLine = linkTexts.substring(80);
-              textElement.append('tspan').text(firstLine);
-              textElement.append('tspan')
-                .attr('x', getColumnStartX() + slotIndex * 200 - translateValues)
-                .attr('dy', '1em')
-                .text(secondLine);
+            // For external links: truncate visually but keep click for opening links
+            if (linkTexts.length > 30) {
+              textElement.text(linkTexts.substring(0, 30) + '\u2026');
             } else {
               textElement.text(linkTexts);
             }
@@ -3348,13 +3375,13 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               }
             });
 
-            // Add tooltip for multiple links
+            // Add tooltip showing full text + link info
             if (links.length > 1) {
               textElement.append('title').text(
-                `${links.length} links: ${links.map(l => l.id).join(', ')}\nClick to open first link`
+                `${links.map(l => l.id).join(', ')}\n${links.length} links \u2013 click to open first`
               );
             } else {
-              textElement.append('title').text(`Click to open: ${links[0].url}`);
+              textElement.append('title').text(`${linkTexts}\nClick to open: ${links[0].url}`);
             }
           }
         });
