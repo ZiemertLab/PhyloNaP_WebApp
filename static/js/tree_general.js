@@ -4314,6 +4314,10 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         padding: 0 10px 8px 10px;
       `;
 
+      // Track labels for expand-all toggle
+      const labelElements = [];
+      let allExpanded = false;
+
       const sortedValues = Object.entries(values).sort(([, a], [, b]) => b - a);
       const maxCount = sortedValues.length > 0 ? sortedValues[0][1] : 1;
 
@@ -4339,7 +4343,9 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
 
         const label = document.createElement('span');
         label.textContent = value || '(empty)';
-        label.title = value || '(empty)';
+        label.title = 'Click to expand';
+        label._fullText = value || '(empty)';
+        label._truncated = true;
         label.style.cssText = `
           color: #444;
           white-space: nowrap;
@@ -4347,7 +4353,33 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
           text-overflow: ellipsis;
           max-width: 55%;
           flex-shrink: 0;
+          cursor: pointer;
+          transition: max-width 0.2s ease;
         `;
+
+        // Click to toggle expand/collapse on individual row
+        label.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (label._truncated) {
+            label.style.whiteSpace = 'normal';
+            label.style.overflow = 'visible';
+            label.style.textOverflow = 'unset';
+            label.style.maxWidth = '100%';
+            label.style.wordBreak = 'break-word';
+            label.title = 'Click to collapse';
+            label._truncated = false;
+          } else {
+            label.style.whiteSpace = 'nowrap';
+            label.style.overflow = 'hidden';
+            label.style.textOverflow = 'ellipsis';
+            label.style.maxWidth = '55%';
+            label.style.wordBreak = 'normal';
+            label.title = 'Click to expand';
+            label._truncated = true;
+          }
+        });
+
+        labelElements.push(label);
 
         const barOuter = document.createElement('div');
         barOuter.style.cssText = `
@@ -4389,6 +4421,49 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
         row.appendChild(countSpan);
         contentDiv.appendChild(row);
       });
+
+      // "Expand all / Collapse all" link (only if there are labels that could overflow)
+      if (sortedValues.some(([v]) => (v || '').length > 20)) {
+        const expandAllLink = document.createElement('span');
+        expandAllLink.textContent = 'expand all';
+        expandAllLink.style.cssText = `
+          display: inline-block;
+          margin-top: 4px;
+          font-size: 10px;
+          color: #7B1B38;
+          cursor: pointer;
+          user-select: none;
+          opacity: 0.7;
+          transition: opacity 0.15s;
+        `;
+        expandAllLink.addEventListener('mouseenter', () => { expandAllLink.style.opacity = '1'; });
+        expandAllLink.addEventListener('mouseleave', () => { expandAllLink.style.opacity = '0.7'; });
+        expandAllLink.addEventListener('click', (e) => {
+          e.stopPropagation();
+          allExpanded = !allExpanded;
+          labelElements.forEach(lbl => {
+            if (allExpanded) {
+              lbl.style.whiteSpace = 'normal';
+              lbl.style.overflow = 'visible';
+              lbl.style.textOverflow = 'unset';
+              lbl.style.maxWidth = '100%';
+              lbl.style.wordBreak = 'break-word';
+              lbl.title = 'Click to collapse';
+              lbl._truncated = false;
+            } else {
+              lbl.style.whiteSpace = 'nowrap';
+              lbl.style.overflow = 'hidden';
+              lbl.style.textOverflow = 'ellipsis';
+              lbl.style.maxWidth = '55%';
+              lbl.style.wordBreak = 'normal';
+              lbl.title = 'Click to expand';
+              lbl._truncated = true;
+            }
+          });
+          expandAllLink.textContent = allExpanded ? 'collapse all' : 'expand all';
+        });
+        contentDiv.appendChild(expandAllLink);
+      }
 
       // ── Toggle ──
       const toggleContent = () => {
