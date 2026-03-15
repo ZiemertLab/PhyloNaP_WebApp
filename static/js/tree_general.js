@@ -3752,7 +3752,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             alert('Dataset ID not found — cannot download sequence.');
             return;
           }
-          // Fetch single sequence from the backend
+          // Fetch single sequence and show in preview
           const fetchUrl = '/api/sequence/' + encodeURIComponent(datasetId) + '/' + encodeURIComponent(leafName);
           fetch(fetchUrl)
             .then(function (resp) {
@@ -3764,23 +3764,37 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               return resp.text();
             })
             .then(function (fastaContent) {
-              // Trigger download as file
-              var blob = new Blob([fastaContent], { type: 'text/plain' });
-              var downloadUrl = window.URL.createObjectURL(blob);
-              var a = document.createElement('a');
-              a.href = downloadUrl;
-              a.download = leafName + '.fasta';
-              a.style.display = 'none';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(downloadUrl);
+              window.showDownloadPreview(
+                'Sequence: ' + leafName,
+                fastaContent,
+                leafName + '.fasta'
+              );
             })
             .catch(function (err) {
               alert('Could not download sequence: ' + err.message);
             });
         },
         function () { return !!datasetId; }
+      ]);
+
+      // "Download annotations (.tsv)" menu item for single leaf
+      node.menu_items.push([
+        function (n) { return '📥 Download annotations (.tsv)'; },
+        function (n) {
+          var leafName = n.data ? n.data.name : n.name;
+          var rowData = metadataById[leafName];
+          if (!rowData) {
+            alert('No annotation data available for ' + leafName);
+            return;
+          }
+          var tsv = window.buildMetadataTSV([rowData]);
+          window.showDownloadPreview(
+            'Annotations: ' + leafName,
+            tsv,
+            leafName + '_annotations.tsv'
+          );
+        },
+        function () { return true; }
       ]);
 
       // "Show annotations" menu item
@@ -3873,6 +3887,33 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     removePanBGCColors(); // clear existing PanBGC rects
     var nodeFilter = new Set(event.detail);
     colorSamePanBGC(nodeFilter);
+  });
+
+  // Listen for clade download events
+  document.addEventListener('downloadCladeAnnotations', function (event) {
+    var leafNames = event.detail;
+    var rows = metadata.filter(function (row) { return leafNames.indexOf(row.ID) !== -1; });
+    if (rows.length === 0) {
+      alert('No annotation data found for this clade.');
+      return;
+    }
+    var tsv = window.buildMetadataTSV(rows);
+    window.showDownloadPreview(
+      'Clade Annotations (' + rows.length + ' entries)',
+      tsv,
+      'clade_annotations.tsv'
+    );
+  });
+
+  document.addEventListener('downloadCladeSequences', function (event) {
+    var leafNames = event.detail;
+    // Determine dataset ID from URL
+    var url = window.location.href;
+    var datasetId = null;
+    var m = url.match(/[?&]treeId=([^&]+)/);
+    if (m) datasetId = m[1];
+    if (!datasetId) { m = url.match(/[?&]dataset_id=([^&]+)/); if (m) datasetId = m[1]; }
+    window.fetchAndPreviewSequences(datasetId, leafNames, 'Clade Sequences (' + leafNames.length + ' entries)');
   });
 }
 
@@ -4077,6 +4118,96 @@ window.addEventListener("terminalNodesSelected", function (event) {
   const terminal_nodes = event.detail;
   window.processTerminalNodes(terminal_nodes);
 });
+
+// ─── Download Preview Overlay ───────────────────────────────────────────────
+// Shows a modal with text content (FASTA / TSV) the user can copy or download.
+window.showDownloadPreview = function (title, content, filename) {
+  var overlay = document.getElementById('download-preview-overlay');
+  var titleEl = document.getElementById('download-preview-title');
+  var contentEl = document.getElementById('download-preview-content');
+  var closeBtn = document.getElementById('download-preview-close');
+  var copyBtn = document.getElementById('download-preview-copy');
+  var dlBtn = document.getElementById('download-preview-download');
+
+  if (!overlay) { console.error('download-preview-overlay not found'); return; }
+
+  titleEl.textContent = title;
+  contentEl.textContent = content;
+  overlay.style.display = 'flex';
+
+  // Clone buttons to remove old listeners
+  var newClose = closeBtn.cloneNode(true);
+  closeBtn.parentNode.replaceChild(newClose, closeBtn);
+  var newCopy = copyBtn.cloneNode(true);
+  copyBtn.parentNode.replaceChild(newCopy, copyBtn);
+  var newDl = dlBtn.cloneNode(true);
+  dlBtn.parentNode.replaceChild(newDl, dlBtn);
+
+  function closeOverlay() { overlay.style.display = 'none'; }
+
+  newClose.addEventListener('click', closeOverlay);
+  overlay.addEventListener('click', function handler(e) {
+    if (e.target === overlay) { closeOverlay(); overlay.removeEventListener('click', handler); }
+  });
+
+  newCopy.addEventListener('click', function () {
+    navigator.clipboard.writeText(content).then(function () {
+      newCopy.textContent = 'Copied!';
+      setTimeout(function () { newCopy.textContent = 'Copy to clipboard'; }, 1500);
+    });
+  });
+
+  newDl.addEventListener('click', function () {
+    var blob = new Blob([content], { type: 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  });
+
+  // Escape key
+  function escHandler(e) {
+    if (e.key === 'Escape') { closeOverlay(); document.removeEventListener('keydown', escHandler); }
+  }
+  document.addEventListener('keydown', escHandler);
+};
+
+// Build TSV string from an array of metadata row objects
+window.buildMetadataTSV = function (rows) {
+  if (!rows || rows.length === 0) return '';
+  var cols = Object.keys(rows[0]);
+  var lines = [cols.join('\t')];
+  rows.forEach(function (row) {
+    lines.push(cols.map(function (c) {
+      var v = row[c];
+      return (v === null || v === undefined) ? '' : String(v);
+    }).join('\t'));
+  });
+  return lines.join('\n') + '\n';
+};
+
+// Fetch bulk sequences and show in preview
+window.fetchAndPreviewSequences = function (datasetId, leafNames, titlePrefix) {
+  if (!datasetId) {
+    alert('Dataset ID not found — cannot download sequences.');
+    return;
+  }
+  fetch('/api/sequences/' + encodeURIComponent(datasetId), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ids: leafNames })
+  })
+    .then(function (resp) {
+      if (!resp.ok) return resp.json().then(function (d) { throw new Error(d.error || 'Failed'); });
+      return resp.text();
+    })
+    .then(function (fasta) {
+      var fname = (titlePrefix || 'sequences').replace(/\s+/g, '_') + '.fasta';
+      window.showDownloadPreview(titlePrefix || 'Sequences', fasta, fname);
+    })
+    .catch(function (err) { alert('Could not retrieve sequences: ' + err.message); });
+};
 
 
 const getMetadataSubset = function (nodeNames, metadata) {

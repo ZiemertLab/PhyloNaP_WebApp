@@ -2574,6 +2574,33 @@
               document.dispatchEvent(new CustomEvent("colorCladePanBGC", { detail: leafNames }));
               menu_object.style("display", "none");
             });
+
+          // Clade download menu items
+          menu_object.append("div").attr("class", "dropdown-divider");
+
+          menu_object
+            .append("a")
+            .attr("class", "dropdown-item")
+            .attr("tabindex", "-1")
+            .text("Download clade annotations (.tsv)")
+            .on("click", mouseEvent => {
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
+              const leafNames = terminal_nodes.map(function (d) { return d.data.name; });
+              document.dispatchEvent(new CustomEvent("downloadCladeAnnotations", { detail: leafNames }));
+              menu_object.style("display", "none");
+            });
+
+          menu_object
+            .append("a")
+            .attr("class", "dropdown-item")
+            .attr("tabindex", "-1")
+            .text("Download clade sequences (.fasta)")
+            .on("click", mouseEvent => {
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
+              const leafNames = terminal_nodes.map(function (d) { return d.data.name; });
+              document.dispatchEvent(new CustomEvent("downloadCladeSequences", { detail: leafNames }));
+              menu_object.style("display", "none");
+            });
         }
 
         // add the option for characterizing the node

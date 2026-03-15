@@ -552,6 +552,29 @@
   </div><!-- /.details -->
 </div><!-- /.layout -->
 
+<!-- Download Preview Overlay -->
+<div id="download-preview-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh;
+     background:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
+  <div id="download-preview-box" style="background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.3);
+       max-width:70vw; max-height:85vh; width:600px; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px 10px;
+         border-bottom:1px solid #eee;">
+      <h5 id="download-preview-title" style="margin:0; color:#7B1B38; font-size:15px; font-weight:600;"></h5>
+      <button id="download-preview-close" style="background:none; border:none; font-size:20px; cursor:pointer;
+              color:#999; line-height:1;" title="Close">&times;</button>
+    </div>
+    <pre id="download-preview-content" style="flex:1; overflow:auto; margin:0; padding:14px 18px; font-size:12px;
+         font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; white-space:pre; background:#fafafa;
+         color:#333; user-select:text; -webkit-user-select:text; max-height:60vh;"></pre>
+    <div style="display:flex; gap:8px; padding:10px 18px 14px; border-top:1px solid #eee; justify-content:flex-end;">
+      <button id="download-preview-copy" class="btn btn-sm" style="background:#6c757d; color:#fff; border:none;
+              border-radius:5px; padding:5px 14px; font-size:12px; cursor:pointer;">Copy to clipboard</button>
+      <button id="download-preview-download" class="btn btn-sm" style="background:#7B1B38; color:#fff; border:none;
+              border-radius:5px; padding:5px 14px; font-size:12px; cursor:pointer;">Download</button>
+    </div>
+  </div>
+</div>
+
 
 <script>
   const content = "{{ content }}";

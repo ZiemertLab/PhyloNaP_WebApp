@@ -800,6 +800,59 @@ def register_routes(app):
             app.logger.error(f"Error getting sequence {leaf_id} from {dataset_id}: {e}")
             return jsonify({"error": "Server error retrieving sequence"}), 500
 
+    @app.route('/api/sequences/<dataset_id>', methods=['POST'])
+    def get_bulk_sequences(dataset_id):
+        """Return multiple sequences from a dataset's FASTA file by a list of leaf IDs."""
+        try:
+            from .db import get_dataset_by_id
+
+            data = request.get_json()
+            if not data or 'ids' not in data:
+                return jsonify({"error": "Missing 'ids' in request body"}), 400
+
+            leaf_ids = set(data['ids'])
+            if not leaf_ids:
+                return jsonify({"error": "Empty IDs list"}), 400
+
+            dataset = get_dataset_by_id(dataset_id)
+            if not dataset:
+                return jsonify({"error": "Dataset not found"}), 404
+
+            fasta_file = dataset.get('sequences', '') or dataset.get('alignment', '')
+            if not fasta_file:
+                return jsonify({"error": "No sequence file available for this dataset"}), 404
+
+            database_dir = app.config['DATABASE_DIR']
+            fasta_path = os.path.join(database_dir, fasta_file)
+
+            if not os.path.exists(fasta_path):
+                return jsonify({"error": "Sequence file not found on server"}), 404
+
+            found_records = []
+            fasta_io = open(fasta_path, 'r')
+            try:
+                for record in SeqIO.parse(fasta_io, "fasta"):
+                    if record.id in leaf_ids or record.name in leaf_ids:
+                        found_records.append(f">{record.description}\n{str(record.seq)}")
+                        if len(found_records) == len(leaf_ids):
+                            break
+            finally:
+                fasta_io.close()
+
+            if not found_records:
+                return jsonify({"error": "No matching sequences found"}), 404
+
+            fasta_content = "\n".join(found_records) + "\n"
+
+            from flask import make_response
+            response = make_response(fasta_content)
+            response.headers['Content-Type'] = 'text/plain'
+            return response
+
+        except Exception as e:
+            app.logger.error(f"Error getting bulk sequences from {dataset_id}: {e}")
+            return jsonify({"error": "Server error retrieving sequences"}), 500
+
     # User data download routes (for view page uploaded data)
     @app.route('/download/user/tree/<session_id>')
     def download_user_tree(session_id):
