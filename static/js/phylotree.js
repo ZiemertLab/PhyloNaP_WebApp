@@ -2166,10 +2166,6 @@
     container = container
       .attr("class", d => {
         return this.reclassEdge(d);
-      })
-      .on("click", d => {
-        this.modifySelection([edge.target], this.selection_attribute_name);
-        this.update();
       });
 
     let new_branch_path = this.draw_branch([edge.source, edge.target]);
@@ -2527,10 +2523,6 @@
             });
           if (options["selectable"]) {
             menu_object.append("div").attr("class", "dropdown-divider");
-            menu_object
-              .append("h6")
-              .attr("class", "dropdown-header")
-              .text("Toggle selection");
           }
         }
         // add the option for characterizing the node
@@ -2545,9 +2537,42 @@
               const terminal_nodes = phylotree.selectAllDescendants(node, true, true);
               const summaryEvent = new CustomEvent("terminalNodesSelected", { detail: terminal_nodes });
               document.dispatchEvent(summaryEvent);
-              console.log(summaryEvent)
               menu_object.style("display", "none");
-              phylotree.modifySelection(terminal_nodes);
+
+              // Use function-based selector to clear non-clade and select clade in one pass
+              var descendantSet = new Set(terminal_nodes);
+              descendantSet.add(node); // include the clade root so the entry branch highlights
+              phylotree.modifySelection(
+                function(link) { return descendantSet.has(link.target); },
+                phylotree.selection_attribute_name
+              );
+            });
+
+          // Clade-specific coloring menu items
+          menu_object.append("div").attr("class", "dropdown-divider");
+
+          menu_object
+            .append("a")
+            .attr("class", "dropdown-item")
+            .attr("tabindex", "-1")
+            .text("Color cluster in clade")
+            .on("click", mouseEvent => {
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
+              const leafNames = terminal_nodes.map(function(d) { return d.data.name; });
+              document.dispatchEvent(new CustomEvent("colorCladeCluster", { detail: leafNames }));
+              menu_object.style("display", "none");
+            });
+
+          menu_object
+            .append("a")
+            .attr("class", "dropdown-item")
+            .attr("tabindex", "-1")
+            .text("Color GCF in clade")
+            .on("click", mouseEvent => {
+              const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
+              const leafNames = terminal_nodes.map(function(d) { return d.data.name; });
+              document.dispatchEvent(new CustomEvent("colorCladePanBGC", { detail: leafNames }));
+              menu_object.style("display", "none");
             });
         }
 
@@ -2609,25 +2634,7 @@
 
       if (node.parent) {
         if (options["selectable"]) {
-          menu_object
-            .append("a")
-            .attr("class", "dropdown-item")
-            .attr("tabindex", "-1")
-            .text("Incident branch")
-            .on("click", function (d) {
-              menu_object.style("display", "none");
-              phylotree.modifySelection([node]);
-            });
-
-          menu_object
-            .append("a")
-            .attr("class", "dropdown-item")
-            .attr("tabindex", "-1")
-            .text("Path to root")
-            .on("click", d => {
-              menu_object.style("display", "none");
-              this.modifySelection(this.phylotree.pathToRoot(node));
-            });
+          // "Incident branch" and "Path to root" removed — only clade selection is available
 
           if (options["reroot"] || options["hide"]) {
             menu_object.append("div").attr("class", "dropdown-divider");

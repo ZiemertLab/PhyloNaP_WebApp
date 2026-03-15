@@ -8,6 +8,10 @@ let currentTree;
 let treshold_to_display = 0.5;
 let treshold_to_summary = 0.8;
 
+// Stored placement clade summary so it can be recalled at any time
+let placementCladeSummary = null;
+let placementCladeLeaves = null;
+
 // Function to calculate color based on pendant length (evolutionary distance)
 function getPlacementColor(pendantLength) {
     const startColor = { r: 123, g: 27, b: 56 }; // #7B1B38 (original red - good placement)
@@ -723,7 +727,13 @@ function MRSA_summury(displayedPlacements, placements, tree, metadata) {
         // Try calling modifySelection on currentTree
         if (currentTree && typeof currentTree.modifySelection === "function") {
             try {
-                currentTree.modifySelection(terminalNodes, undefined, true, false, "true");
+                // Use function-based selector to clear non-clade and select clade in one pass
+                var descendantSet = new Set(terminalNodes);
+                descendantSet.add(mrcaNode);
+                currentTree.modifySelection(
+                    function(link) { return descendantSet.has(link.target); },
+                    currentTree.selection_attribute_name
+                );
                 console.log("modifySelection called successfully");
             } catch (error) {
                 console.error("Error calling modifySelection:", error);
@@ -742,8 +752,21 @@ function MRSA_summury(displayedPlacements, placements, tree, metadata) {
 
         const filteredTable = getMetadataSubset(mrcaLeafNames, metadata);
         const metadataSummaryResult = getMetadataSummary(filteredTable);
+
+        // Store for later recall via the "Show Placement Clade Summary" button
+        placementCladeSummary = metadataSummaryResult;
+        placementCladeLeaves = mrcaLeafNames;
+
         displayMetadataSummary(metadataSummaryResult, true);
-        // ...display or use metadataSummaryResult as needed...
+
+        // Enable the recall button now that we have data
+        const recallBtn = document.getElementById('show-placement-summary-btn');
+        if (recallBtn) {
+            recallBtn.disabled = false;
+            recallBtn.style.opacity = '0.85';
+            recallBtn.style.cursor = 'pointer';
+            recallBtn.title = `Show metadata summary for the ${mrcaLeafNames.length}-leaf placement clade`;
+        }
     } else {
         console.log("No MRCA node found for edge numbers:", displayedEdgeNums);
     }
@@ -831,5 +854,42 @@ function updateTreeVisualization(bubbleData) {
 
 
 
+
+// Wire up the "Show Placement Clade Summary" button
+document.addEventListener('DOMContentLoaded', function () {
+    const recallBtn = document.getElementById('show-placement-summary-btn');
+    if (recallBtn) {
+        recallBtn.addEventListener('click', function () {
+            if (placementCladeSummary) {
+                displayMetadataSummary(placementCladeSummary, true);
+
+                // Also re-select the placement clade on the tree for visual feedback
+                if (placementCladeLeaves && placementCladeLeaves.length > 0 && tree) {
+                    try {
+                        const mrcaNode = tree.mrca(placementCladeLeaves);
+                        if (mrcaNode) {
+                            const terminalNodes = tree.selectAllDescendants(mrcaNode, true, true);
+                            if (currentTree && typeof currentTree.modifySelection === 'function') {
+                                // Use function-based selector to clear non-clade and select clade in one pass
+                                var descendantSet = new Set(terminalNodes);
+                                descendantSet.add(mrcaNode);
+                                currentTree.modifySelection(
+                                    function(link) { return descendantSet.has(link.target); },
+                                    currentTree.selection_attribute_name
+                                );
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not re-select placement clade leaves:', e);
+                    }
+                }
+
+                // Scroll the metadata summary card into view
+                const card = document.getElementById('metadata-summary-card');
+                if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+});
 
 main();

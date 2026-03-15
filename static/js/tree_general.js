@@ -2089,7 +2089,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   // Initialize on first call
   calculateMaxColumns();
 
-  function colorSameCluster() {
+  function colorSameCluster(nodeFilter) {
     let columnName = 'Cluster';
 
     // SAFETY CHECK: Ensure metadata exists and has the required column
@@ -2119,6 +2119,11 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     console.log('annot:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+
+    // If nodeFilter is provided, restrict to only those nodes
+    if (nodeFilter) {
+      nodes = nodes.filter(d => nodeFilter.has(d.data.name));
+    }
 
     // Group nodes by their text content
     let textGroups = {};
@@ -2166,7 +2171,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   }
   // Add these functions after the removeColors() function
 
-  function colorSamePanBGC() {
+  function colorSamePanBGC(nodeFilter) {
     let columnName = 'GCF_ID';
 
     // SAFETY CHECK: Ensure metadata exists and has the required column
@@ -2189,6 +2194,11 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
     console.log('PanBGC annotation data:', annot);
     let nodes = d3.selectAll('.node').filter(d => annot.hasOwnProperty(d.data.name));
+
+    // If nodeFilter is provided, restrict to only those nodes
+    if (nodeFilter) {
+      nodes = nodes.filter(d => nodeFilter.has(d.data.name));
+    }
 
     // Group nodes by their FAM_ID content
     let famGroups = {};
@@ -3851,6 +3861,19 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
       window.setupExternalLinksToggle();
     }
   }, 100); // Small delay to ensure other functionality is set up first
+
+  // Listen for clade-specific coloring events dispatched from the context menu
+  document.addEventListener('colorCladeCluster', function (event) {
+    removeColors(); // clear existing cluster rects
+    var nodeFilter = new Set(event.detail);
+    colorSameCluster(nodeFilter);
+  });
+
+  document.addEventListener('colorCladePanBGC', function (event) {
+    removePanBGCColors(); // clear existing PanBGC rects
+    var nodeFilter = new Set(event.detail);
+    colorSamePanBGC(nodeFilter);
+  });
 }
 
 window.setupSaveImageButton = function () {
