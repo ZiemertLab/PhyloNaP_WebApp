@@ -95,39 +95,45 @@
 
     .details {
       flex: 1;
-      /* Take up 2 parts of the available space */
-      /* background-color: #D1E7E0; 
-      Grey background */
-      /* background-color: #CCDDE2; */
-      /* background-color:#6BA292; */
-      background-color: #e8e4d8;
+      background-color: #f5f5f5;
       overflow: auto;
-      /* Add scrollbars if necessary */
       margin: 0;
-      /* Remove all margins */
       padding: 0;
-      /* Remove all padding */
       box-sizing: border-box;
-      /* Include padding in the element's total width and height */
     }
 
-    .details>div {
-      display: flex;
-      justify-content: flex-end;
+    /* ---- Modern Details Panel ---- */
+    .details {
+      background-color: #f5f5f5 !important;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
     }
 
-    .details>div>div {
-      padding: 10px;
-      margin-top: 1rem;
-      width: 100%;
-      /* Ensure the inner content takes the full width */
+    .details-inner {
+      padding: 20px 18px;
     }
 
-    .details h3,
-    .details h10,
-    .details h4 {
-      margin: 0;
-      /* Remove default margins */
+    .section-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      transition: box-shadow 0.2s;
+    }
+
+    .section-card:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+    }
+
+    .section-heading {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #7B1B38;
+      margin: 0 0 10px 0;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #7B1B38;
     }
 
     /* .collapsible {
@@ -163,9 +169,10 @@
 
     #enlarged-image {
       width: 100%;
-      height: 100%;
+      height: auto;
       max-width: 100%;
       max-height: 100%;
+      border-radius: 4px;
     }
 
     .no-overlap {
@@ -184,8 +191,7 @@
     }
 
     #tree_name {
-      /* Remove the !important and let JavaScript control the font size */
-      font-size: 1.75rem;
+      font-size: 1.4rem;
     }
 
     /* Add a class for JavaScript-controlled sizing */
@@ -193,53 +199,60 @@
       font-size: var(--js-font-size) !important;
     }
 
-    /* Leaf Annotation Panel */
+    /* Leaf Annotation Panel — inline card style */
     #leaf-annotation-panel {
       display: none;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: #fff;
-      z-index: 100;
-      overflow-y: auto;
-      padding: 20px;
-      border-radius: 6px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+      border-left: 4px solid #e85d04;
+      background: linear-gradient(135deg, #fff8f2 0%, #ffffff 40%);
+      animation: leafCardHighlight 1.5s ease-in-out infinite;
+    }
+
+    @keyframes leafCardHighlight {
+      0% {
+        box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12);
+        border-left-color: #e85d04;
+      }
+
+      50% {
+        box-shadow: 0 2px 12px rgba(232, 93, 4, 0.25);
+        border-left-color: #d45f00;
+      }
+
+      100% {
+        box-shadow: 0 1px 4px rgba(232, 93, 4, 0.12);
+        border-left-color: #e85d04;
+      }
     }
 
     #leaf-annotation-panel .panel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 10px;
-      border-bottom: 2px solid #3D3D3D;
+      margin-bottom: 10px;
     }
 
     #leaf-annotation-panel .panel-header h4 {
       margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #333;
+      font-size: 14px;
+      font-weight: 700;
+      color: #d45f00;
       word-break: break-all;
     }
 
     #leaf-annotation-panel .close-btn {
       background: none;
       border: none;
-      font-size: 22px;
+      font-size: 18px;
       cursor: pointer;
-      color: #888;
-      padding: 2px 8px;
+      color: #999;
+      padding: 2px 6px;
       border-radius: 4px;
       transition: background 0.15s, color 0.15s;
       line-height: 1;
     }
 
     #leaf-annotation-panel .close-btn:hover {
-      background: #eee;
+      background: #f0f0f0;
       color: #333;
     }
 
@@ -251,8 +264,8 @@
 
     .leaf-annotation-table th,
     .leaf-annotation-table td {
-      padding: 8px 10px;
-      border-bottom: 1px solid #e9ecef;
+      padding: 6px 10px;
+      border-bottom: 1px solid #eee;
       text-align: left;
       vertical-align: top;
     }
@@ -260,10 +273,11 @@
     .leaf-annotation-table th {
       width: 35%;
       font-weight: 600;
-      color: #495057;
-      background: #f8f9fa;
+      color: #555;
+      background: #fafafa;
       text-transform: capitalize;
       white-space: nowrap;
+      font-size: 12px;
     }
 
     .leaf-annotation-table td {
@@ -272,7 +286,24 @@
     }
 
     .leaf-annotation-table tr:hover {
-      background: #f1f3f5;
+      background: #f8f8f8;
+    }
+
+    /* Download & annotation buttons */
+    .details .btn.non-active-button {
+      border-radius: 6px;
+      font-size: 12px;
+      padding: 5px 12px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .details .btn.non-active-button:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Structures image */
+    #enlarged-image-container {
+      margin-top: 8px;
     }
   </style>
 </head>
@@ -362,80 +393,71 @@
         datasetDescr="{{ datasetDescr }}" source="{{ source }}" cite="{{ cite }}"></div>
     </div>
   </div>
-  <div class="details" style="position: relative;">
-    <!-- Leaf Annotation Overlay Panel -->
-    <div id="leaf-annotation-panel">
-      <div class="panel-header">
-        <h4><i class="fa fa-leaf" style="margin-right: 6px; color: #5a9e6f;"></i><span
-            id="leaf-annotation-title"></span></h4>
-        <button class="close-btn"
-          onclick="document.getElementById('leaf-annotation-panel').style.display='none'; if(window.clearLeafHighlight) window.clearLeafHighlight();"
-          title="Close">&times;</button>
-      </div>
-      <div id="leaf-annotation-body"></div>
-    </div>
-    <!-- <div class="d-flex justify-content-end"> -->
-    <div style="display: flex; justify-content: flex-end;">
-      <div style="padding: 10px; margin-top: 1rem; "> <!-- Add background color, padding and top margin -->
-        <div style="display: flex; justify-content: center;">
-          <div style="display: flex; justify-content: center;">
-            <h3 id="tree_name">{{ superfamily_name }}{% if source == 'curated' %} - {{ dataset_name }}{% endif %}</h3>
-          </div>
-        </div>
-        <h10 id="description">The descripton of the treeThe descripton of the treeThe descripton of the treeThe
-          descripton of the tree</h10>
+  <div class="details">
+    <div class="details-inner">
+
+      <!-- ===== Header: Dataset name & description ===== -->
+      <div class="section-card" id="dataset-header-card">
+        <h3 id="tree_name" style="font-size: 1.4rem; font-weight: 700; color: #333; margin: 0 0 6px 0;">
+          {{ superfamily_name }}{% if source == 'curated' %} - {{ dataset_name }}{% endif %}
+        </h3>
+        <p id="description" style="font-size: 13px; color: #666; margin: 0; line-height: 1.5;">Loading description…</p>
+
         {% if source == 'curated' and cite %}
         <div id="cite"
-          style="margin-top: 15px; padding: 12px; background-color: #f8f9fa; border-left: 4px solid #3D3D3D; border-radius: 4px;">
-          <h5 style="color: #495057; margin-bottom: 8px; font-weight: 600;">
-            <i class="fa fa-quote-left" style="margin-right: 5px; color: #3D3D3D; font-size: 12px;"></i>
-            Citation
-          </h5>
-          <div style="margin-left: 15px; font-size: 14px; line-height: 1.4;">
-            {% if cite.name %}
-            <div style="margin-bottom: 6px;">
-              <span style="font-weight: 500; color: #495057;">Authors:</span>
-              <span style="color: #6c757d;">{{ cite.name }}</span>
-            </div>
-            {% endif %}
-            {% if cite.doi %}
-            <div>
-              <span style="font-weight: 500; color: #495057;">DOI:</span>
-              {% if cite.doi.startswith('DOI: ') %}
-              <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank"
-                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
-                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
-                {{ cite.doi }}
-                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
-              </a>
-              {% elif cite.doi.startswith('http') %}
-              <a href="{{ cite.doi }}" target="_blank"
-                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
-                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
-                {{ cite.doi }}
-                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
-              </a>
-              {% else %}
-              <a href="{{ cite.doi }}" target="_blank"
-                style="color: #3D3D3D; text-decoration: underline; font-weight: 500; transition: color 0.2s;"
-                onmouseover="this.style.color='#555555'" onmouseout="this.style.color='#3D3D3D'">
-                DOI: {{ cite.doi }}
-                <i class="fa fa-external-link" style="margin-left: 4px; font-size: 10px;"></i>
-              </a>
-              {% endif %}
-            </div>
+          style="margin-top: 12px; padding: 10px 14px; background: #fafafa; border-left: 3px solid #7B1B38; border-radius: 4px; font-size: 13px; line-height: 1.5;">
+          <span
+            style="font-weight: 600; color: #7B1B38; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;">Citation</span>
+          {% if cite.name %}
+          <div style="margin-top: 6px; color: #555;">
+            <span style="font-weight: 600;">Authors:</span> {{ cite.name }}
+          </div>
+          {% endif %}
+          {% if cite.doi %}
+          <div style="margin-top: 4px;">
+            <span style="font-weight: 600; color: #555;">DOI:</span>
+            {% if cite.doi.startswith('DOI: ') %}
+            <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank"
+              style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
+            {% elif cite.doi.startswith('http') %}
+            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
+            {% else %}
+            <a href="{{ cite.doi }}" target="_blank" style="color: #7B1B38; text-decoration: none; font-weight: 500;"
+              onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">DOI: {{
+              cite.doi }} <i class="fa fa-external-link" style="font-size: 10px;"></i></a>
             {% endif %}
           </div>
+          {% endif %}
         </div>
         {% endif %}
+      </div>
 
+      <!-- ===== Leaf Annotation (inline, shown after description) ===== -->
+      <div id="leaf-annotation-panel" class="section-card">
+        <div class="panel-header">
+          <h4 style="display: flex; align-items: center; gap: 6px;">
+            <i class="fa fa-leaf" style="color: #e85d04; font-size: 14px;"></i>
+            <span id="leaf-annotation-title"></span>
+          </h4>
+          <button class="close-btn"
+            onclick="document.getElementById('leaf-annotation-panel').style.display='none'; if(window.clearLeafHighlight) window.clearLeafHighlight();"
+            title="Close">&times;</button>
+        </div>
+        <div id="leaf-annotation-body"></div>
+      </div>
+
+      <!-- ===== Annotation Buttons ===== -->
+      <div class="section-card">
         <div id="button-container">
-          <h4>Annotation</h4>
+          <h4 class="section-heading">Annotation</h4>
           <script>
             const color_buttons = "#982B1C";
             const color_old = "#a61e37";
           </script>
-
           <script>
             var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
             document.getElementById('description').textContent = datasetDescr;
@@ -449,85 +471,72 @@
             metadataListArray.forEach(function (item) {
               var button = document.createElement('button');
               button.id = item;
-              // button.style.backgroundColor = '#a61e37';
-              // button.style.color = 'white';
               button.className = 'btn m-1 non-active-button';
               button.textContent = item.replace('_', ' ');
-
               buttonContainer.appendChild(button);
             });
           </script>
         </div>
+      </div>
+
+      <!-- ===== Colour Annotation ===== -->
+      <div class="section-card">
         <div id="colour_button-container">
-          <h4>Colour annotation</h4>
+          <h4 class="section-heading">Colour Annotation</h4>
           <button id="cluster" class="btn m-1 non-active-button">Proteins from the same cluster</button>
           <button id="panbgc" class="btn m-1 non-active-button">Proteins from the same GCF</button>
         </div>
-        <div class="external-links-section">
-          <h4 id="external-links-heading"
-            style="cursor: pointer; display: flex; align-items: center; user-select: none;">
-            External links
-            <span id="external-links-toggle"
-              style="margin-left: 8px; font-size: 14px; transition: transform 0.2s ease;">
-              ▼
-            </span>
-          </h4>
-          <div id="hyperlink-container">
-            <!-- Table and button will be added here by createExternalLinksTable -->
-          </div>
-        </div>
-        <!-- {{ metadata_list }} 
-        {% for item in metadataListArray %}
-            <button id="{{ item }}" class="btn m-1" style="background-color: #a61e37; color: white;">{{ item.replace('_', ' ') }}</button>
-        {% endfor %} -->
-        <!-- <button id="Enzyme_function" class="btn m-1" style="background-color: #982B1C; color: white;">Enzyme Function</button>
-        <button id="Species" class="btn m-1" style="background-color: #982B1C; color: white;">Species</button>
-        <button id="biosyn_class" class="btn m-1" style="background-color: #982B1C; color: white;">BGC type</button> -->
-        <h4>Structures</h4>
+      </div>
+
+      <!-- ===== External Links ===== -->
+      <div class="section-card external-links-section">
+        <h4 id="external-links-heading" class="section-heading"
+          style="cursor: pointer; display: flex; align-items: center; user-select: none; margin-bottom: 0; border-bottom: none; padding-bottom: 0;">
+          External Links
+          <span id="external-links-toggle"
+            style="margin-left: 8px; font-size: 12px; transition: transform 0.2s ease;">▼</span>
+        </h4>
+        <div id="hyperlink-container" style="margin-top: 8px;"></div>
+      </div>
+
+      <!-- ===== Structures ===== -->
+      <div class="section-card">
+        <h4 class="section-heading">Structures</h4>
         <button id="BGC_product" class="btn m-1 non-active-button">BGC product</button>
         <button id="Reaction" class="btn m-1 non-active-button">Reaction</button>
         <div id="enlarged-image-container">
-          <!-- <img id="enlarged-image" src="" alt="Enlarged image" /> -->
           <img id="enlarged-image" src="" />
-        </div>
-        <h4 id="metadata-summary-heading" style="display: none;">Metadata summary</h4>
-        <div id="summary-container"></div>
-        <h4>Placements</h4>
-        <div id="placement-container"></div>
-        <h4>Download Dataset</h4>
-        <div class="download-buttons">
-          <button id="download-tree-btn" class="btn btn-sm non-active-button m-1">
-            Tree (.nwk)
-          </button>
-          <button id="download-metadata-btn" class="btn btn-sm non-active-button m-1">
-            Metadata (.tsv)
-          </button>
-          <button id="download-alignment-btn" class="btn btn-sm non-active-button m-1">
-            Alignment (.faa)
-          </button>
-          <button id="download-sequences-btn" class="btn btn-sm non-active-button m-1">
-            Sequences (.fasta)
-          </button>
-          <button id="download-aligned-query-btn" class="btn btn-sm non-active-button m-1">
-            Aligned Query (.fa)
-          </button>
-          <button id="download-placement-btn" class="btn btn-sm non-active-button m-1">
-            Placement (.jplace)
-          </button>
         </div>
       </div>
 
-    </div>
+      <!-- ===== Metadata Summary ===== -->
+      <div class="section-card" id="metadata-summary-card" style="display: none;">
+        <h4 class="section-heading" id="metadata-summary-heading">Metadata Summary</h4>
+        <div id="summary-container"></div>
+      </div>
 
+      <!-- ===== Placements ===== -->
+      <div class="section-card">
+        <h4 class="section-heading">Placements</h4>
+        <div id="placement-container"></div>
+      </div>
 
-  </div>
+      <!-- ===== Download Dataset ===== -->
+      <div class="section-card">
+        <h4 class="section-heading">Download Dataset</h4>
+        <div class="download-buttons" style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <button id="download-tree-btn" class="btn btn-sm non-active-button">Tree (.nwk)</button>
+          <button id="download-metadata-btn" class="btn btn-sm non-active-button">Metadata (.tsv)</button>
+          <button id="download-alignment-btn" class="btn btn-sm non-active-button">Alignment (.faa)</button>
+          <button id="download-sequences-btn" class="btn btn-sm non-active-button">Sequences (.fasta)</button>
+          <button id="download-aligned-query-btn" class="btn btn-sm non-active-button">Aligned Query (.fa)</button>
+          <button id="download-placement-btn" class="btn btn-sm non-active-button">Placement (.jplace)</button>
+        </div>
+      </div>
 
-</div>
-
-
-
-
-
+    </div><!-- /.details-inner -->
+  </div><!-- /.details -->
+</div><!-- /.layout -->
 
 
 <script>
@@ -535,108 +544,6 @@
   console.log("phylotree_render.html content:");
   console.log(content);
 </script>
-<script>
-  // Metadata summary functionality
-  document.addEventListener('DOMContentLoaded', function () {
-    // Function to generate metadata summary
-    function generateMetadataSummary() {
-      var treeDataElement = document.getElementById('tree_data');
-      if (!treeDataElement) {
-        console.log('tree_data element not found');
-        return;
-      }
-
-      var metadata = treeDataElement.getAttribute('metadata');
-      var metadataList = treeDataElement.getAttribute('metadata_list');
-
-      if (!metadata || !metadataList) {
-        console.log('Metadata or metadata list not found');
-        return;
-      }
-
-      try {
-        // Parse the metadata
-        metadata = metadata.replace(/'/g, '"');
-        var metadataObj = JSON.parse(metadata);
-
-        // Parse the metadata list
-        metadataList = metadataList.replace(/'/g, '"');
-        var metadataListArray = JSON.parse(metadataList);
-
-        // Generate summary for each metadata column
-        var summaryContainer = document.getElementById('summary-container');
-        if (!summaryContainer) {
-          console.log('summary-container not found');
-          return;
-        }
-
-        summaryContainer.innerHTML = ''; // Clear existing content
-
-        metadataListArray.forEach(function (column) {
-          if (metadataObj[column]) {
-            // Count occurrences of each value
-            var valueCounts = {};
-
-            Object.values(metadataObj[column]).forEach(function (value) {
-              if (value && value !== '' && value !== 'N/A' && value !== 'null') {
-                valueCounts[value] = (valueCounts[value] || 0) + 1;
-              }
-            });
-
-            // Sort by count (descending)
-            var sortedValues = Object.entries(valueCounts)
-              .sort(function (a, b) { return b[1] - a[1]; })
-              .slice(0, 10); // Show top 10
-
-            if (sortedValues.length > 0) {
-              // Create summary section for this metadata column
-              var summarySection = document.createElement('div');
-              summarySection.style.marginBottom = '15px';
-              summarySection.style.padding = '10px';
-              summarySection.style.backgroundColor = '#f8f9fa';
-              summarySection.style.borderRadius = '4px';
-              summarySection.style.border = '1px solid #dee2e6';
-
-              var title = document.createElement('h6');
-              title.textContent = column.replace('_', ' ');
-              title.style.fontWeight = 'bold';
-              title.style.marginBottom = '8px';
-              title.style.color = '#495057';
-              summarySection.appendChild(title);
-
-              var list = document.createElement('ul');
-              list.style.margin = '0';
-              list.style.paddingLeft = '20px';
-              list.style.fontSize = '13px';
-
-              sortedValues.forEach(function (entry) {
-                var listItem = document.createElement('li');
-                listItem.style.marginBottom = '3px';
-                listItem.innerHTML = '<strong>' + entry[0] + '</strong>: ' + entry[1] + ' sequence' + (entry[1] > 1 ? 's' : '');
-                list.appendChild(listItem);
-              });
-
-              summarySection.appendChild(list);
-              summaryContainer.appendChild(summarySection);
-            }
-          }
-        });
-
-        if (summaryContainer.children.length === 0) {
-          summaryContainer.innerHTML = '<p style="color: #6c757d; font-style: italic;">No metadata summary available</p>';
-        }
-
-      } catch (error) {
-        console.error('Error generating metadata summary:', error);
-        document.getElementById('summary-container').innerHTML = '<p style="color: #dc3545;">Error loading metadata summary</p>';
-      }
-    }
-
-    // Generate summary after DOM loads
-    setTimeout(generateMetadataSummary, 100);
-  });
-</script>
-
 <script src="static/js/tree_general.js"></script>
 <script src="static/js/tree_placement.js"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->

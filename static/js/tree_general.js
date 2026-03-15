@@ -1675,15 +1675,26 @@ window.showLargeImageOverlay = function (imageSrc, bgcId, nodeId) {
   document.body.appendChild(overlay);
 };
 /**
- * Truncate an SVG <text> element with "..." and add click-to-expand.
- * @param {d3.Selection} textEl - A d3-selected SVG <text> element
- * @param {string} fullText - The complete annotation string
- * @param {number} maxChars - Maximum characters before truncation (default 30)
+ * Truncate an SVG <text> element with "…" and add click-to-expand.
+ * If onLinkOpen is provided, double-click opens the link.
+ * @param {d3.Selection} textEl  - d3 SVG <text> element
+ * @param {string}       fullText - Complete annotation string
+ * @param {number}       [maxChars=30] - Max visible characters
+ * @param {Function}     [onLinkOpen] - Optional callback for double-click (open link)
  */
-function applyTruncation(textEl, fullText, maxChars) {
+function applyTruncation(textEl, fullText, maxChars, onLinkOpen) {
   if (maxChars === undefined) maxChars = 30;
   if (!fullText || fullText.length <= maxChars) {
     textEl.text(fullText || '');
+    // Even short hyperlinks need double-click to open
+    if (onLinkOpen) {
+      textEl.style('cursor', 'pointer');
+      textEl.append('title').text(fullText + '\n\nDouble-click to open link');
+      textEl.on('dblclick.link', function (event) {
+        event.stopPropagation();
+        onLinkOpen();
+      });
+    }
     return;
   }
   // Start truncated
@@ -1692,24 +1703,33 @@ function applyTruncation(textEl, fullText, maxChars) {
   textEl.attr('data-full-text', fullText);
   textEl.attr('data-truncated', 'true');
   textEl.style('cursor', 'pointer');
-  textEl.append('title').text(fullText + '\n\nClick to expand / collapse');
+
+  var tipSuffix = onLinkOpen ? '\nDouble-click to open link' : '';
+  textEl.append('title').text(fullText + '\n\nClick to expand / collapse' + tipSuffix);
 
   textEl.on('click.truncation', function (event) {
     event.stopPropagation();
     var el = d3.select(this);
     var isTruncated = el.attr('data-truncated') === 'true';
-    // Remove existing title
     el.select('title').remove();
     if (isTruncated) {
       el.text(fullText);
       el.attr('data-truncated', 'false');
-      el.append('title').text('Click to collapse');
+      el.append('title').text('Click to collapse' + tipSuffix);
     } else {
       el.text(truncated);
       el.attr('data-truncated', 'true');
-      el.append('title').text(fullText + '\n\nClick to expand');
+      el.append('title').text(fullText + '\n\nClick to expand' + tipSuffix);
     }
   });
+
+  // Double-click opens link
+  if (onLinkOpen) {
+    textEl.on('dblclick.link', function (event) {
+      event.stopPropagation();
+      onLinkOpen();
+    });
+  }
 }
 
 window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
@@ -3096,42 +3116,27 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               .attr('fill', '#3D3D3D')
               .style('cursor', 'pointer')
               .style('text-decoration', 'underline');
-            // For hyperlinks: truncate visually but keep click for opening links
-            if (linkTexts.length > 30) {
-              textElement.text(linkTexts.substring(0, 30) + '\u2026');
-            } else {
-              textElement.text(linkTexts);
-            }
 
-            // Add click handler for hyperlinks
-            textElement.on('click', function () {
+            // Build the link-open callback for double-click
+            const hyperlinkOpenFn = function () {
               if (ids.length === 1) {
-                // Single link - open directly
                 const cleanId = cleanIdentifier(ids[0], columnName);
                 const url = template.url.replace('{id}', cleanId);
                 window.open(url, '_blank');
               } else {
-                // Multiple links - show options
                 const linkUrls = ids.map(id => {
                   const cleanId = cleanIdentifier(id, columnName);
-                  return {
-                    id: cleanId,
-                    url: template.url.replace('{id}', cleanId)
-                  };
+                  return { id: cleanId, url: template.url.replace('{id}', cleanId) };
                 });
-
                 const linkList = linkUrls.map(l => `${l.id}: ${l.url}`).join('\n');
                 const userChoice = confirm(`Multiple links found (${ids.length}):\n\n${linkList}\n\nClick OK to open the first link, Cancel to copy all URLs to clipboard.`);
-
                 if (userChoice) {
                   window.open(linkUrls[0].url, '_blank');
                 } else {
-                  // Copy all URLs to clipboard
                   const allUrls = linkUrls.map(l => l.url).join('\n');
                   navigator.clipboard.writeText(allUrls).then(() => {
                     alert('All URLs copied to clipboard!');
                   }).catch(() => {
-                    // Fallback for older browsers
                     const textArea = document.createElement('textarea');
                     textArea.value = allUrls;
                     document.body.appendChild(textArea);
@@ -3142,15 +3147,10 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
                   });
                 }
               }
-            });
+            };
 
-            // Add tooltip (includes full text when truncated)
-            const tooltipPrefix = linkTexts.length > 30 ? linkTexts + '\n\n' : '';
-            const tooltipText = ids.length === 1
-              ? `${tooltipPrefix}Click to open ${template.name}: ${template.url.replace('{id}', cleanIdentifier(ids[0], columnName))}`
-              : `${tooltipPrefix}${ids.length} ${template.name} links found. Click for options.`;
-
-            textElement.append('title').text(tooltipText);
+            // Click = expand/collapse, double-click = open link
+            applyTruncation(textElement, linkTexts, 30, hyperlinkOpenFn);
 
           } else {
 
@@ -3361,28 +3361,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               .style('cursor', 'pointer')
               .style('text-decoration', 'underline');
 
-            // For external links: truncate visually but keep click for opening links
-            if (linkTexts.length > 30) {
-              textElement.text(linkTexts.substring(0, 30) + '\u2026');
-            } else {
-              textElement.text(linkTexts);
-            }
-
-            // Add click handler to open the first link
-            textElement.on('click', function () {
+            // Build link-open callback for double-click
+            const extLinkOpenFn = function () {
               if (links[0] && links[0].url) {
                 window.open(links[0].url, '_blank');
               }
-            });
+            };
 
-            // Add tooltip showing full text + link info
-            if (links.length > 1) {
-              textElement.append('title').text(
-                `${links.map(l => l.id).join(', ')}\n${links.length} links \u2013 click to open first`
-              );
-            } else {
-              textElement.append('title').text(`${linkTexts}\nClick to open: ${links[0].url}`);
-            }
+            // Click = expand/collapse, double-click = open link
+            applyTruncation(textElement, linkTexts, 30, extLinkOpenFn);
           }
         });
       }, 0);
