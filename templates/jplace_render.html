@@ -513,10 +513,8 @@
       <div class="section-card" id="metadata-summary-card" style="display: none;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
           <h4 class="section-heading" id="metadata-summary-heading" style="margin-bottom: 0;">Metadata Summary</h4>
-          <button id="show-placement-summary-btn" class="btn btn-sm"
-            disabled
-            title="Placement clade summary not yet available"
-            style="font-size: 11px; padding: 3px 10px; border-radius: 5px;
+          <button id="show-placement-summary-btn" class="btn btn-sm" disabled
+            title="Placement clade summary not yet available" style="font-size: 11px; padding: 3px 10px; border-radius: 5px;
                    background: #e85d04; color: #fff; border: none;
                    opacity: 0.5; transition: opacity 0.2s, transform 0.1s;
                    white-space: nowrap;"
@@ -524,6 +522,9 @@
             onmouseleave="this.style.opacity=this.disabled?'0.5':'0.85';this.style.transform='none'">
             <i class="fa fa-crosshairs" style="margin-right: 4px;"></i>Placement Clade
           </button>
+        </div>
+        <div id="metadata-summary-subtitle"
+          style="display: none; font-size: 12px; color: #6c757d; font-weight: 500; margin-top: 2px; margin-bottom: 6px;">
         </div>
         <div id="summary-container"></div>
       </div>

@@ -731,7 +731,7 @@ function MRSA_summury(displayedPlacements, placements, tree, metadata) {
                 var descendantSet = new Set(terminalNodes);
                 descendantSet.add(mrcaNode);
                 currentTree.modifySelection(
-                    function(link) { return descendantSet.has(link.target); },
+                    function (link) { return descendantSet.has(link.target); },
                     currentTree.selection_attribute_name
                 );
                 console.log("modifySelection called successfully");
@@ -874,7 +874,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 var descendantSet = new Set(terminalNodes);
                                 descendantSet.add(mrcaNode);
                                 currentTree.modifySelection(
-                                    function(link) { return descendantSet.has(link.target); },
+                                    function (link) { return descendantSet.has(link.target); },
                                     currentTree.selection_attribute_name
                                 );
                             }

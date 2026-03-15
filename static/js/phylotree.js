@@ -2543,7 +2543,7 @@
               var descendantSet = new Set(terminal_nodes);
               descendantSet.add(node); // include the clade root so the entry branch highlights
               phylotree.modifySelection(
-                function(link) { return descendantSet.has(link.target); },
+                function (link) { return descendantSet.has(link.target); },
                 phylotree.selection_attribute_name
               );
             });
@@ -2558,7 +2558,7 @@
             .text("Color cluster in clade")
             .on("click", mouseEvent => {
               const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
-              const leafNames = terminal_nodes.map(function(d) { return d.data.name; });
+              const leafNames = terminal_nodes.map(function (d) { return d.data.name; });
               document.dispatchEvent(new CustomEvent("colorCladeCluster", { detail: leafNames }));
               menu_object.style("display", "none");
             });
@@ -2570,7 +2570,7 @@
             .text("Color GCF in clade")
             .on("click", mouseEvent => {
               const terminal_nodes = phylotree.selectAllDescendants(node, true, false);
-              const leafNames = terminal_nodes.map(function(d) { return d.data.name; });
+              const leafNames = terminal_nodes.map(function (d) { return d.data.name; });
               document.dispatchEvent(new CustomEvent("colorCladePanBGC", { detail: leafNames }));
               menu_object.style("display", "none");
             });

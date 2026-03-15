@@ -4166,17 +4166,15 @@ const displayMetadataSummary = function (summary, showPlacementHeader = false) {
       return; // Exit early if no valid columns
     }
 
-    // Add Placement status header if requested
-    if (showPlacementHeader && validColumns.length > 0) {
-      const statusHeader = document.createElement('div');
-      statusHeader.style.cssText = `
-            font-size: 12px; 
-            color: #6c757d; 
-            margin-bottom: 6px;
-            font-weight: 500;
-          `;
-      statusHeader.innerHTML = '<strong>For the clade of placements</strong>';
-      summaryContainer.appendChild(statusHeader);
+    // Update subtitle text based on context
+    const subtitleEl = document.getElementById('metadata-summary-subtitle');
+    if (subtitleEl) {
+      if (showPlacementHeader) {
+        subtitleEl.textContent = 'for the placement clade';
+      } else {
+        subtitleEl.textContent = 'for the highlighted clade';
+      }
+      subtitleEl.style.display = 'block';
     }
 
     // Sort columns by diversity score (ascending - least diverse first)
@@ -4553,6 +4551,10 @@ window.getTerminalNodesArray = function (tree, metadata) {
     metadataSummaryResult = getMetadataSummary(filteredTable)
     console.log('Metadata summary:', metadataSummaryResult);
     displayMetadataSummary(metadataSummaryResult);
+
+    // Scroll the metadata summary card into view
+    const card = document.getElementById('metadata-summary-card');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
   return nodeNames;
 }
