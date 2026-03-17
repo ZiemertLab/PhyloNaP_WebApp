@@ -2095,13 +2095,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // SAFETY CHECK: Ensure metadata exists and has the required column
     if (!metadata || metadata.length === 0) {
       console.error('No metadata available for clustering');
-      return;
+      showCustomWarning('No metadata available for cluster coloring');
+      return false;
     }
 
     if (!metadata[0].hasOwnProperty(columnName)) {
       console.error(`Column '${columnName}' not found in metadata`);
       console.log('Available columns:', Object.keys(metadata[0]));
-      return;
+      showCustomWarning('No Cluster data available in metadata');
+      return false;
     }
 
     if (metadata.length > 0) {
@@ -2149,10 +2151,19 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     if (Object.keys(textGroups).length === 0) {
       console.log('No clusters with multiple members found');
       showCustomWarning("No proteins are coming from the same cluster, nothing to highlight");
-      return;
+      return false;
     }
 
-    var clusters_colors = palette('tol-rainbow', Object.keys(textGroups).length);
+    var numGroups = Object.keys(textGroups).length;
+    var clusters_colors = palette('tol-rainbow', numGroups);
+
+    // Check if the palette can provide enough distinguishable colors
+    if (!clusters_colors || numGroups > 20) {
+      console.log('Too many cluster groups (' + numGroups + ') for distinguishable coloring');
+      showCustomWarning('Too many clusters (' + numGroups + ') to color distinctly. Right-click a node of interest and use "Color same Cluster" from there instead.');
+      return false;
+    }
+
     Object.keys(textGroups).forEach((text, index) => {
       textGroups[text].forEach(node => {
         let textElement = d3.select(node).select('text');
@@ -2168,6 +2179,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         }
       });
     });
+    return true;
   }
   // Add these functions after the removeColors() function
 
@@ -2177,13 +2189,15 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // SAFETY CHECK: Ensure metadata exists and has the required column
     if (!metadata || metadata.length === 0) {
       console.error('No metadata available for PanBGC coloring');
-      return;
+      showCustomWarning('No metadata available for GCF coloring');
+      return false;
     }
 
     if (!metadata[0].hasOwnProperty(columnName)) {
       console.error(`Column '${columnName}' not found in metadata`);
       console.log('Available columns:', Object.keys(metadata[0]));
-      return;
+      showCustomWarning('No GCF data available in metadata');
+      return false;
     }
 
     console.log('Coloring by PanBGC GCF_ID');
@@ -2224,18 +2238,27 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     if (Object.keys(famGroups).length === 0) {
       console.log('No PanBGC families with multiple members found');
       showCustomWarning("No proteins are coming from the same GCF, nothing to highlight");
-      return;
+      return false;
+    }
+
+    var numGroups = Object.keys(famGroups).length;
+
+    // Check if the palette can provide enough distinguishable colors
+    if (numGroups > 20) {
+      console.log('Too many PanBGC groups (' + numGroups + ') for distinguishable coloring');
+      showCustomWarning('Too many GCF groups (' + numGroups + ') to color distinctly. Right-click a node of interest and use "Color same PanBGC" from there instead.');
+      return false;
     }
 
     // Use a different color palette to distinguish from clusters
-    console.log('Requesting palette Set3 with', Object.keys(famGroups).length, 'colors');
+    console.log('Requesting palette Set3 with', numGroups, 'colors');
     console.log('typeof palette:', typeof palette);
-    var panbgc_colors = palette('Set3', Object.keys(famGroups).length);
+    var panbgc_colors = palette('Set3', numGroups);
     console.log('panbgc_colors:', panbgc_colors);
 
     if (!panbgc_colors) {
       console.error('Failed to generate palette, falling back to tol-rainbow');
-      panbgc_colors = palette('tol-rainbow', Object.keys(famGroups).length);
+      panbgc_colors = palette('tol-rainbow', numGroups);
     }
 
     Object.keys(famGroups).forEach((famId, index) => {
@@ -2255,6 +2278,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         }
       });
     });
+    return true;
   }
 
   function removePanBGCColors() {
@@ -2262,6 +2286,24 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   }
   function removeColors() {
     d3.selectAll('rect').remove();
+  }
+  // Clear ALL color annotations and reset both buttons to inactive
+  function resetAllColorAnnotations() {
+    removeColors();
+    removePanBGCColors();
+    const clusterButton = document.getElementById('cluster');
+    if (clusterButton) {
+      clusterButton.dataset.active = 'false';
+      clusterButton.classList.remove('active-button');
+      clusterButton.classList.add('non-active-button');
+    }
+    const panbgcButton = document.getElementById('panbgc');
+    if (panbgcButton) {
+      panbgcButton.dataset.active = 'false';
+      panbgcButton.classList.remove('active-button');
+      panbgcButton.classList.add('non-active-button');
+    }
+    activeColoringButton = null;
   }
   // Add this function after removePanBGCColors() and removeColors()
   function handleColoringButtonToggle(buttonId, button, activateFunction, deactivateFunction) {
@@ -2284,13 +2326,14 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
         }
       }
 
-      // Activate the clicked button
-      activateFunction();
-      button.dataset.active = 'true';
-      button.classList.add('active-button');
-      button.classList.remove('non-active-button');
-      activeColoringButton = buttonId;
-      console.log(`Activated ${buttonId} button`);
+      // Activate the clicked button (only if coloring succeeded)
+      if (activateFunction()) {
+        button.dataset.active = 'true';
+        button.classList.add('active-button');
+        button.classList.remove('non-active-button');
+        activeColoringButton = buttonId;
+        console.log(`Activated ${buttonId} button`);
+      }
 
     } else {
       // Deactivate the clicked button
@@ -3457,34 +3500,24 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     if (hasClusterColumn) {
       let button = document.getElementById(id);
       if (button) {
+        button.style.display = 'block';
         button.dataset.active = 'false'; // Add data-active attribute
 
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false') {
-            // NEW: Deactivate PanBGC button if it's active (MINIMAL ADDITION)
-            if (activeColoringButton === 'panbgc') {
-              const panbgcButton = document.getElementById('panbgc');
-              if (panbgcButton && panbgcButton.dataset.active === 'true') {
-                removePanBGCColors();
-                panbgcButton.dataset.active = 'false';
-                panbgcButton.classList.remove('active-button');
-                panbgcButton.classList.add('non-active-button');
-              }
-            }
+            // Always clear all existing color annotations first
+            resetAllColorAnnotations();
 
-            // If the button is not active, display the content and set the button to active
-            colorSameCluster(); // FIXED: Remove (id) parameter
-            button.dataset.active = 'true';
-            button.classList.add('active-button');
-            button.classList.remove('non-active-button');
-            activeColoringButton = 'cluster'; // NEW: Track active button
+            // Apply cluster coloring — only activate button on success
+            if (colorSameCluster()) {
+              button.dataset.active = 'true';
+              button.classList.add('active-button');
+              button.classList.remove('non-active-button');
+              activeColoringButton = 'cluster';
+            }
           } else {
-            // If the button is active, hide the content and set the button to inactive
-            removeColors(); // FIXED: Remove (id) parameter
-            button.dataset.active = 'false';
-            button.classList.remove('active-button');
-            button.classList.add('non-active-button');
-            activeColoringButton = null; // NEW: Clear active button
+            // Deactivate: clear colors and reset
+            resetAllColorAnnotations();
           }
         });
 
@@ -3521,28 +3554,19 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
         button.addEventListener('click', function () {
           if (button.dataset.active === 'false') {
-            // NEW: Deactivate Cluster button if it's active
-            if (activeColoringButton === 'cluster') {
-              const clusterButton = document.getElementById('cluster');
-              if (clusterButton && clusterButton.dataset.active === 'true') {
-                removeColors();
-                clusterButton.dataset.active = 'false';
-                clusterButton.classList.remove('active-button');
-                clusterButton.classList.add('non-active-button');
-              }
-            }
+            // Always clear all existing color annotations first
+            resetAllColorAnnotations();
 
-            colorSamePanBGC();
-            button.dataset.active = 'true';
-            button.classList.add('active-button');
-            button.classList.remove('non-active-button');
-            activeColoringButton = 'panbgc'; // NEW: Track active button
+            // Apply PanBGC coloring — only activate button on success
+            if (colorSamePanBGC()) {
+              button.dataset.active = 'true';
+              button.classList.add('active-button');
+              button.classList.remove('non-active-button');
+              activeColoringButton = 'panbgc';
+            }
           } else {
-            removePanBGCColors();
-            button.dataset.active = 'false';
-            button.classList.remove('active-button');
-            button.classList.add('non-active-button');
-            activeColoringButton = null; // NEW: Clear active button
+            // Deactivate: clear colors and reset
+            resetAllColorAnnotations();
           }
         });
 
@@ -3878,13 +3902,13 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
 
   // Listen for clade-specific coloring events dispatched from the context menu
   document.addEventListener('colorCladeCluster', function (event) {
-    removeColors(); // clear existing cluster rects
+    resetAllColorAnnotations(); // clear all existing color annotations
     var nodeFilter = new Set(event.detail);
     colorSameCluster(nodeFilter);
   });
 
   document.addEventListener('colorCladePanBGC', function (event) {
-    removePanBGCColors(); // clear existing PanBGC rects
+    resetAllColorAnnotations(); // clear all existing color annotations
     var nodeFilter = new Set(event.detail);
     colorSamePanBGC(nodeFilter);
   });
