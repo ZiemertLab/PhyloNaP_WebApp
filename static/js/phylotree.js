@@ -579,6 +579,17 @@
       return generateError(nwk_str.length - 1);
     }
 
+    // Capture root branch length / annotation that was read after the final ')'
+    if (current_node_attribute.length > 0) {
+      tree_json["attribute"] = current_node_attribute;
+    }
+    if (current_node_annotation.length > 0) {
+      tree_json["annotation"] = current_node_annotation;
+    }
+    if (current_node_name.length > 0 && current_node_name !== "root") {
+      tree_json["name"] = current_node_name;
+    }
+
     return {
       json: tree_json,
       error: null
@@ -3074,6 +3085,7 @@
       this.radial_center = 0;
       this.radius = 1;
       this.radius_pad_for_bubbles = 0;
+      this.root_branch_length = 0;
       this.rescale_nodeSpan = 1;
       this.relative_nodeSpan = function (_node) {
         return this.nodeSpan(_node) / this.rescale_nodeSpan;
@@ -3189,6 +3201,76 @@
 
       const _label_width = this.options["show-labels"] ? this.label_width : 0;
       return this.offsets[1] + this.options["left-offset"] + _label_width;
+    }
+
+    /**
+     * Draw a root stem branch (horizontal line from the left edge to the root node).
+     * This makes the root branch length visible in dendrogram view.
+     */
+    /**
+     * Draw a root stem branch (horizontal line from the left edge to the root node)
+     * and a small root node marker. This makes the tree visually appear rooted.
+     *
+     * - If the root has a real branch length, the stem length is proportional.
+     * - If the root has no branch length (or 0), a short cosmetic stem is drawn.
+     */
+    _drawRootStem(enclosure, transitions) {
+      let root = this.phylotree.nodes;
+
+      // Only draw in non-radial layouts
+      if (this.radial()) {
+        enclosure.selectAll(".root-stem").remove();
+        enclosure.selectAll(".root-marker").remove();
+        return;
+      }
+
+      let stem_offset = this._root_stem_offset || 0;
+      if (stem_offset <= 0) {
+        enclosure.selectAll(".root-stem").remove();
+        enclosure.selectAll(".root-marker").remove();
+        return;
+      }
+
+      // root.y and root.x are already in screen coordinates after placenodes()
+      // root.y already includes the stem offset, so the stem goes from
+      // (root.y - stem_offset) to (root.y)
+      let root_screen_y = root.y; // horizontal (depth) position
+      let root_screen_x = root.x; // vertical (breadth) position
+
+      let stem_start = root_screen_y - stem_offset;
+      let stem_end = root_screen_y;
+
+      // ---- Root stem line ----
+      let stem_path = "M " + stem_start + "," + root_screen_x +
+                       " L " + stem_end + "," + root_screen_x;
+
+      let stem = enclosure.selectAll(".root-stem").data([1]);
+      stem = stem.enter()
+        .insert("path", ":first-child")
+        .attr("class", "root-stem")
+        .merge(stem)
+        .attr("d", stem_path);
+
+      // Tooltip
+      let title = stem.selectAll("title");
+      if (title.empty()) {
+        title = stem.append("title");
+      }
+      if (this.root_branch_length > 0) {
+        title.text("Root branch length = " + this.root_branch_length);
+      } else {
+        title.text("Root");
+      }
+
+      // ---- Small root node marker (filled circle at the base of the stem) ----
+      let marker = enclosure.selectAll(".root-marker").data([1]);
+      marker = marker.enter()
+        .append("circle")
+        .attr("class", "root-marker")
+        .merge(marker)
+        .attr("cx", stem_start)
+        .attr("cy", root_screen_x)
+        .attr("r", 3);
     }
 
     /**
@@ -3340,6 +3422,9 @@
         .data([0]);
 
       this.updateCollapsedClades(transitions);
+
+      // Draw root stem branch if the root has a branch length
+      this._drawRootStem(enclosure, transitions);
 
       let drawn_links = enclosure
         .selectAll(edgeCssSelectors(css_classes))
@@ -3623,6 +3708,13 @@
       } else {
         this.x = 0.0;
         // the span of the last node laid out in the top to bottom hierarchy
+        // Include root branch length if scaling is enabled and the root has one
+        if (this.do_scaling) {
+          let root_bl = this.phylotree.branch_length_accessor(a_node);
+          this.root_branch_length = (typeof root_bl === "number" && root_bl > 0) ? root_bl : 0;
+        } else {
+          this.root_branch_length = 0;
+        }
         a_node.y = 0.0;
         this.last_node = null;
         this.last_span = 0.0;
@@ -4028,7 +4120,23 @@
         this.size[0] = this.radial_center + this.radius / scaler;
         this.size[1] = this.radial_center + this.radius / scaler;
       } else {
+        // Compute the root stem offset before do_lr so it can be factored into spacing
+        // For cosmetic stems (no real root branch length), use a fixed pixel value.
+        // For real root branch lengths, the offset will be computed after do_lr.
+        let cosmetic_stem_px = 15; // fixed cosmetic stem width in pixels
+        this._root_stem_offset = cosmetic_stem_px;
+
         this.do_lr();
+
+        // Now recompute the actual root stem offset using scales[1]
+        if (this.root_branch_length > 0 && this.do_scaling) {
+          this._root_stem_offset = this.root_branch_length * this.scales[1];
+        } else {
+          // Cosmetic stem: ~3% of the scaled tree width, minimum 12px
+          let tree_width = this._extents[1][1] * this.scales[1];
+          this._root_stem_offset = Math.max(12, tree_width * 0.03);
+        }
+        let root_stem_offset = this._root_stem_offset;
 
         this.draw_branch = draw_line;
         this.edge_placer = lineSegmentPlacer;
@@ -4043,6 +4151,9 @@
             d.y = this._extents[1][1] * this.scales[1] - d.y;
           }
 
+          // Shift all nodes to the right by the root stem offset
+          d.y += root_stem_offset;
+
 
           if (isLeafNode(d)) {
             this.right_most_leaf = Math.max(
@@ -4055,6 +4166,7 @@
             d.collapsed.forEach(p => {
               p[0] *= this.scales[0];
               p[1] *= this.scales[1] * .8;
+              p[1] += root_stem_offset; // shift collapsed coordinates by root stem offset
             });
 
             let last_x = d.collapsed[1][0];
