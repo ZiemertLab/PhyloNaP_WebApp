@@ -385,9 +385,32 @@
       <!-- ===== Header: Dataset name & description ===== -->
       <div class="section-card" id="dataset-header-card">
         <h3 id="tree_name" style="font-size: 1.4rem; font-weight: 700; color: #333; margin: 0 0 6px 0;">
-          {{ superfamily_name }}{% if source == 'curated' %} - {{ dataset_name }}{% endif %}
+          {% if superfamily_name is defined and superfamily_name is matches('^Superfamily_\\d+$') and superfamily_hmm_names is defined and superfamily_hmm_names %}
+            {{ superfamily_hmm_names | join(', ') }}
+          {% else %}
+            {{ superfamily_name }}
+          {% endif %}
+          {% if source == 'curated' %} - {{ dataset_name }}{% endif %}
         </h3>
         <p id="description" style="font-size: 13px; color: #666; margin: 0; line-height: 1.5;">Loading description…</p>
+
+        {% if ec_numbers is defined and ec_numbers %}
+        <div style="margin-top: 8px; font-size: 13px; color: #555;">
+          <span style="font-weight: 600; color: #7B1B38;">EC:</span> {{ ec_numbers | join(', ') }}
+        </div>
+        {% endif %}
+
+        {% if pfams is defined and pfams %}
+        <div style="margin-top: 4px; font-size: 13px; color: #555;">
+          <span style="font-weight: 600; color: #7B1B38;">Pfam:</span> {{ pfams | join(', ') }}
+        </div>
+        {% endif %}
+
+        {% if cog_category is defined and cog_category %}
+        <div style="margin-top: 4px; font-size: 13px; color: #555;">
+          <span style="font-weight: 600; color: #7B1B38;">COG:</span> {{ cog_category | join(', ') }}
+        </div>
+        {% endif %}
 
         {% if source == 'curated' and cite %}
         <div id="cite"

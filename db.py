@@ -263,6 +263,21 @@ def init_app(app):
         os.makedirs(db_dir, exist_ok=True)
         logger.info(f"Created database directory: {db_dir}")
 
+def _parse_json_field(value, default=None):
+    """Safely parse a JSON field that may already be parsed by row_factory"""
+    if default is None:
+        default = []
+    if value is None:
+        return default
+    if isinstance(value, list):
+        return value  # Already parsed by row_factory
+    if isinstance(value, str):
+        try:
+            return json.loads(value) if value.strip() else default
+        except (json.JSONDecodeError, ValueError):
+            return default
+    return default
+
 def query_db(query, args=(), one=False):
     """Execute a query and fetch results"""
     try:
@@ -276,6 +291,58 @@ def query_db(query, args=(), one=False):
         # Return empty result instead of crashing
         return None if one else []
 
+def _ensure_extra_columns(column_names):
+    """Add ec_numbers, pfams, cog_category columns if missing, and populate from JSON"""
+    needed = {
+        'ec_numbers': 'EC',
+        'pfams': 'PFAMs', 
+        'cog_category': 'COG_category'
+    }
+    missing = {col: json_key for col, json_key in needed.items() if col not in column_names}
+    if not missing:
+        return
+    
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        for col in missing:
+            logger.info(f"Adding {col} column to datasets table")
+            cursor.execute(f"ALTER TABLE datasets ADD COLUMN {col} TEXT")
+        
+        # Populate from JSON source
+        json_path = os.path.join(current_app.config.get('DB_DIR'), 'db_structure.json')
+        if os.path.exists(json_path):
+            with open(json_path) as f:
+                data = json.load(f)
+            for sf in data.get('superfamilies', []):
+                for ds in sf.get('datasets', []):
+                    ds_id = ds.get('id', '')
+                    updates = []
+                    values = []
+                    for col, json_key in missing.items():
+                        val = ds.get(json_key, [])
+                        if val:
+                            updates.append(f"{col} = ?")
+                            values.append(json.dumps(val))
+                    if updates and ds_id:
+                        values.append(ds_id)
+                        cursor.execute(
+                            f"UPDATE datasets SET {', '.join(updates)} WHERE dataset_id = ?",
+                            values
+                        )
+            conn.commit()
+            logger.info(f"Populated columns {list(missing.keys())} from JSON source")
+        else:
+            conn.commit()
+            logger.warning(f"JSON file not found, added empty columns: {list(missing.keys())}")
+    except Exception as e:
+        logger.warning(f"Error ensuring extra columns: {e}")
+        try:
+            conn.commit()
+        except:
+            pass
+
 def get_db_structure():
     """Main function used by the web app - now uses simplified schema"""
     # First check if we have the new single-table schema
@@ -287,7 +354,8 @@ def get_db_structure():
             column_names = [col['name'] for col in columns]
             
             if 'citation_authors' in column_names and 'superfamily_name' in column_names:
-                # New single-table schema
+                # New single-table schema — ensure extra columns exist
+                _ensure_extra_columns(column_names)
                 logger.info("Using new single-table schema")
                 return get_db_structure_simple()
             else:
@@ -321,11 +389,7 @@ def get_db_structure_simple():
             sf_name = dataset['superfamily_name']
             
             if sf_name not in superfamilies_dict:
-                # Parse HMM names from JSON
-                try:
-                    hmm_names = json.loads(dataset['superfamily_hmm_names'] or '[]')
-                except:
-                    hmm_names = []
+                hmm_names = _parse_json_field(dataset.get('superfamily_hmm_names'))
                 
                 superfamilies_dict[sf_name] = {
                     'name': sf_name,
@@ -333,17 +397,11 @@ def get_db_structure_simple():
                     'datasets': []
                 }
             
-            # Parse metadata columns from JSON
-            try:
-                metadata_columns = json.loads(dataset['metadata_columns'] or '[]')
-            except:
-                metadata_columns = []
-            
-            # Parse citation authors from JSON
-            try:
-                citation_authors = json.loads(dataset['citation_authors'] or '[]')
-            except:
-                citation_authors = []
+            metadata_columns = _parse_json_field(dataset.get('metadata_columns'))
+            citation_authors = _parse_json_field(dataset.get('citation_authors'))
+            ec_numbers = _parse_json_field(dataset.get('ec_numbers'))
+            pfams = _parse_json_field(dataset.get('pfams'))
+            cog_category = _parse_json_field(dataset.get('cog_category'))
             
             # Build dataset info
             dataset_info = {
@@ -362,7 +420,10 @@ def get_db_structure_simple():
                 'N_proteins': dataset['N_proteins'] or 0,
                 'N_characterized': dataset['N_characterized'] or 0,
                 'N_np_val': dataset['N_np_val'] or 0,
-                'N_np_pred': dataset['N_np_pred'] or 0
+                'N_np_pred': dataset['N_np_pred'] or 0,
+                'EC': ec_numbers,
+                'PFAMs': pfams,
+                'COG_category': cog_category
             }
             
             # Add citation if available
@@ -762,7 +823,8 @@ def get_db_structure():
             column_names = [col['name'] for col in columns]
             
             if 'citation_authors' in column_names and 'superfamily_name' in column_names:
-                # New single-table schema
+                # New single-table schema — ensure extra columns exist
+                _ensure_extra_columns(column_names)
                 logger.info("Using new single-table schema")
                 return get_db_structure_simple()
             else:
@@ -792,6 +854,33 @@ def migrate_to_single_table():
             column_names = [col['name'] for col in columns]
             
             if 'citation_authors' in column_names and 'superfamily_name' in column_names:
+                # Check if ec_numbers column exists, add it if missing
+                if 'ec_numbers' not in column_names:
+                    logger.info("Adding ec_numbers column to existing schema")
+                    conn = get_db()
+                    cursor = conn.cursor()
+                    cursor.execute("ALTER TABLE datasets ADD COLUMN ec_numbers TEXT")
+                    
+                    # Populate ec_numbers from JSON source
+                    try:
+                        json_path = os.path.join(current_app.config.get('DB_DIR'), 'db_structure.json')
+                        if os.path.exists(json_path):
+                            with open(json_path) as f:
+                                data = json.load(f)
+                            for sf in data.get('superfamilies', []):
+                                for ds in sf.get('datasets', []):
+                                    ec = ds.get('EC', [])
+                                    if ec:
+                                        cursor.execute(
+                                            "UPDATE datasets SET ec_numbers = ? WHERE dataset_id = ?",
+                                            (json.dumps(ec), ds.get('id', ''))
+                                        )
+                            conn.commit()
+                            logger.info("Populated ec_numbers from JSON source")
+                    except Exception as e:
+                        logger.warning(f"Could not populate ec_numbers from JSON: {e}")
+                        conn.commit()
+                
                 logger.info("Database already uses new single-table schema")
                 return True
         
@@ -840,6 +929,9 @@ def migrate_to_single_table():
             N_characterized INTEGER DEFAULT 0,
             N_np_val INTEGER DEFAULT 0,
             N_np_pred INTEGER DEFAULT 0,
+            ec_numbers TEXT,
+            pfams TEXT,
+            cog_category TEXT,
             citation_authors TEXT,
             citation_doi TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -872,6 +964,11 @@ def migrate_to_single_table():
                     citation_authors = json.dumps([])
                     citation_doi = ''
                 
+                # Extract EC numbers
+                ec_numbers = json.dumps(dataset.get('EC', []))
+                pfams = json.dumps(dataset.get('PFAMs', []))
+                cog_category = json.dumps(dataset.get('COG_category', []))
+                
                 # Insert dataset
                 cursor.execute('''
                 INSERT INTO datasets (
@@ -879,8 +976,8 @@ def migrate_to_single_table():
                     description, tree, tree_model, metadata, metadata_columns,
                     alignment, sequences, source, data_type, reviewed,
                     N_proteins, N_characterized, N_np_val, N_np_pred,
-                    citation_authors, citation_doi
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ec_numbers, pfams, cog_category, citation_authors, citation_doi
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     dataset.get('id', ''),
                     sf_name,
@@ -900,6 +997,9 @@ def migrate_to_single_table():
                     dataset.get('N_characterized', 0),
                     dataset.get('N_np_val', 0),
                     dataset.get('N_np_pred', 0),
+                    ec_numbers,
+                    pfams,
+                    cog_category,
                     citation_authors,
                     citation_doi
                 ))
@@ -1089,15 +1189,12 @@ def filter_datasets(superfamily=None, source=None, min_proteins=0, max_proteins=
         # Convert datasets to the expected format
         result_datasets = []
         for dataset in datasets:
-            # Parse JSON fields
-            try:
-                hmm_names = json.loads(dataset['superfamily_hmm_names'] or '[]')
-                metadata_columns = json.loads(dataset['metadata_columns'] or '[]')
-                citation_authors = json.loads(dataset['citation_authors'] or '[]')
-            except:
-                hmm_names = []
-                metadata_columns = []
-                citation_authors = []
+            hmm_names = _parse_json_field(dataset.get('superfamily_hmm_names'))
+            metadata_columns = _parse_json_field(dataset.get('metadata_columns'))
+            citation_authors = _parse_json_field(dataset.get('citation_authors'))
+            ec_numbers = _parse_json_field(dataset.get('ec_numbers'))
+            pfams = _parse_json_field(dataset.get('pfams'))
+            cog_category = _parse_json_field(dataset.get('cog_category'))
             
             dataset_dict = {
                 'id': dataset['dataset_id'],
@@ -1105,6 +1202,9 @@ def filter_datasets(superfamily=None, source=None, min_proteins=0, max_proteins=
                 'description': dataset['description'] or '',
                 'superfamily_name': dataset['superfamily_name'],
                 'superfamily_hmm_names': hmm_names,
+                'ec_numbers': ec_numbers,
+                'pfams': pfams,
+                'cog_category': cog_category,
                 'tree': dataset['tree'] or '',
                 'tree_model': dataset['tree_model'] or '',
                 'metadata': dataset['metadata'] or '',
@@ -1248,7 +1348,7 @@ def sqlite3_row_factory(cursor, row):
         row_dict = dict(zip(column_names, row))
         
         # Parse JSON columns
-        json_columns = ['superfamily_hmm_names', 'metadata_columns', 'citation_authors']
+        json_columns = ['superfamily_hmm_names', 'metadata_columns', 'citation_authors', 'ec_numbers', 'pfams', 'cog_category']
         for json_col in json_columns:
             if json_col in row_dict and row_dict[json_col] is not None:
                 try:
@@ -1555,26 +1655,12 @@ def get_dataset_by_id(dataset_id):
             return None
         
         # Handle JSON fields - check if already parsed or need parsing
-        def safe_json_parse(value, default=None):
-            if default is None:
-                default = []
-            
-            if value is None:
-                return default
-            elif isinstance(value, list):
-                # Already parsed by custom row factory
-                return value
-            elif isinstance(value, str):
-                try:
-                    return json.loads(value) if value.strip() else default
-                except json.JSONDecodeError:
-                    return default
-            else:
-                return default
-        
-        hmm_names = safe_json_parse(dataset['superfamily_hmm_names'], [])
-        metadata_columns = safe_json_parse(dataset['metadata_columns'], [])
-        citation_authors = safe_json_parse(dataset['citation_authors'], [])
+        hmm_names = _parse_json_field(dataset.get('superfamily_hmm_names'))
+        metadata_columns = _parse_json_field(dataset.get('metadata_columns'))
+        citation_authors = _parse_json_field(dataset.get('citation_authors'))
+        ec_numbers = _parse_json_field(dataset.get('ec_numbers'))
+        pfams = _parse_json_field(dataset.get('pfams'))
+        cog_category = _parse_json_field(dataset.get('cog_category'))
         
         # Build result in the expected format
         result = {
@@ -1585,6 +1671,9 @@ def get_dataset_by_id(dataset_id):
             'description': dataset['description'] or '',
             'superfamily_name': dataset['superfamily_name'],
             'superfamily_hmm_names': hmm_names,
+            'ec_numbers': ec_numbers,
+            'pfams': pfams,
+            'cog_category': cog_category,
             'tree': dataset['tree'] or '',
             'tree_file': dataset['tree'] or '',  # Alias for compatibility
             'tree_model': dataset['tree_model'] or '',

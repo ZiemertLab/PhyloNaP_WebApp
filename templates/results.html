@@ -482,6 +482,24 @@
       }
     }
 
+    function formatSuperfamily(item) {
+      let displayName = item.superfamily || "Unknown";
+      const hmmNames = item.superfamily_hmm_names || [];
+      
+      // If superfamily name matches Superfamily_<number>, show hmm_names instead
+      if (/^Superfamily_\d+$/.test(displayName) && hmmNames.length > 0) {
+        displayName = hmmNames.join(', ');
+      }
+      
+      // Add EC number if available
+      const ecNumbers = item.ec_numbers || [];
+      if (ecNumbers.length > 0) {
+        displayName += `<br><small style="color: #666;">EC: ${ecNumbers.join(', ')}</small>`;
+      }
+      
+      return displayName;
+    }
+
     function createResultRow(item, hasMultiple, query, allResults) {
       const branchLength = item.pendant_length || 0;
       const isDistant = branchLength > 1;
@@ -504,7 +522,7 @@
         <tr data-query="${query}" data-main="true">
           <td>${query}</td>
           <td>${item.tree_id || "Unknown"}</td>
-          <td>${item.superfamily || "Unknown"}</td>
+          <td>${formatSuperfamily(item)}</td>
           <td>${item.family || "Unknown"}</td>
           <td data-tooltip="Likelihood weight ratio (LWR): Statistical confidence of this placement. Higher values (closer to 1.0) indicate more reliable placements.">
             ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}
@@ -535,9 +553,9 @@
 
         return `
           <tr data-query="${query}" data-alternative="true" style="display: none; background-color: #f8f9fa;">
-            <td style="padding-left: 20px;">↳ ${query}</td>
+            <td style="padding-left: 20px;">&#8627; ${query}</td>
             <td>${item.tree_id || "Unknown"}</td>
-            <td>${item.superfamily || "Unknown"}</td>
+            <td>${formatSuperfamily(item)}</td>
             <td>${item.family || "Unknown"}</td>
             <td data-tooltip="Likelihood weight ratio (LWR): Statistical confidence of this placement. Higher values (closer to 1.0) indicate more reliable placements.">
               ${item.like_weight_ratio ? item.like_weight_ratio.toFixed(3) : 'N/A'}

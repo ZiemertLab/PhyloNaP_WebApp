@@ -351,8 +351,22 @@
                 const datasetName = dataset.name || dataset.dataset_name || 'N/A';
                 const datasetId = dataset.id || dataset.dataset_id || null;
 
+                // If superfamily name is Superfamily_<number>, show hmm_names instead
+                let displaySuperfamily = superfamilyName;
+                const hmmNames = dataset.superfamily_hmm_names || [];
+                if (/^Superfamily_\d+$/.test(superfamilyName) && hmmNames.length > 0) {
+                    displaySuperfamily = hmmNames.join(', ');
+                }
+
+                // Add EC number if available
+                const ecNumbers = dataset.ec_numbers || [];
+                let ecDisplay = '';
+                if (ecNumbers.length > 0) {
+                    ecDisplay = `<br><small style="color: #666;">EC: ${ecNumbers.join(', ')}</small>`;
+                }
+
                 row.innerHTML = `
-                <td>${superfamilyName}</td>
+                <td>${displaySuperfamily}${ecDisplay}</td>
                 <td>${datasetName}</td>
                 <td>${dataset.source ? dataset.source.charAt(0).toUpperCase() + dataset.source.slice(1) : 'N/A'}</td>
                 <td>${dataset.data_type ? dataset.data_type.charAt(0).toUpperCase() + dataset.data_type.slice(1) : 'N/A'}</td>

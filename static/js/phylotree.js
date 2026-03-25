@@ -3242,7 +3242,7 @@
 
       // ---- Root stem line ----
       let stem_path = "M " + stem_start + "," + root_screen_x +
-                       " L " + stem_end + "," + root_screen_x;
+        " L " + stem_end + "," + root_screen_x;
 
       let stem = enclosure.selectAll(".root-stem").data([1]);
       stem = stem.enter()

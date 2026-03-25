@@ -7,6 +7,8 @@ import threading
 from datetime import datetime
 import time
 
+import re
+
 from flask import Flask, render_template, request, redirect, url_for, Response, session, jsonify
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
@@ -81,7 +83,15 @@ def create_app():
     """Application factory function"""
     flask_app = Flask(__name__)
     print("FLASK APP STARTED")
-    
+
+    # Register custom Jinja2 test for regex matching
+    def _regex_matches(value, pattern):
+        """Jinja2 test:  {% if var is matches('^Superfamily_\\d+$') %}"""
+        if not isinstance(value, str):
+            return False
+        return bool(re.match(pattern, value))
+    flask_app.jinja_env.tests['matches'] = _regex_matches
+
     # Setup logging first
     setup_app_logging()
     logger = logging.getLogger('phylonap')
@@ -685,6 +695,10 @@ def register_routes(app):
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
                              superfamily_name=dataset['superfamily_name'],
+                             superfamily_hmm_names=dataset.get('superfamily_hmm_names', []),
+                             ec_numbers=dataset.get('ec_numbers', []),
+                             pfams=dataset.get('pfams', []),
+                             cog_category=dataset.get('cog_category', []),
                              dataset_name=dataset['dataset_name'],
                              source=source,
                              cite=cite)
@@ -1178,6 +1192,10 @@ def register_routes(app):
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
                              superfamily_name=dataset['superfamily_name'],
+                             superfamily_hmm_names=dataset.get('superfamily_hmm_names', []),
+                             ec_numbers=dataset.get('ec_numbers', []),
+                             pfams=dataset.get('pfams', []),
+                             cog_category=dataset.get('cog_category', []),
                              dataset_name=dataset['dataset_name'],
                              source=source,
                              cite=cite)
@@ -1680,7 +1698,7 @@ def process_job(job_id, filename, app):
             # '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
-            'sashakorenskaia/phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+            'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True

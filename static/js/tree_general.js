@@ -41,7 +41,12 @@ const HYPERLINK_CONFIG = {
     name: 'PanBGC',
     url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
     description: 'Protein family information'
-  }
+  },
+  'KEGG_ID':{
+  name:'KEGG',
+  url:'https://www.kegg.jp/entry/:{id}',
+  description: 'KEGG reaction information'
+  },
 };
 // Create reverse mapping for external links functionality
 const HYPERLINK_SOURCE_TO_COLUMN = Object.fromEntries(
@@ -1262,6 +1267,10 @@ function cleanIdentifier(id, columnName) {
       // if (!cleanId.startsWith('PF') && /^\d+/.test(cleanId)) {
       //   cleanId = 'PF' + cleanId.padStart(5, '0');
       // }
+      break;
+    case 'KEGG_ID':
+      // Clean MITE IDs
+      cleanId = cleanId.replace(/^(KEGG_Reaction:|KEGG_rclass:)/i, '');
       break;
   }
 
