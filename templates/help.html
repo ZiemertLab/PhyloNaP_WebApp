@@ -276,57 +276,97 @@
                 </div> -->
 
                 <div class="clean-section">
-                    <h5>Pipeline Steps</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6><strong>A) Data Collection</strong></h6>
-                            <p class="small">Protein sequences and annotations gathered from multiple high-quality
-                                databases:</p>
-                            <ul class="small">
-                                <li><strong>MiBIG:</strong> Characterized biosynthetic gene clusters</li>
-                                <li><strong>MITE:</strong> Tailoring enzymes with experimentally proven reactions</li>
-                                <li><strong>antiSMASH DB:</strong> Predicted biosynthetic gene clusters</li>
-                                <li><strong>UniProt SwissProt:</strong> Curated protein annotations</li>
-                            </ul>
-                            <p class="small">Collected data includes taxonomic information, BGC types, functional
-                                annotations, and structural data (SMILES) when available.</p>
+                    <h5>Pipeline Overview</h5>
+                    <p class="small">The dataset generation pipeline consists of a series of automated steps designed
+                        to collect, filter, and organize protein sequences into phylogenetically structured datasets.</p>
 
-                            <h6><strong>B) Sequence Clustering</strong></h6>
-                            <p class="small">Sequences clustered using <code>mmseqs easy-linclust</code> with default
-                                parameters (E-value: 1.000E-03) to group related proteins.</p>
+                    <h6><strong>A) Data Collection</strong></h6>
+                    <p class="small">Protein sequences were collected from four established resources:</p>
+                    <ul class="small">
+                        <li><strong>MiBiG 4.0</strong> <span class="text-muted">(Zdouc et al. 2024)</span> &mdash;
+                            proteins from experimentally characterized biosynthetic gene clusters (BGCs)</li>
+                        <li><strong>MITE</strong> <span class="text-muted">(Zdouc et al. 2024)</span> &mdash; enzymes
+                            with experimentally validated reactions</li>
+                        <li><strong>antiSMASH-DB 4.0</strong> <span class="text-muted">(Blin et al. 2024)</span>
+                            &mdash; predicted BGC-derived proteins from large-scale genome mining</li>
+                        <li><strong>UniProt SwissProt</strong> <span class="text-muted">(Boutet et al. 2007; The
+                                UniProt Consortium 2025)</span> &mdash; manually curated sequences with high-quality
+                            functional data</li>
+                    </ul>
 
-                            <h6><strong>C) Quality Filtering</strong></h6>
-                            <p class="small">Clusters are filtered to remove:</p>
-                            <ul class="small">
-                                <li>Explicitly eukaryotic proteins or SwissProt-only clusters</li>
-                                <li>Small clusters (&lt;20 sequences)</li>
-                                <li>Sequences with unusual lengths (&lt;150 or &gt;1000 amino acids)</li>
-                                <li>NRPS/PKS sequences (require domain-level analysis)</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6><strong>D) Phylogenetic Analysis</strong></h6>
-                            <ol class="small">
-                                <li><strong>Alignment:</strong> Sequences aligned with <code>MAFFT auto</code></li>
-                                <li><strong>Trimming:</strong> Alignments trimmed with <code>TrimAl auto</code></li>
-                                <li><strong>Deduplication:</strong> Identical sequences removed (annotations preserved)
-                                </li>
-                                <li><strong>Tree construction:</strong> Phylogenetic trees built with
-                                    <code>FastTree</code>
-                                </li>
-                                <li><strong>Rooting:</strong> Trees rooted using <code>MAD-root</code></li>
-                            </ol>
+                    <h6><strong>B) Metadata Enrichment</strong></h6>
+                    <p class="small">Each sequence was enriched with metadata from multiple sources:</p>
+                    <ul class="small">
+                        <li>Taxonomic information via the <strong>NCBI Datasets Taxonomy Data Package</strong>
+                            <span class="text-muted">(O&apos;Leary et al. 2024)</span></li>
+                        <li>Functional annotations, BGC product classes, and cross-links to external databases where
+                            available</li>
+                        <li>Structural data for substrates or products from MITE/MiBiG directly, or indirectly via
+                            UniProt cross-references to <strong>ChEBI</strong>
+                            <span class="text-muted">(Hastings et al. 2016)</span> and <strong>Rhea</strong>
+                            <span class="text-muted">(Bansal et al. 2022)</span>; chemical structure depictions
+                            generated with <strong>RDKit</strong> <span class="text-muted">(Landrum et al.
+                                2020)</span></li>
+                        <li>antiSMASH-DB sequences additionally mapped to <strong>PanBGC</strong>
+                            <span class="text-muted">(Paccagnella et al. 2025)</span> to enable cross-referencing</li>
+                        <li>Dereplicated sequences (&lt;70% identity) annotated with <strong>EggNOG</strong> and
+                            domains from the <strong>Superfamilies</strong> database</li>
+                    </ul>
 
-                            <h6><strong>E) Functional Classification</strong></h6>
-                            <p class="small">All sequences classified into superfamilies using <code>HMMER</code> with
-                                superfamilies_1.75 profiles for consistent functional annotation.</p>
+                    <h6><strong>C) Sequence Clustering &amp; Quality Filtering</strong></h6>
+                    <p class="small">Sequences were clustered using <strong>MMseqs2</strong>
+                        <code>easy-linclust</code>
+                        <span class="text-muted">(Steinegger &amp; Söding 2017)</span> with minimal length 80 and
+                        sensitivity 7.5 (most sensitive mode)</sup>,
+                        generating broad clusters with relatively high diversity.
+                        Clusters were then filtered to remove only SwissProt entries (likely primary
+                            metabolism)
 
-                            <div class="custom-alert alert mt-3">
-                                <h6><i class="fa fa-info-circle"></i> Quality Assurance</h6>
-                                <p class="small mb-0">Each step includes quality control measures to ensure reliable
-                                    phylogenetic reconstructions and meaningful functional predictions.</p>
-                            </div>
-                        </div>
+                        </p>
+                    <h6><strong>D) Alignment, Tree Construction &amp; Iterative Refinement</strong></h6>
+                    <p class="small">For each retained cluster:</p>
+                    <ol class="small">
+                        <li><strong>Alignment:</strong> Multiple sequence alignment with <code>MAFFT</code> (auto mode)
+                            <span class="text-muted">(Katoh &amp; Standley 2013)</span></li>
+                        <li><strong>Trimming:</strong> Automatic trimming with <code>TrimAl</code>
+                            <span class="text-muted">(Capella-Gutiérrez et al. 2009)</span></li>
+                        <li><strong>Deduplication:</strong> Identical post-trimming sequences removed; unique
+                            annotation information retained in <code>&lt;column&gt;_others</code> metadata fields.
+                            Clusters with fewer than 10 sequences after this step are discarded.</li>
+                        <li><strong>Tree construction:</strong> Phylogenetic trees inferred with <code>FastTree</code>
+                            <span class="text-muted">(Price et al. 2010)</span></li>
+                        <li><strong>Iterative subclustering:</strong> Evolutionary diversity assessed with
+                            <code>TreeCluster</code>
+                            <span class="text-muted">(Balaban et al. 2019, PLoS ONE 14(8):e0221068)</span> using a
+                            maximal evolutionary distance threshold of 4. Trees exceeding this threshold are
+                            subclustered; each subcluster is then independently realigned, trimmed, deduplicated, and phylogenetic tree inferred.</li>
+                    </ol>
+
+                    <h6><strong>E) Alignment Quality Control</strong></h6>
+                    <p class="small">After iterative refinement, alignment quality is assessed using two criteria:</p>
+                    <ul class="small">
+                        <li><strong>Alignment length retention</strong> = <em>length of trimmed alignment</em> /
+                            <em>mean(length of protein sequences)</em>. Datasets with a value &lt;75 are discarded.
+                        </li>
+                        <li><strong>AliStat</strong> completeness metrics: datasets with row completeness
+                            <strong>C<sub>r</sub> &lt; 0.7</strong> (median fraction of non-empty symbols per row) or
+                            low overall completeness <strong>C<sub>a</sub></strong> are discarded.</li>
+                    </ul>
+
+                    <h6><strong>F) Tree Rooting</strong></h6>
+                    <p class="small">Trees are rooted using one of two approaches:</p>
+                    <ul class="small">
+                        <li><strong>MADroot</strong> <span class="text-muted">(Bryant &amp; Charleston 2018)</span>
+                            &mdash; minimal ancestor deviation rooting applied by default</li>
+                        <li><strong>Taxonomy-based rooting</strong> &mdash; a custom algorithm applied when a
+                            taxonomically divergent outgroup clade is detected (applied to ~68% of datasets)</li>
+                    </ul>
+
+                    <div class="custom-alert alert mt-3">
+                        <h6><i class="fa fa-info-circle"></i> Quality Assurance</h6>
+                        <p class="small mb-0">Each step includes quality control measures — sequence filtering,
+                            alignment completeness checks, and tree quality assessment — to ensure reliable
+                            phylogenetic reconstructions and meaningful functional predictions.</p>
                     </div>
                 </div>
                 <h4>Database Navigation</h4>
