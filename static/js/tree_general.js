@@ -42,9 +42,9 @@ const HYPERLINK_CONFIG = {
     url: 'https://panbgc-db.cs.uni-tuebingen.de/bgc/{id}',
     description: 'Protein family information'
   },
-  'KEGG_ID':{
+  'KEGG_Reaction':{
   name:'KEGG',
-  url:'https://www.kegg.jp/entry/:{id}',
+  url:'https://www.kegg.jp/entry/{id}',
   description: 'KEGG reaction information'
   },
 };
@@ -1268,8 +1268,8 @@ function cleanIdentifier(id, columnName) {
       //   cleanId = 'PF' + cleanId.padStart(5, '0');
       // }
       break;
-    case 'KEGG_ID':
-      // Clean MITE IDs
+    case 'KEGG_Reaction':
+      // Strip prefixes like "KEGG_Reaction:" or "KEGG_rclass:" from raw values
       cleanId = cleanId.replace(/^(KEGG_Reaction:|KEGG_rclass:)/i, '');
       break;
   }
