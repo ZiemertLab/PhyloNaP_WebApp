@@ -374,11 +374,14 @@
       <!-- Placement colorbar legend -->
       <div id="placement-colorbar"
         style="position: absolute; right: 10px; top: 5px; margin: 0; padding: 3px 5px; background: #f8f9fa; border-radius: 3px; border: 1px solid #dee2e6; display: none; z-index: 10;">
-        <span style="font-size: 8px; font-weight: 600; margin-right: 5px;">Evol. Distance: 0.0</span>
+        <span style="font-size: 8px; font-weight: 600; margin-right: 3px;">0.0</span>
+        <span style="font-size: 7px; color: #1a7d37; margin-right: 2px;">reliable</span>
         <div
           style="display: inline-block; width: 200px; height: 8px; background: linear-gradient(to right, rgb(123, 27, 56), rgb(154, 89, 104), rgb(189, 165, 171)); border-radius: 2px; border: 1px solid #aaa; vertical-align: middle;">
         </div>
-        <span style="font-size: 7px; color: #666; margin-left: 5px;"> 1.0+</span>
+        <span style="font-size: 7px; color: #b45309; margin-left: 2px;">unreliable</span>
+        <span style="font-size: 8px; font-weight: 600; margin-left: 3px;">1.0+</span>
+        <span style="font-size: 7px; color: #888; margin-left: 4px;">(evol. distance)</span>
       </div>
     </div>
 
@@ -612,6 +615,6 @@
   console.log(content);
 </script>
 <script src="static/js/tree_general.js"></script>
-<script src="static/js/tree_placement.js?v=20260404b"></script>
+<script src="static/js/tree_placement.js?v=20260405"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}

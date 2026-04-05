@@ -555,11 +555,14 @@ function updatePlacementContainer(placementsToShow, showAll) {
         const summaryBox = `
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
                 <li style="margin-bottom: 4px;">
-                    <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
-                    <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+                    <span style="display:inline-block; min-width: 200px;"><strong>Likelihood weight ratio</strong>
+                        <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Ranges from 0 to 1; all placements for a query sum to 1.0. With a single placement, LWR is always 1.0 — use pendant length to assess quality." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${likeWeight}</span>
+                    <span style="display:inline-block; min-width: 180px;"><strong>Pendant length</strong>
+                        <span title="The branch length connecting the query sequence to the reference tree at the point of placement. Reflects evolutionary distance — shorter values indicate the query is more similar to the reference clade (reliable); longer values suggest greater divergence (interpret with caution)." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${pendantLen}</span>
                 </li>
             </ul>
             ${qualityNote}
+            <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
         `;
 
         // Show confidence toggle only if there are hidden low-confidence placements
@@ -632,8 +635,15 @@ function updatePlacementContainer(placementsToShow, showAll) {
 
         summaryBox = `
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
+                <li style="margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
+                    <span style="display:inline-block; min-width: 200px; font-weight:600; color:#6c757d;">Likelihood weight ratio
+                        <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Higher = more probable location. All LWR values for a query sum to 1.0." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span></span>
+                    <span style="display:inline-block; min-width: 180px; font-weight:600; color:#6c757d;">Pendant length
+                        <span title="The evolutionary distance between the query and the placement node. Shorter = more similar to the reference (reliable). Longer = more distant (interpret with caution). Reflected by dot color on the tree." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span></span>
+                </li>
                 ${dataRows}
             </ul>
+            <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
         `;
     } else {
         // Show only the best placement
@@ -642,8 +652,10 @@ function updatePlacementContainer(placementsToShow, showAll) {
         const dataRow = `
             <li style="margin-bottom: 4px;">
                 <span style="font-weight:600; color:#7B1B38;">Best:</span>
-                <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
-                <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+                <span style="display:inline-block; min-width: 200px;"><strong>Likelihood weight ratio</strong>
+                    <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Higher = more probable location. All LWR values for a query sum to 1.0." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${likeWeight}</span>
+                <span style="display:inline-block; min-width: 180px;"><strong>Pendant length</strong>
+                    <span title="The evolutionary distance between the query and the placement node. Shorter = more similar to the reference (reliable). Longer = more distant (interpret with caution). Reflected by dot color on the tree." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${pendantLen}</span>
             </li>
         `;
 
@@ -651,6 +663,7 @@ function updatePlacementContainer(placementsToShow, showAll) {
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
                 ${dataRow}
             </ul>
+            <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
         `;
     }
 
