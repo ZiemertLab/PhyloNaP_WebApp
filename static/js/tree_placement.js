@@ -248,6 +248,12 @@ async function main() {
     updatePlacementContainer(currentDisplayPlacements, showingAllPlacements);
     console.log("After updatePlacementContainer");
 
+    // Show the multi-placement explanation note if more than one placement
+    const explanationEl = document.getElementById('placement-explanation');
+    if (explanationEl && currentDisplayPlacements.length > 1) {
+        explanationEl.style.display = 'block';
+    }
+
     // Show colorbar legend
     const colorbar = document.getElementById('placement-colorbar');
     console.log('Colorbar element:', colorbar);
@@ -507,6 +513,81 @@ function updatePlacementContainer(placementsToShow, showAll) {
         current[2] > best[2] ? current : best
     );
 
+    // Helper for formatting numbers
+    function formatNumber(val) {
+        if (Math.abs(val) < 0.001 && val !== 0) {
+            return Number(val).toExponential(2);
+        } else {
+            return Number(val).toFixed(4).replace(/\.?0+$/, '');
+        }
+    }
+
+    const isSinglePlacement = placementsToShow.length === 1;
+
+    // --- Single placement: simplified display ---
+    if (isSinglePlacement) {
+        const likeWeight = formatNumber(bestPlacement[2]);
+        const pendantLen = formatNumber(bestPlacement[4]);
+        const pendantVal = bestPlacement[4];
+
+        let qualityNote = '';
+        if (pendantVal < 0.1) {
+            qualityNote = `<div style="font-size: 11px; color: #1a7d37; margin-top: 6px; padding: 5px 10px; background: #f0faf3; border: 1px solid #c3e6cb; border-radius: 4px;">
+                <i class="fa fa-check-circle" style="margin-right: 4px;"></i>
+                The evolutionary distance is very short — this placement is reliable.
+            </div>`;
+        } else if (pendantVal < 0.5) {
+            qualityNote = `<div style="font-size: 11px; color: #6c757d; margin-top: 6px;">
+                Moderate evolutionary distance to the placement node.
+            </div>`;
+        } else if (pendantVal <= 1.0) {
+            qualityNote = `<div style="font-size: 11px; color: #b45309; margin-top: 6px; padding: 5px 10px; background: #fefcf3; border: 1px solid #f0e6c8; border-radius: 4px;">
+                <i class="fa fa-exclamation-circle" style="margin-right: 4px;"></i>
+                The evolutionary distance is considerable — interpret with some caution.
+            </div>`;
+        } else {
+            qualityNote = `<div style="font-size: 11px; color: #b45309; margin-top: 6px; padding: 5px 10px; background: #fefcf3; border: 1px solid #f0e6c8; border-radius: 4px;">
+                <i class="fa fa-exclamation-triangle" style="margin-right: 4px;"></i>
+                The evolutionary distance is large — the query may be distant from the reference sequences in this clade. Interpret with caution.
+            </div>`;
+        }
+
+        const summaryBox = `
+            <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
+                <li style="margin-bottom: 4px;">
+                    <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
+                    <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+                </li>
+            </ul>
+            ${qualityNote}
+        `;
+
+        // Show confidence toggle only if there are hidden low-confidence placements
+        let confidenceToggleButton = '';
+        if (allPlacements.length > 1) {
+            const buttonText = showAll ?
+                `Show only high-confidence (${highConfidencePlacements.length})` :
+                `Show all placements (${allPlacements.length})`;
+            confidenceToggleButton = `<button id="toggle-placements-btn" class="btn btn-sm btn-secondary mb-2">${buttonText}</button><br>`;
+        }
+
+        placementContainer.innerHTML = confidenceToggleButton + summaryBox;
+
+        // Re-attach confidence toggle listener
+        const toggleBtn = document.getElementById('toggle-placements-btn');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                showingAllPlacements = !showingAllPlacements;
+                const newPlacements = showingAllPlacements ? allPlacements : highConfidencePlacements;
+                updatePlacementDisplay(newPlacements, showingAllPlacements);
+                MRSA_summury(newPlacements, placements, tree, metadata);
+            });
+        }
+        return;
+    }
+
+    // --- Multiple placements: full display ---
+
     // Create toggle button for high/all confidence placements
     let confidenceToggleButton = '';
     if (highConfidencePlacements.length > 0 && highConfidencePlacements.length < allPlacements.length) {
@@ -518,31 +599,20 @@ function updatePlacementContainer(placementsToShow, showAll) {
 
     // Create status header (smaller font)
     let statusHeader = '';
-    if (highConfidencePlacements.length > 0) {
-        if (showAll) {
-            statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} total placements${!showAllPlacements ? ' (best placement has the biggest circle on the tree)' : ''}</strong></div>`;
-        } else {
-            statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${highConfidencePlacements.length} high-confidence placements (like_weight_ratio > ${treshold_to_display})${!showAllPlacements ? ' - best placement has the biggest circle on the tree' : ''}</strong></div>`;
-        }
+    if (showAll) {
+        statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all ' + allPlacements.length : 'best of ' + allPlacements.length} total placements. ${!showAllPlacements ? 'The largest dot on the tree marks the most probable placement.' : ''}</strong></div>`;
+    } else if (highConfidencePlacements.length > 0) {
+        statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all ' + highConfidencePlacements.length : 'best of ' + highConfidencePlacements.length} high-confidence placements (LWR > ${treshold_to_display}). ${!showAllPlacements ? 'The largest dot on the tree marks the most probable placement.' : ''}</strong></div>`;
     } else {
-        statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all' : 'best'} placement${showAllPlacements ? 's' : ''} out of ${allPlacements.length} placements (none with like_weight_ratio > ${treshold_to_display})${!showAllPlacements ? ' - best placement has the biggest circle on the tree' : ''}</strong></div>`;
+        statusHeader = `<div style="font-size: 12px; color: #6c757d; margin-bottom: 8px;"><strong>Showing ${showAllPlacements ? 'all ' + allPlacements.length : 'best of ' + allPlacements.length} placements (none with LWR > ${treshold_to_display}). ${!showAllPlacements ? 'The largest dot on the tree marks the most probable placement.' : ''}</strong></div>`;
     }
 
-    // Create toggle button for best vs all placements (styled as non-active/muted)
+    // Create toggle button for best vs all placements
     const placementToggleText = showAllPlacements ?
         `Show the best only` :
         `Show all ${placementsToShow.length} placements`;
-    // const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #6c757d; border-color: #dee2e6; background-color: transparent;">${placementToggleText}</button></div>`;
 
     const placementToggleButton = `<div style="margin-bottom: 10px;"><button id="toggle-placement-view-btn" class="btn btn-sm btn-outline-secondary" style="color: #495057; border-color: #6c757d; background-color: #f8f9fa; padding: 6px 12px; font-weight: 500;">${placementToggleText}</button></div>`;
-    // Helper for formatting numbers
-    function formatNumber(val) {
-        if (Math.abs(val) < 0.001 && val !== 0) {
-            return Number(val).toExponential(2);
-        } else {
-            return Number(val).toFixed(4).replace(/\.?0+$/, '');
-        }
-    }
 
     let summaryBox;
 

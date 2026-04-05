@@ -116,6 +116,7 @@
                             Trees</a>
                         <a href="#classification" class="list-group-item list-group-item-action">Enzyme
                             Classification</a>
+                        <a href="#interpreting-results" class="list-group-item list-group-item-action" style="padding-left: 28px; font-size: 13px;">↳ Interpreting Results</a>
                         <!-- <a href="#submission" class="list-group-item list-group-item-action">Data contribution</a> -->
                         <a href="#contact" class="list-group-item list-group-item-action">About, Contact & Legal</a>
                     </div>
@@ -551,12 +552,73 @@
                         class="img-fluid my-2"
                         style="max-width: 900px; display: block; margin-left: auto; margin-right: auto;">
                     <ul class="small mt-2">
-                        <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">red circles</span>
+                        <li>Placements are shown as <span style="color:#7B1B38;font-weight:600;">colored circles (dots)</span>
                             on the phylogenetic tree.</li>
                         <li>Circle size reflects the relative likelihood of each placement.</li>
                         <li>If there is one dominant placement, only that is shown by default; others can be
-                            revealed by clicking “Show all placements”.</li>
+                            revealed by clicking "Show all placements".</li>
                     </ul>
+                </div>
+
+                <!-- Interpreting Placement Results -->
+                <div id="interpreting-results" class="highlight-box mb-4" style="margin-top: 20px;">
+                    <h6><i class="fa fa-eye"></i> Interpreting Placement Results on the Tree</h6>
+                    <p class="small mb-2">
+                        When your sequence is placed onto a reference tree, the result is shown as one or more
+                        <strong>colored dots</strong>. Here is how to read them:
+                    </p>
+
+                    <h6 class="mt-3" style="font-size: 13px;"><i class="fa fa-circle" style="color:#7B1B38;"></i> Dot Color &mdash; Evolutionary Distance</h6>
+                    <p class="small mb-1">
+                        The color of each dot reflects the <strong>pendant length</strong> (evolutionary distance
+                        between your query and the placement node). A color scale is shown at the top of the tree view:
+                    </p>
+                    <ul class="small mb-2">
+                        <li><span style="color:#7B1B38; font-weight:600;">Bright / saturated</span> &mdash; short evolutionary distance (query is close to the placement node)</li>
+                        <li><span style="color:#bda5ab; font-weight:600;">Pale / faded</span> &mdash; long evolutionary distance (query is far from the placement node; interpret with caution)</li>
+                    </ul>
+
+                    <h6 class="mt-3" style="font-size: 13px;"><i class="fa fa-circle" style="font-size:10px;"></i><i class="fa fa-circle" style="font-size:6px; margin-left:2px;"></i> Dot Size &mdash; Likelihood Weight Ratio (LWR)</h6>
+                    <p class="small mb-1">
+                        When <strong>multiple placements</strong> are identified, the <strong>relative size</strong>
+                        of each dot reflects its <strong>Likelihood Weight Ratio (LWR)</strong>:
+                    </p>
+                    <ul class="small mb-2">
+                        <li><strong>Larger dots</strong> = higher LWR = more probable placement location</li>
+                        <li><strong>Smaller dots</strong> = lower LWR = less probable alternative placement</li>
+                        <li>All LWR values for a query within a tree sum up to <strong>1.0</strong></li>
+                    </ul>
+
+                    <h6 class="mt-3" style="font-size: 13px;"><i class="fa fa-hand-pointer-o"></i> Click on a Dot for Details</h6>
+                    <p class="small mb-1">
+                        Clicking on any placement dot displays the exact <strong>LWR</strong> and
+                        <strong>pendant length</strong> values — no need to search for placement IDs manually.
+                    </p>
+
+                    <div class="custom-alert alert mt-3" style="border-left: 4px solid #e85d04;">
+                        <h6><i class="fa fa-exclamation-circle" style="color:#e85d04;"></i> Important: LWR &ne; Placement Quality</h6>
+                        <p class="small mb-1">
+                            The <strong>Likelihood Weight Ratio</strong> reflects the <em>relative probability</em>
+                            of each placement <em>within the tree</em>. If there is only one placement, the LWR
+                            will be <strong>1.0</strong> by definition &mdash; this does <strong>not</strong> mean the
+                            sequence is a close match to the reference clade.
+                        </p>
+                        <p class="small mb-0">
+                            To assess <strong>placement quality</strong>, always check the <strong>pendant length</strong>
+                            (evolutionary distance). A long pendant length means the query is distant from the
+                            reference sequences, even if LWR is high. The dot color provides this information at a
+                            glance: brighter = closer, paler = more distant.
+                        </p>
+                    </div>
+
+                    <h6 class="mt-3" style="font-size: 13px;"><i class="fa fa-list-ol"></i> Multiple Placements</h6>
+                    <p class="small mb-0">
+                        A query may have multiple placements when the algorithm finds several equally likely positions.
+                        This often happens when the query is distant from the known sequences, or when the tree
+                        topology is ambiguous. In such cases, focus on the <strong>largest dot</strong> (highest LWR)
+                        and verify the pendant length. You can toggle between showing only the best placement and all
+                        placements using the controls in the Placements panel.
+                    </p>
                 </div>
             </section>
         </div>
