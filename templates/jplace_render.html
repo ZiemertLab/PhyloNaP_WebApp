@@ -306,9 +306,8 @@
       margin-top: 8px;
     }
 
-    /* Custom tooltip for ? icons */
+    /* Custom tooltip ? icon (pill only — popup is JS-driven, position:fixed) */
     .info-tooltip {
-      position: relative;
       cursor: help;
       display: inline-block;
       width: 15px;
@@ -323,14 +322,11 @@
       vertical-align: middle;
       margin-left: 3px;
     }
-    .info-tooltip .info-tooltip-text {
-      visibility: hidden;
-      opacity: 0;
-      position: absolute;
-      bottom: 125%;
-      left: 50%;
-      transform: translateX(-50%);
+    /* Floating tooltip box (appended to body by JS) */
+    .info-tooltip-popup {
+      position: fixed;
       width: 260px;
+      max-width: 80vw;
       background: #333;
       color: #fff;
       padding: 8px 10px;
@@ -339,24 +335,22 @@
       font-weight: 400;
       line-height: 1.4;
       text-align: left;
-      z-index: 1000;
+      z-index: 10000;
       pointer-events: none;
-      transition: opacity 0.2s;
+      opacity: 0;
+      transition: opacity 0.15s;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
-    .info-tooltip .info-tooltip-text::after {
+    .info-tooltip-popup.visible { opacity: 1; }
+    .info-tooltip-popup::after {
       content: '';
       position: absolute;
       top: 100%;
-      left: 50%;
+      left: var(--arrow-left, 50%);
       margin-left: -5px;
       border-width: 5px;
       border-style: solid;
       border-color: #333 transparent transparent transparent;
-    }
-    .info-tooltip:hover .info-tooltip-text {
-      visibility: visible;
-      opacity: 1;
     }
   </style>
 </head>
@@ -668,6 +662,6 @@
   console.log(content);
 </script>
 <script src="static/js/tree_general.js"></script>
-<script src="static/js/tree_placement.js?v=20260405f"></script>
+<script src="static/js/tree_placement.js?v=20260406c"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}

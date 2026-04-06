@@ -17,10 +17,53 @@ const TOOLTIP_LWR = 'The ratio of the likelihood of this placement to the sum of
 const TOOLTIP_LWR_SINGLE = TOOLTIP_LWR + ' With a single placement, LWR is always 1.0 — use pendant length to assess quality.';
 const TOOLTIP_PL = 'The branch length connecting the query to the reference tree at the placement point. Reflects evolutionary distance — shorter = more reliable, longer = interpret with caution. Shown as dot color on the tree.';
 
-// Helper: build an inline info-tooltip ? span
+// Helper: build an inline info-tooltip ? span (tooltip text stored in data attribute;
+// the popup is positioned with JS so it's never clipped by overflow containers)
 function infoTooltipHTML(text) {
-    return `<span class="info-tooltip" style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?<span class="info-tooltip-text">${text}</span></span>`;
+    // Escape HTML-special chars for safe use inside a data-attribute
+    const escaped = text.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<span class="info-tooltip" data-tip="${escaped}">?</span>`;
 }
+
+// --- Global fixed-position tooltip logic (runs once) ---
+(function initInfoTooltips() {
+    let popup = null;
+
+    function getPopup() {
+        if (!popup) {
+            popup = document.createElement('div');
+            popup.className = 'info-tooltip-popup';
+            document.body.appendChild(popup);
+        }
+        return popup;
+    }
+
+    document.addEventListener('mouseenter', function (e) {
+        const trigger = e.target.closest('.info-tooltip[data-tip]');
+        if (!trigger) return;
+        const p = getPopup();
+        p.textContent = trigger.getAttribute('data-tip');
+        // Position above the icon
+        const rect = trigger.getBoundingClientRect();
+        let left = rect.left + rect.width / 2 - 130; // 130 = half of 260px width
+        if (left < 4) left = 4;
+        if (left + 260 > window.innerWidth - 4) left = window.innerWidth - 264;
+        p.style.left = left + 'px';
+        p.style.top = (rect.top - 8) + 'px'; // 8px gap
+        p.style.transform = 'translateY(-100%)';
+        // Adjust arrow to point at the icon center
+        const arrowLeft = rect.left + rect.width / 2 - left;
+        p.style.setProperty('--arrow-left', arrowLeft + 'px');
+        void p.offsetHeight; // force reflow
+        p.classList.add('visible');
+    }, true);
+
+    document.addEventListener('mouseleave', function (e) {
+        const trigger = e.target.closest('.info-tooltip[data-tip]');
+        if (!trigger || !popup) return;
+        popup.classList.remove('visible');
+    }, true);
+})();
 
 // Scroll the tree panel so a placement node (by edge annotation) is visible
 function scrollToPlacement(edgeAnnotation) {
@@ -678,31 +721,33 @@ function updatePlacementContainer(placementsToShow, showAll) {
     let summaryBox;
 
     if (showAllPlacements) {
-        // Show all placements with numbering and center buttons
+        // Show all placements as a compact table
         const dataRows = placementsToShow.map((values, index) => {
             const likeWeight = formatNumber(values[2]);
             const pendantLen = formatNumber(values[4]);
             const edgeNum = values[0];
-            return `
-                <li style="margin-bottom: 4px; display:flex; align-items:center;">
-                    <span style="font-weight:600; color:#7B1B38; min-width:20px;">${index + 1}.</span>
-                    <span style="display:inline-block; min-width: 170px;"><strong>LWR:</strong> ${likeWeight}</span>
-                    <span style="display:inline-block; min-width: 150px;"><strong>PL:</strong> ${pendantLen}</span>
-                    <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; margin-left:6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on placement ${index + 1}"><i class="fa fa-crosshairs"></i></button>
-                </li>
-            `;
+            return `<tr>
+                <td style="font-weight:600; color:#7B1B38; padding:3px 6px 3px 0; white-space:nowrap;">${index + 1}.</td>
+                <td style="padding:3px 6px; white-space:nowrap;">${likeWeight}</td>
+                <td style="padding:3px 6px; white-space:nowrap;">${pendantLen}</td>
+                <td style="padding:3px 2px;"><button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on placement ${index + 1}"><i class="fa fa-crosshairs"></i></button></td>
+            </tr>`;
         }).join('');
 
         summaryBox = `
-            <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
-                <li style="margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
-                    <span style="display:inline-block; min-width: 200px; font-weight:600; color:#6c757d;">Likelihood weight ratio
-                        ${infoTooltipHTML(TOOLTIP_LWR)}</span>
-                    <span style="display:inline-block; min-width: 180px; font-weight:600; color:#6c757d;">Pendant length
-                        ${infoTooltipHTML(TOOLTIP_PL)}</span>
-                </li>
-                ${dataRows}
-            </ul>
+            <div style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:10px 14px; font-size:13px; margin:0 0 10px 0;">
+                <table style="border-collapse:collapse; width:100%;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #dee2e6;">
+                            <th style="padding:3px 6px 5px 0;"></th>
+                            <th style="padding:3px 6px 5px; font-weight:600; color:#6c757d; text-align:left; white-space:nowrap; font-size:12px;">LWR ${infoTooltipHTML(TOOLTIP_LWR)}</th>
+                            <th style="padding:3px 6px 5px; font-weight:600; color:#6c757d; text-align:left; white-space:nowrap; font-size:12px;">PL ${infoTooltipHTML(TOOLTIP_PL)}</th>
+                            <th style="padding:3px 2px 5px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>${dataRows}</tbody>
+                </table>
+            </div>
             <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
         `;
     } else {
@@ -710,21 +755,17 @@ function updatePlacementContainer(placementsToShow, showAll) {
         const likeWeight = formatNumber(bestPlacement[2]);
         const pendantLen = formatNumber(bestPlacement[4]);
         const edgeNum = bestPlacement[0];
-        const dataRow = `
-            <li style="margin-bottom: 4px;">
-                <span style="font-weight:600; color:#7B1B38;">Best:</span>
-                <span style="display:inline-block; min-width: 200px;"><strong>Likelihood weight ratio</strong>
-                    ${infoTooltipHTML(TOOLTIP_LWR)}<strong>:</strong> ${likeWeight}</span>
-                <span style="display:inline-block; min-width: 180px;"><strong>Pendant length</strong>
-                    ${infoTooltipHTML(TOOLTIP_PL)}<strong>:</strong> ${pendantLen}</span>
-                <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; margin-left:6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on best placement"><i class="fa fa-crosshairs"></i></button>
-            </li>
-        `;
 
         summaryBox = `
-            <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
-                ${dataRow}
-            </ul>
+            <div style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:10px 14px; font-size:13px; margin:0 0 10px 0;">
+                <div style="margin-bottom:4px;">
+                    <span style="font-weight:600; color:#7B1B38;">Best:</span>
+                    <strong>LWR</strong> ${infoTooltipHTML(TOOLTIP_LWR)}<strong>:</strong> ${likeWeight}
+                    &nbsp;&middot;&nbsp;
+                    <strong>PL</strong> ${infoTooltipHTML(TOOLTIP_PL)}<strong>:</strong> ${pendantLen}
+                    <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; margin-left:6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on best placement"><i class="fa fa-crosshairs"></i></button>
+                </div>
+            </div>
             <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
         `;
     }
