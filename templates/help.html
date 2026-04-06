@@ -656,79 +656,149 @@
             <!-- Contributing a Dataset -->
             <section id="contributing" class="mb-5">
                 <h2 class="border-bottom pb-2 section-header">5. Contributing a Dataset</h2>
+
                 <p>
-                    PhyloNaP welcomes community contributions. If you have a phylogenetic tree of proteins
-                    involved in natural product biosynthesis, you can submit it for expert review and
-                    inclusion in the database via the
+                    PhyloNaP welcomes community contributions of curated phylogenetic datasets, particularly those
+                    derived from published studies. These datasets are essential for improving coverage and annotation
+                    quality across enzyme families. Submissions can be made via the
                     <strong><a href="/upload" class="link-custom">Contribute</a></strong> page.
                 </p>
 
-                <h4>Required Files</h4>
+                <h4>General Recommendations</h4>
+                <p class="small">
+                    We strongly encourage submissions based on published phylogenetic analyses, which may be included
+                    in their original form to preserve reproducibility. We also welcome newly constructed phylogenies
+                    for enzyme families not yet represented in PhyloNaP.
+                    All submissions are subject to basic quality checks (e.g., alignment consistency, identifier
+                    matching, and completeness of metadata) prior to inclusion.
+                </p>
+
+                <!-- ── Submission data table ── -->
+                <h4>Submission Data</h4>
                 <div class="highlight-box mb-3">
                     <table class="table table-sm table-borderless mb-0" style="font-size: 13px;">
                         <thead>
                             <tr style="border-bottom: 2px solid #dee2e6;">
-                                <th style="width: 30%;">Item</th>
+                                <th style="width: 28%;">Item</th>
                                 <th>Details</th>
+                                <th style="width: 14%; text-align:center;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td><i class="fa fa-tree" style="color:#7B1B38;"></i> <strong>Phylogenetic tree</strong></td>
                                 <td>Newick format (<code>.nwk</code>, <code>.newick</code>, <code>.tree</code>, <code>.contree</code>)</td>
+                                <td style="text-align:center;"><span class="badge" style="background:#7B1B38; color:#fff;">Required</span></td>
                             </tr>
                             <tr>
                                 <td><i class="fa fa-align-left" style="color:#7B1B38;"></i> <strong>Alignment</strong></td>
                                 <td>The multiple sequence alignment used to build the tree, in FASTA format (<code>.fasta</code>, <code>.fa</code>)</td>
+                                <td style="text-align:center;"><span class="badge" style="background:#7B1B38; color:#fff;">Required</span></td>
                             </tr>
                             <tr>
                                 <td><i class="fa fa-table" style="color:#7B1B38;"></i> <strong>Annotation table</strong></td>
-                                <td>TSV or CSV with an <strong>ID</strong> column whose values match the leaf labels in the tree and alignment files. Additional columns (e.g., function, organism, product class) will appear as metadata on the tree</td>
+                                <td>TSV or CSV with an <strong>ID</strong> column whose values match the leaf labels in the tree and alignment. Additional columns (e.g., function, organism, product class) will appear as metadata on the tree</td>
+                                <td style="text-align:center;"><span class="badge" style="background:#7B1B38; color:#fff;">Required</span></td>
                             </tr>
                             <tr>
                                 <td><i class="fa fa-tag" style="color:#7B1B38;"></i> <strong>Dataset name</strong></td>
                                 <td>A short, descriptive name for the dataset</td>
+                                <td style="text-align:center;"><span class="badge" style="background:#7B1B38; color:#fff;">Required</span></td>
                             </tr>
                             <tr>
                                 <td><i class="fa fa-pencil" style="color:#7B1B38;"></i> <strong>Description</strong></td>
                                 <td>A brief description of the dataset (enzyme family, scope, organism range, etc.)</td>
+                                <td style="text-align:center;"><span class="badge" style="background:#7B1B38; color:#fff;">Required</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-cog" style="color:#7B1B38;"></i> <strong>Evolutionary model</strong></td>
+                                <td>The substitution model used for tree inference (e.g., <code>LG+F+I+R4</code>, <code>WAG+I+G4</code>). For IQ-TREE users: upload the <code>.iqtree</code> file and the model is extracted automatically. Important for placement accuracy</td>
+                                <td style="text-align:center;"><span class="badge bg-warning text-dark">Recommended</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-cubes" style="color:#7B1B38;"></i> <strong>Alignment type</strong></td>
+                                <td>Select <em>Full sequence</em> or <em>Domain</em>. If your dataset is based on individual protein domains or heavily trimmed sequences, mark it as "Domain" — this affects placement interpretation and functional inference</td>
+                                <td style="text-align:center;"><span class="badge bg-warning text-dark">Recommended</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-user" style="color:#7B1B38;"></i> <strong>Author &amp; publication</strong></td>
+                                <td>Name(s) of the tree author(s) and/or a DOI or reference to the associated publication</td>
+                                <td style="text-align:center;"><span class="badge bg-light text-dark" style="border:1px solid #ccc;">Optional</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-flask" style="color:#7B1B38;"></i> <strong>SMILES strings</strong></td>
+                                <td>Include substrate or product structures as a column in the annotation table. They will be used to render chemical structure images on the tree</td>
+                                <td style="text-align:center;"><span class="badge bg-light text-dark" style="border:1px solid #ccc;">Optional</span></td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-picture-o" style="color:#7B1B38;"></i> <strong>Molecule images</strong></td>
+                                <td>Upload images of substrates, products, or reactions (PNG/JPG). Filenames should contain the matching leaf ID. For &gt;100 images, use a <code>.zip</code> archive. Images will be stored in the database and displayed on the tree</td>
+                                <td style="text-align:center;"><span class="badge bg-light text-dark" style="border:1px solid #ccc;">Optional</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <h4>Highly Recommended</h4>
-                <div class="highlight-box mb-3">
-                    <ul class="small mb-0">
-                        <li>
-                            <strong>Evolutionary model</strong> — the substitution model used for tree
-                            inference (e.g., <code>LG+F+I+R4</code>, <code>WAG+I+G4</code>). This is
-                            important for placement accuracy. If your tree was built with
-                            <strong>IQ-TREE</strong>, you can simply upload the <code>.iqtree</code>
-                            output file and the model will be extracted automatically.
-                            <br><span class="text-muted" style="font-size: 12px;">We understand the model
-                            may not be available for every analysis, so this field is optional.</span>
-                        </li>
-                    </ul>
+                <!-- ── Quality guidelines ── -->
+                <h4>Quality Guidelines for Phylogenetic Trees</h4>
+                <p class="small">
+                    To ensure reliability and interpretability of contributed datasets, we ask authors to
+                    follow these recommendations where possible.
+                </p>
+
+                <div class="clean-section">
+                    <h6><strong><i class="fa fa-align-left" style="color:#7B1B38; margin-right:4px;"></i>Sequence Alignment</strong></h6>
+                    <p class="small">
+                        Alignments should be of high quality, without extensive regions of ambiguous alignment
+                        or excessive gaps.
+                    </p>
+
+                    <h6><strong><i class="fa fa-cut" style="color:#7B1B38; margin-right:4px;"></i>Alignment Trimming</strong></h6>
+                    <p class="small">
+                        Trimming is recommended to remove poorly aligned or highly gapped regions that may
+                        introduce noise into tree reconstruction. At the same time, care should be taken to
+                        preserve informative positions and avoid excessive trimming that reduces phylogenetic
+                        signal. As a general principle, alignments should retain sufficient length and
+                        information content relative to the underlying protein sequences.
+                    </p>
+
+                    <h6><strong><i class="fa fa-sitemap" style="color:#7B1B38; margin-right:4px;"></i>Tree Inference Methods</strong></h6>
+                    <p class="small">
+                        We recommend maximum likelihood (ML) or similarly robust methods for tree inference.
+                        Neighbor-joining (NJ) trees are generally less reliable and are primarily accepted
+                        when derived from published studies.
+                    </p>
+
+                    <h6><strong><i class="fa fa-check-square-o" style="color:#7B1B38; margin-right:4px;"></i>Branch Support</strong></h6>
+                    <p class="small">
+                        Inclusion of branch support values (e.g., bootstrap or SH-like support) is strongly
+                        encouraged, as it helps users assess the reliability of individual clades.
+                    </p>
+
+                    <h6><strong><i class="fa fa-cog" style="color:#7B1B38; margin-right:4px;"></i>Evolutionary Model</strong></h6>
+                    <p class="small">
+                        Please provide the substitution model used for tree inference. For IQ-TREE, submission
+                        of the corresponding <code>.iqtree</code> file is recommended, as the model is
+                        extracted automatically and improves placement accuracy.
+                    </p>
+
+                    <h6><strong><i class="fa fa-anchor" style="color:#7B1B38; margin-right:4px;"></i>Rooting</strong></h6>
+                    <p class="small">
+                        Rooting is essential for the placement algorithm to work correctly. Please ensure
+                        that your tree is rooted before submission. If the rooting method is known (e.g.,
+                        outgroup, midpoint, MAD), including that information is appreciated.
+                    </p>
+
+                    <h6><strong><i class="fa fa-cubes" style="color:#7B1B38; margin-right:4px;"></i>Domain-Based Datasets</strong></h6>
+                    <p class="small mb-0">
+                        If your dataset is based on protein domains or heavily trimmed sequences rather than
+                        full-length proteins, please indicate this by selecting "Domain" as the alignment type.
+                        This distinction is important because domain-based trees may affect placement
+                        interpretation and functional inference.
+                    </p>
                 </div>
 
-                <h4>Optional but Welcome</h4>
-                <div class="highlight-box mb-3">
-                    <ul class="small mb-0">
-                        <li><strong>Author &amp; publication info</strong> — name(s) of the person(s) who
-                            generated the tree, and/or a DOI or reference to the associated publication</li>
-                        <li><strong>SMILES strings</strong> — if you have substrate or product structures,
-                            include them as a column in the annotation table. They will be used to render
-                            chemical structure images on the tree</li>
-                        <li><strong>Molecule images</strong> — if you already have images of substrates,
-                            products, or reactions, you can upload them (PNG/JPG). Image filenames should
-                            contain the matching leaf ID. If there are more than 100 images, upload them
-                            as a <code>.zip</code> archive. Uploaded images will be stored in the database
-                            and displayed alongside other annotations on the tree</li>
-                    </ul>
-                </div>
-
-                <div class="custom-alert alert">
+                <div class="custom-alert alert mt-3">
                     <h6><i class="fa fa-check-circle" style="color:#7B1B38;"></i> Consistency Is Key</h6>
                     <p class="small mb-0">
                         The most common issue with submissions is <strong>mismatched identifiers</strong>.
