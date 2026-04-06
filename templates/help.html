@@ -117,7 +117,8 @@
                         <a href="#classification" class="list-group-item list-group-item-action">Enzyme
                             Classification</a>
                         <a href="#interpreting-results" class="list-group-item list-group-item-action" style="padding-left: 28px; font-size: 13px;">↳ Interpreting Results</a>
-                        <!-- <a href="#submission" class="list-group-item list-group-item-action">Data contribution</a> -->
+                        <a href="#view-page" class="list-group-item list-group-item-action">View Page</a>
+                        <a href="#contributing" class="list-group-item list-group-item-action">Contributing a Dataset</a>
                         <a href="#contact" class="list-group-item list-group-item-action">About, Contact & Legal</a>
                     </div>
                 </div>
@@ -621,6 +622,124 @@
                     </p>
                 </div>
             </section>
+
+            <!-- View Page -->
+            <section id="view-page" class="mb-5">
+                <h2 class="border-bottom pb-2 section-header">4. View Page</h2>
+                <p>
+                    The <strong><a href="/view" class="link-custom">View</a></strong> page allows you to
+                    visualize your own phylogenetic tree and metadata interactively — without submitting
+                    anything to the server. All processing happens entirely in your browser.
+                </p>
+                <div class="simple-card">
+                    <h6><i class="fa fa-eye"></i> What You Can Do</h6>
+                    <ul class="small">
+                        <li>Upload a phylogenetic tree (Newick format) together with a metadata table and,
+                            optionally, a sequence alignment</li>
+                        <li>Explore the tree interactively: zoom, pan, reroot, collapse clades</li>
+                        <li>Color and annotate leaves using any column from your metadata</li>
+                        <li>Check that your data is formatted correctly before contributing it to PhyloNaP</li>
+                    </ul>
+                    <p class="small mb-0">
+                        <strong>Privacy note:</strong> Your files are read by the browser and never sent to
+                        our servers. The viewer uses the same rendering engine as the main PhyloNaP database
+                        pages, so what you see is exactly how the dataset would look after submission.
+                    </p>
+                </div>
+                <p class="small text-muted">
+                    <i class="fa fa-lightbulb-o"></i>
+                    <strong>Tip:</strong> Use the View page to verify your data before going to
+                    <a href="/upload" class="link-custom">Contribute</a>.
+                </p>
+            </section>
+
+            <!-- Contributing a Dataset -->
+            <section id="contributing" class="mb-5">
+                <h2 class="border-bottom pb-2 section-header">5. Contributing a Dataset</h2>
+                <p>
+                    PhyloNaP welcomes community contributions. If you have a phylogenetic tree of proteins
+                    involved in natural product biosynthesis, you can submit it for expert review and
+                    inclusion in the database via the
+                    <strong><a href="/upload" class="link-custom">Contribute</a></strong> page.
+                </p>
+
+                <h4>Required Files</h4>
+                <div class="highlight-box mb-3">
+                    <table class="table table-sm table-borderless mb-0" style="font-size: 13px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #dee2e6;">
+                                <th style="width: 30%;">Item</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><i class="fa fa-tree" style="color:#7B1B38;"></i> <strong>Phylogenetic tree</strong></td>
+                                <td>Newick format (<code>.nwk</code>, <code>.newick</code>, <code>.tree</code>, <code>.contree</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-align-left" style="color:#7B1B38;"></i> <strong>Alignment</strong></td>
+                                <td>The multiple sequence alignment used to build the tree, in FASTA format (<code>.fasta</code>, <code>.fa</code>)</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-table" style="color:#7B1B38;"></i> <strong>Annotation table</strong></td>
+                                <td>TSV or CSV with an <strong>ID</strong> column whose values match the leaf labels in the tree and alignment files. Additional columns (e.g., function, organism, product class) will appear as metadata on the tree</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-tag" style="color:#7B1B38;"></i> <strong>Dataset name</strong></td>
+                                <td>A short, descriptive name for the dataset</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fa fa-pencil" style="color:#7B1B38;"></i> <strong>Description</strong></td>
+                                <td>A brief description of the dataset (enzyme family, scope, organism range, etc.)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Highly Recommended</h4>
+                <div class="highlight-box mb-3">
+                    <ul class="small mb-0">
+                        <li>
+                            <strong>Evolutionary model</strong> — the substitution model used for tree
+                            inference (e.g., <code>LG+F+I+R4</code>, <code>WAG+I+G4</code>). This is
+                            important for placement accuracy. If your tree was built with
+                            <strong>IQ-TREE</strong>, you can simply upload the <code>.iqtree</code>
+                            output file and the model will be extracted automatically.
+                            <br><span class="text-muted" style="font-size: 12px;">We understand the model
+                            may not be available for every analysis, so this field is optional.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <h4>Optional but Welcome</h4>
+                <div class="highlight-box mb-3">
+                    <ul class="small mb-0">
+                        <li><strong>Author &amp; publication info</strong> — name(s) of the person(s) who
+                            generated the tree, and/or a DOI or reference to the associated publication</li>
+                        <li><strong>SMILES strings</strong> — if you have substrate or product structures,
+                            include them as a column in the annotation table. They will be used to render
+                            chemical structure images on the tree</li>
+                        <li><strong>Molecule images</strong> — if you already have images of substrates,
+                            products, or reactions, you can upload them (PNG/JPG). Image filenames should
+                            contain the matching leaf ID. If there are more than 100 images, upload them
+                            as a <code>.zip</code> archive. Uploaded images will be stored in the database
+                            and displayed alongside other annotations on the tree</li>
+                    </ul>
+                </div>
+
+                <div class="custom-alert alert">
+                    <h6><i class="fa fa-check-circle" style="color:#7B1B38;"></i> Consistency Is Key</h6>
+                    <p class="small mb-0">
+                        The most common issue with submissions is <strong>mismatched identifiers</strong>.
+                        Make sure the IDs in your annotation table match those in the tree and alignment
+                        files exactly (including case and any version suffixes such as <code>.1</code>).
+                        Use the <a href="/view" class="link-custom">View</a> page to preview your data
+                        and catch formatting problems before submitting.
+                    </p>
+                </div>
+            </section>
+
         </div>
     </div>
 
