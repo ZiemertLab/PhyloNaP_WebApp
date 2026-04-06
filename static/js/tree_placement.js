@@ -12,6 +12,89 @@ let treshold_to_summary = 0.8;
 let placementCladeSummary = null;
 let placementCladeLeaves = null;
 
+// === Shared tooltip explanation texts (single source of truth) ===
+const TOOLTIP_LWR = 'The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements within the same tree. Higher = more probable location. All LWR values for a query sum to 1.0.';
+const TOOLTIP_LWR_SINGLE = TOOLTIP_LWR + ' With a single placement, LWR is always 1.0 — use pendant length to assess quality.';
+const TOOLTIP_PL = 'The branch length connecting the query to the reference tree at the placement point. Reflects evolutionary distance — shorter = more reliable, longer = interpret with caution. Shown as dot color on the tree.';
+
+// Helper: build an inline info-tooltip ? span
+function infoTooltipHTML(text) {
+    return `<span class="info-tooltip" style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?<span class="info-tooltip-text">${text}</span></span>`;
+}
+
+// Scroll the tree panel so a placement node (by edge annotation) is visible
+function scrollToPlacement(edgeAnnotation) {
+    const treeContainer = document.querySelector('#tree');
+    if (!treeContainer) { console.warn('scrollToPlacement: #tree not found'); return; }
+
+    // Find the node by the data-edge attribute set in the node-styler
+    const targetNode = treeContainer.querySelector('[data-edge="' + edgeAnnotation + '"]');
+    if (!targetNode) { console.warn('scrollToPlacement: node not found for data-edge', edgeAnnotation); return; }
+
+    // Use getBoundingClientRect relative to the scroll container
+    const containerRect = treeContainer.getBoundingClientRect();
+    const circle = targetNode.querySelector('circle');
+    const target = circle || targetNode;
+    const targetRect = target.getBoundingClientRect();
+
+    // Calculate where it is inside the scrollable area
+    const targetScrollTop = treeContainer.scrollTop + (targetRect.top - containerRect.top) - (containerRect.height / 2);
+    const targetScrollLeft = treeContainer.scrollLeft + (targetRect.left - containerRect.left) - (containerRect.width / 2);
+
+    treeContainer.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        left: Math.max(0, targetScrollLeft),
+        behavior: 'smooth'
+    });
+
+    // Brief highlight flash on the circle
+    if (circle) {
+        const origStroke = circle.getAttribute('stroke') || circle.style.stroke || '';
+        const origStrokeWidth = circle.getAttribute('stroke-width') || circle.style.strokeWidth || '';
+        circle.setAttribute('stroke', '#e85d04');
+        circle.setAttribute('stroke-width', '3');
+        setTimeout(() => {
+            if (origStroke) {
+                circle.setAttribute('stroke', origStroke);
+            } else {
+                circle.removeAttribute('stroke');
+            }
+            if (origStrokeWidth) {
+                circle.setAttribute('stroke-width', origStrokeWidth);
+            } else {
+                circle.removeAttribute('stroke-width');
+            }
+        }, 1500);
+    }
+}
+
+// Show Placement Details panel (used by all click handlers)
+function showPlacementDetails(confidence, pendantLength, edgeAnnotation) {
+    const details = `
+        <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px;">
+                <h4 style="margin: 0; color: #7B1B38;">Placement Info</h4>
+                <button onclick="scrollToPlacement('${edgeAnnotation}')" class="btn btn-sm" style="font-size:10px; padding:2px 8px; background:#7B1B38; color:#fff; border:none; border-radius:4px; cursor:pointer;" title="Center tree on this placement"><i class="fa fa-crosshairs" style="margin-right:3px;"></i>Show on tree</button>
+            </div>
+            <p style="margin: 5px 0;"><strong>Likelihood weight ratio</strong> ${infoTooltipHTML(TOOLTIP_LWR)}<strong>:</strong> ${confidence.toFixed(4)}</p>
+            <p style="margin: 5px 0;"><strong>Pendant length</strong> ${infoTooltipHTML(TOOLTIP_PL)}<strong>:</strong> ${pendantLength.toFixed(4)}</p>
+        </div>
+    `;
+
+    const placementContainer = document.getElementById('placement-container');
+    if (placementContainer) {
+        const detailsDiv = document.createElement('div');
+        detailsDiv.innerHTML = details;
+        detailsDiv.style.marginTop = '10px';
+
+        const existing = placementContainer.querySelector('.placement-details');
+        if (existing) existing.remove();
+
+        detailsDiv.className = 'placement-details';
+        placementContainer.appendChild(detailsDiv);
+    }
+}
+
 // Function to calculate color based on pendant length (evolutionary distance)
 function getPlacementColor(pendantLength) {
     const startColor = { r: 123, g: 27, b: 56 }; // #7B1B38 (original red - good placement)
@@ -144,7 +227,7 @@ async function main() {
 
     // === INITIAL SETUP ===
     // Create initial bubble size function
-    // Store both confidence (placement[2]) and pendant_length (placement[4])
+    // Store confidence (placement[2]) and pendant_length (placement[4])
     const initialBubbleData = Object.fromEntries(
         currentDisplayPlacements.map(placement => [placement[0], { confidence: placement[2], pendantLength: placement[4] }])
     );
@@ -178,6 +261,7 @@ async function main() {
             if (hasConfidence) {
                 container.classed("alternate", false);
                 container.classed("circle", true);
+                container.attr("data-edge", annotation); // tag for scrollToPlacement
 
                 // For internal nodes with bubbles, add a special class
                 if (!isLeaf) {
@@ -194,28 +278,8 @@ async function main() {
                     .on('click.placement', function (d) {
                         if (d3.event) d3.event.stopPropagation();
                         const confidence = data.confidence;
-                        const details = `
-                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
-                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
-                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
-                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
-                            </div>
-                        `;
-
-                        // Display in placement container
-                        const placementContainer = document.getElementById('placement-container');
-                        if (placementContainer) {
-                            const detailsDiv = document.createElement('div');
-                            detailsDiv.innerHTML = details;
-                            detailsDiv.style.marginTop = '10px';
-
-                            // Remove any existing details
-                            const existing = placementContainer.querySelector('.placement-details');
-                            if (existing) existing.remove();
-
-                            detailsDiv.className = 'placement-details';
-                            placementContainer.appendChild(detailsDiv);
-                        }
+                        const pendantLen = pendantLength;
+                        showPlacementDetails(confidence, pendantLen, annotation);
                     });
             } else {
                 container.classed("alternate", true);
@@ -236,6 +300,15 @@ async function main() {
 
     // Add click handlers to placement bubbles after tree is rendered
     attachPlacementClickHandlers(initialBubbleData);
+
+    // Auto-scroll tree to the best placement so it's visible on load
+    setTimeout(() => {
+        if (currentDisplayPlacements.length > 0) {
+            // Scroll to the best placement (highest LWR)
+            const best = currentDisplayPlacements.reduce((a, b) => b[2] > a[2] ? b : a);
+            scrollToPlacement(best[0]);
+        }
+    }, 800);
 
     document.addEventListener("terminalNodesSelected", function (event) {
         const terminalNodes = event.detail;
@@ -412,26 +485,7 @@ function attachPlacementClickHandlers(bubbleData) {
 
                         const confidence = data.confidence;
                         const pendantLength = data.pendantLength;
-                        const details = `
-                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
-                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
-                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
-                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
-                            </div>
-                        `;
-
-                        const placementContainer = document.getElementById('placement-container');
-                        if (placementContainer) {
-                            const detailsDiv = document.createElement('div');
-                            detailsDiv.innerHTML = details;
-                            detailsDiv.style.marginTop = '10px';
-
-                            const existing = placementContainer.querySelector('.placement-details');
-                            if (existing) existing.remove();
-
-                            detailsDiv.className = 'placement-details';
-                            placementContainer.appendChild(detailsDiv);
-                        }
+                        showPlacementDetails(confidence, pendantLength, annotation);
                     }, true); // Use capture phase
 
                     // Also add to the circle element
@@ -469,7 +523,7 @@ function attachPlacementClickHandlers(bubbleData) {
 // }
 // === PLACEMENT DISPLAY AND VISUALIZATION ===
 function updatePlacementDisplay(placementsToShow, showAll = false) {
-    // Update bubble data - convert to object for quick lookup [edge_num, confidence, pendant_length]
+    // Update bubble data - convert to object for quick lookup
     const bubbleData = Object.fromEntries(
         placementsToShow.map(placement => [placement[0], { confidence: placement[2], pendantLength: placement[4] }])
     );
@@ -529,6 +583,7 @@ function updatePlacementContainer(placementsToShow, showAll) {
         const likeWeight = formatNumber(bestPlacement[2]);
         const pendantLen = formatNumber(bestPlacement[4]);
         const pendantVal = bestPlacement[4];
+        const edgeNum = bestPlacement[0];
 
         let qualityNote = '';
         if (pendantVal < 0.1) {
@@ -556,13 +611,16 @@ function updatePlacementContainer(placementsToShow, showAll) {
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
                 <li style="margin-bottom: 4px;">
                     <span style="display:inline-block; min-width: 200px;"><strong>Likelihood weight ratio</strong>
-                        <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Ranges from 0 to 1; all placements for a query sum to 1.0. With a single placement, LWR is always 1.0 — use pendant length to assess quality." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${likeWeight}</span>
+                        ${infoTooltipHTML(TOOLTIP_LWR_SINGLE)}<strong>:</strong> ${likeWeight}</span>
                     <span style="display:inline-block; min-width: 180px;"><strong>Pendant length</strong>
-                        <span title="The branch length connecting the query sequence to the reference tree at the point of placement. Reflects evolutionary distance — shorter values indicate the query is more similar to the reference clade (reliable); longer values suggest greater divergence (interpret with caution)." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${pendantLen}</span>
+                        ${infoTooltipHTML(TOOLTIP_PL)}<strong>:</strong> ${pendantLen}</span>
                 </li>
             </ul>
             ${qualityNote}
-            <div style="font-size: 11px; margin-top: 6px;"><a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a></div>
+            <div style="font-size: 11px; margin-top: 6px;">
+                <a href="/help#interpreting-results" style="color: #7B1B38; text-decoration: none; font-weight: 500;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"><i class="fa fa-question-circle" style="margin-right: 3px;"></i>How to interpret placement results</a>
+                <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:10px; padding:2px 8px; margin-left:10px; background:#7B1B38; color:#fff; border:none; border-radius:4px; cursor:pointer;" title="Center tree on this placement"><i class="fa fa-crosshairs" style="margin-right:3px;"></i>Show on tree</button>
+            </div>
         `;
 
         // Show confidence toggle only if there are hidden low-confidence placements
@@ -620,15 +678,17 @@ function updatePlacementContainer(placementsToShow, showAll) {
     let summaryBox;
 
     if (showAllPlacements) {
-        // Show all placements with numbering
+        // Show all placements with numbering and center buttons
         const dataRows = placementsToShow.map((values, index) => {
             const likeWeight = formatNumber(values[2]);
             const pendantLen = formatNumber(values[4]);
+            const edgeNum = values[0];
             return `
-                <li style="margin-bottom: 4px;">
-                    <span style="font-weight:600; color:#7B1B38;">${index + 1}.</span>
-                    <span style="display:inline-block; min-width: 170px;"><strong>Likelihood weight ratio:</strong> ${likeWeight}</span>
-                    <span style="display:inline-block; min-width: 150px;"><strong>Pendant length:</strong> ${pendantLen}</span>
+                <li style="margin-bottom: 4px; display:flex; align-items:center;">
+                    <span style="font-weight:600; color:#7B1B38; min-width:20px;">${index + 1}.</span>
+                    <span style="display:inline-block; min-width: 170px;"><strong>LWR:</strong> ${likeWeight}</span>
+                    <span style="display:inline-block; min-width: 150px;"><strong>PL:</strong> ${pendantLen}</span>
+                    <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; margin-left:6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on placement ${index + 1}"><i class="fa fa-crosshairs"></i></button>
                 </li>
             `;
         }).join('');
@@ -637,9 +697,9 @@ function updatePlacementContainer(placementsToShow, showAll) {
             <ul style="background:#f8f9fa; border-radius:6px; border:1px solid #dee2e6; padding:12px 18px; list-style-type:none; font-size:13px; margin:0 0 10px 0;">
                 <li style="margin-bottom: 6px; border-bottom: 1px solid #eee; padding-bottom: 4px;">
                     <span style="display:inline-block; min-width: 200px; font-weight:600; color:#6c757d;">Likelihood weight ratio
-                        <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Higher = more probable location. All LWR values for a query sum to 1.0." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span></span>
+                        ${infoTooltipHTML(TOOLTIP_LWR)}</span>
                     <span style="display:inline-block; min-width: 180px; font-weight:600; color:#6c757d;">Pendant length
-                        <span title="The evolutionary distance between the query and the placement node. Shorter = more similar to the reference (reliable). Longer = more distant (interpret with caution). Reflected by dot color on the tree." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span></span>
+                        ${infoTooltipHTML(TOOLTIP_PL)}</span>
                 </li>
                 ${dataRows}
             </ul>
@@ -649,13 +709,15 @@ function updatePlacementContainer(placementsToShow, showAll) {
         // Show only the best placement
         const likeWeight = formatNumber(bestPlacement[2]);
         const pendantLen = formatNumber(bestPlacement[4]);
+        const edgeNum = bestPlacement[0];
         const dataRow = `
             <li style="margin-bottom: 4px;">
                 <span style="font-weight:600; color:#7B1B38;">Best:</span>
                 <span style="display:inline-block; min-width: 200px;"><strong>Likelihood weight ratio</strong>
-                    <span title="The ratio of the likelihood of this placement to the sum of likelihoods of all alternative placements for this query. Higher = more probable location. All LWR values for a query sum to 1.0." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${likeWeight}</span>
+                    ${infoTooltipHTML(TOOLTIP_LWR)}<strong>:</strong> ${likeWeight}</span>
                 <span style="display:inline-block; min-width: 180px;"><strong>Pendant length</strong>
-                    <span title="The evolutionary distance between the query and the placement node. Shorter = more similar to the reference (reliable). Longer = more distant (interpret with caution). Reflected by dot color on the tree." style="cursor:help; display:inline-block; width:14px; height:14px; line-height:14px; text-align:center; border-radius:50%; background:#dee2e6; color:#495057; font-size:10px; font-weight:700; vertical-align:middle; margin-left:2px;">?</span><strong>:</strong> ${pendantLen}</span>
+                    ${infoTooltipHTML(TOOLTIP_PL)}<strong>:</strong> ${pendantLen}</span>
+                <button onclick="scrollToPlacement('${edgeNum}')" class="btn btn-sm" style="font-size:9px; padding:1px 6px; margin-left:6px; background:#7B1B38; color:#fff; border:none; border-radius:3px; cursor:pointer; line-height:1.4;" title="Center tree on best placement"><i class="fa fa-crosshairs"></i></button>
             </li>
         `;
 
@@ -869,6 +931,7 @@ function updateTreeVisualization(bubbleData) {
                 // High-confidence nodes - apply styling to both leaf and internal nodes
                 container.classed("alternate", false);
                 container.classed("circle", true);
+                container.attr("data-edge", annotation); // tag for scrollToPlacement
 
                 // For internal nodes with bubbles, add a special class for additional styling
                 if (!isLeaf) {
@@ -885,28 +948,8 @@ function updateTreeVisualization(bubbleData) {
                     .on('click.placement', function (d) {
                         if (d3.event) d3.event.stopPropagation();
                         const confidence = data.confidence;
-                        const details = `
-                            <div style="padding: 15px; background: #f8f9fa; border-radius: 6px; border: 1px solid #dee2e6;">
-                                <h4 style="margin-top: 0; color: #7B1B38;">Placement Details</h4>
-                                <p style="margin: 5px 0;"><strong>Likelihood weight ratio:</strong> ${confidence.toFixed(4)}</p>
-                                <p style="margin: 5px 0;"><strong>Pendant length (evol. distance):</strong> ${pendantLength.toFixed(4)}</p>
-                            </div>
-                        `;
-
-                        // Display in placement container
-                        const placementContainer = document.getElementById('placement-container');
-                        if (placementContainer) {
-                            const detailsDiv = document.createElement('div');
-                            detailsDiv.innerHTML = details;
-                            detailsDiv.style.marginTop = '10px';
-
-                            // Remove any existing details
-                            const existing = placementContainer.querySelector('.placement-details');
-                            if (existing) existing.remove();
-
-                            detailsDiv.className = 'placement-details';
-                            placementContainer.appendChild(detailsDiv);
-                        }
+                        const pendantLen = pendantLength;
+                        showPlacementDetails(confidence, pendantLen, annotation);
                     });
             } else {
                 // Low-confidence or no-confidence nodes
