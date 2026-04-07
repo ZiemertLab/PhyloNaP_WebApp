@@ -9,16 +9,23 @@ async function main() {
     const tree = createTree(nwk);
     setupEventListeners(tree);
     console.log("tree: ", tree);
+
+    // Enable bootstrap flag BEFORE renderTree so node-styler can use it
+    enableBootstrapDisplay(tree);
+
     customTreeOptions = {
         'draw-size-bubbles': true,
         'node-styler': function (container, node) {
             // Non-annotated nodes
             container.classed("alternate", true); // Add "alternate" class
             container.classed("circle", false); // Ensure "circle" class is removed
+            // Bootstrap value label (only rendered when enabled)
+            styleBootstrapNode(container, node);
         }
     };
     let renderedTree = await renderTree(tree, width, height, customTreeOptions);
     console.log("renderedTree: ", renderedTree);
+
     addImagesAndMetadata(tree, metadata, metadataListArray2);
     setupSaveImageButton();
     setTreeSize(width, height);

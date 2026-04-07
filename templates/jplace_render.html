@@ -306,6 +306,13 @@
       margin-top: 8px;
     }
 
+    /* Bootstrap value labels on internal nodes */
+    .bootstrap-label {
+      font-size: 9px;
+      fill: #888;
+      pointer-events: none;
+    }
+
     /* Custom tooltip ? icon (pill only — popup is JS-driven, position:fixed) */
     .info-tooltip {
       cursor: help;
@@ -408,6 +415,10 @@
           </button>
           <button class="btn btn-light btn-sm phylotree-align-toggler" data-align="right">
             <i class="fa fa-align-right"></i>
+          </button>
+          <button type="button" class="btn btn-light btn-sm active" id="toggle-bootstrap-btn"
+            title="Toggle bootstrap values" style="display:none;" onclick="toggleBootstrapLabels()">
+            <i class="fa fa-hashtag"></i>
           </button>
 
         </div>
@@ -661,7 +672,7 @@
   console.log("phylotree_render.html content:");
   console.log(content);
 </script>
-<script src="static/js/tree_general.js"></script>
-<script src="static/js/tree_placement.js?v=20260406c"></script>
+<script src="static/js/tree_general.js?v=20260407a"></script>
+<script src="static/js/tree_placement.js?v=20260407a"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}

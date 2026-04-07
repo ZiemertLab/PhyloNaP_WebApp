@@ -801,6 +801,88 @@ window.renderTree = function (tree, height, width, customOptions) {
   return renderedTree
 }
 
+// ===== Bootstrap value display =====
+
+// Global flag – set to true when bootstrap values are detected.
+// Controls whether styleBootstrapNode appends labels.
+window._bootstrapEnabled = false;
+
+// Check whether a tree has bootstrap values on internal nodes.
+// Returns true if at least some internal nodes have numeric bootstrap_values.
+window.hasBootstrapValues = function (tree) {
+  if (!tree) return false;
+  const internals = tree.getInternals();
+  let count = 0;
+  for (const node of internals) {
+    const bv = node.data.bootstrap_values;
+    if (bv !== undefined && bv !== null && bv !== '' && !isNaN(Number(bv))) {
+      count++;
+      if (count >= 3) return true;
+    }
+  }
+  return false;
+};
+
+// Call from inside a node-styler callback: styleBootstrapNode(container, node).
+// Appends a <text class="bootstrap-label"> to internal nodes that have a
+// numeric bootstrap_values property.  Safe to call repeatedly – existing
+// labels inside this container are removed first.
+window.styleBootstrapNode = function (container, node) {
+  if (!window._bootstrapEnabled) return;
+
+  // Remove any previous label for this node (idempotent on tree.update())
+  container.selectAll('.bootstrap-label').remove();
+
+  // Only internal nodes
+  if (!node.children || node.children.length === 0) return;
+
+  const bv = node.data.bootstrap_values;
+  if (bv === undefined || bv === null || bv === '') return;
+  const num = Number(bv);
+  if (isNaN(num)) return;
+
+  // Format: [0,1] → percentage; else integer
+  let label;
+  if (num >= 0 && num <= 1) {
+    label = Math.round(num * 100).toString();
+  } else {
+    label = Math.round(num).toString();
+  }
+
+  container.append('text')
+    .attr('class', 'bootstrap-label')
+    .attr('dx', -3)
+    .attr('dy', -5)
+    .attr('text-anchor', 'end')
+    .text(label);
+};
+
+// Enable bootstrap display: sets the global flag and shows the toggle button.
+window.enableBootstrapDisplay = function (tree) {
+  if (!hasBootstrapValues(tree)) return;
+  window._bootstrapEnabled = true;
+  const btn = document.getElementById('toggle-bootstrap-btn');
+  if (btn) {
+    btn.style.display = '';
+    btn.classList.add('active');
+  }
+};
+
+// Toggle visibility of bootstrap labels
+window.toggleBootstrapLabels = function () {
+  const labels = d3.selectAll('.bootstrap-label');
+  if (labels.empty()) return;
+  const currentlyVisible = labels.style('display') !== 'none';
+  labels.style('display', currentlyVisible ? 'none' : null);
+  // Update button state
+  const btn = document.getElementById('toggle-bootstrap-btn');
+  if (btn) {
+    btn.classList.toggle('active', !currentlyVisible);
+  }
+};
+
+// ===== End bootstrap value display =====
+
 // Add this function to get tree positioning information
 window.getTreePositionInfo = function (tree) {
   // console.log('=== Checking tree object ===');

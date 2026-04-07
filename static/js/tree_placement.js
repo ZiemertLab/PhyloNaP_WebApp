@@ -291,6 +291,9 @@ async function main() {
         }
     };
 
+    // Enable bootstrap display if tree has bootstrap values
+    enableBootstrapDisplay(tree);
+
     // Render tree initially
     const initialTreeOptions = {
         'draw-size-bubbles': true,
@@ -329,6 +332,9 @@ async function main() {
                 container.classed("circle", false);
                 container.classed("internal-bubble", false);
             }
+
+            // Bootstrap value label (only rendered when enabled)
+            styleBootstrapNode(container, node);
         }
     };
     console.log("Before renderTree");
@@ -998,6 +1004,9 @@ function updateTreeVisualization(bubbleData) {
                 container.classed("circle", false);
                 container.classed("internal-bubble", false);
             }
+
+            // Bootstrap value label (only rendered when enabled)
+            styleBootstrapNode(container, node);
         }
     };
 
