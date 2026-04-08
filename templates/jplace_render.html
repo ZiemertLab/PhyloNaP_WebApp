@@ -309,7 +309,7 @@
     /* Bootstrap value labels on internal nodes */
     .bootstrap-label {
       font-size: 9px;
-      fill: #888;
+      fill: #555;
       pointer-events: none;
     }
 
@@ -418,7 +418,7 @@
           </button>
           <button type="button" class="btn btn-light btn-sm active" id="toggle-bootstrap-btn"
             title="Toggle bootstrap values" style="display:none;" onclick="toggleBootstrapLabels()">
-            <i class="fa fa-hashtag"></i>
+            <b style="font-size:11px">BS</b>
           </button>
 
         </div>
@@ -451,7 +451,8 @@
     <!-- <div id="tree_data" style="margin-top: 20%;" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div> -->
     <div class="tree" id="tree">
       <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}"
-        datasetDescr="{{ datasetDescr }}" source="{{ source }}" cite="{{ cite }}"></div>
+        datasetDescr="{{ datasetDescr }}" source="{{ source }}" cite="{{ cite }}"
+        data-bootstrap-mapping='{{ bootstrap_mapping | default("{}") }}'></div>
     </div>
   </div>
   <div class="details">
@@ -672,7 +673,7 @@
   console.log("phylotree_render.html content:");
   console.log(content);
 </script>
-<script src="static/js/tree_general.js?v=20260407a"></script>
-<script src="static/js/tree_placement.js?v=20260407a"></script>
+<script src="static/js/tree_general.js?v=20260407b"></script>
+<script src="static/js/tree_placement.js?v=20260407b"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}

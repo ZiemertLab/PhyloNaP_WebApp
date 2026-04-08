@@ -79,6 +79,97 @@ def setup_app_logging():
     
     return root_logger
 
+# ── Bootstrap-value mapping for jplace trees ─────────────────────────────────
+
+def _parse_newick_internal_nodes(nwk_str):
+    """Parse Newick string, return internal-node info.
+
+    For each internal node yields (label, annotation, leaf_set):
+      * label  – node name (= bootstrap value in original trees)
+      * annotation – {N} edge annotation (in jplace trees)
+      * leaf_set – frozenset of all descendant leaf names
+    """
+    nwk_str = nwk_str.strip().rstrip(';').strip()
+    stack, current_leaves, results = [], set(), []
+    i, n = 0, len(nwk_str)
+
+    def _read_until(stop):
+        nonlocal i
+        text, ann = '', ''
+        while i < n and nwk_str[i] not in stop:
+            if nwk_str[i] == '{':
+                end = nwk_str.index('}', i)
+                ann = nwk_str[i + 1:end]
+                i = end + 1
+            else:
+                text += nwk_str[i]
+                i += 1
+        return text, ann
+
+    while i < n:
+        c = nwk_str[i]
+        if c == '(':
+            stack.append(current_leaves)
+            current_leaves = set()
+            i += 1
+        elif c == ')':
+            i += 1
+            label, ann1 = _read_until(',:();')
+            ann2 = ''
+            if i < n and nwk_str[i] == ':':
+                i += 1
+                _, ann2 = _read_until(',();')
+            annotation = ann1 or ann2
+            node_leaves = frozenset(current_leaves)
+            results.append((label, annotation, node_leaves))
+            parent = stack.pop()
+            current_leaves = parent | current_leaves
+        elif c == ',':
+            i += 1
+        elif c in ' \t\n\r':
+            i += 1
+        else:
+            name, ann1 = _read_until(',:();')
+            if i < n and nwk_str[i] == ':':
+                i += 1
+                _, _ = _read_until(',();')
+            if name:
+                current_leaves.add(name)
+    return results
+
+
+def build_bootstrap_mapping(original_nwk, jplace_nwk):
+    """Map jplace edge-annotations → bootstrap values by leaf-set matching.
+
+    Returns ``{"edge_num": "bootstrap_value", ...}`` (both strings).
+    Returns an empty dict when no mapping can be built.
+    """
+    try:
+        orig_nodes = _parse_newick_internal_nodes(original_nwk)
+        jplace_nodes = _parse_newick_internal_nodes(jplace_nwk)
+
+        leafset_to_bs = {}
+        for label, _ann, leaves in orig_nodes:
+            if label:
+                try:
+                    float(label)
+                    leafset_to_bs[leaves] = label
+                except ValueError:
+                    pass
+
+        if not leafset_to_bs:
+            return {}
+
+        mapping = {}
+        for _label, annotation, leaves in jplace_nodes:
+            if annotation and leaves in leafset_to_bs:
+                mapping[annotation] = leafset_to_bs[leaves]
+        return mapping
+    except Exception:
+        return {}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
 def create_app():
     """Application factory function"""
     flask_app = Flask(__name__)
@@ -242,6 +333,53 @@ def register_routes(app):
     @app.route('/analyse')
     def analyse():
         return render_template('analyse.html')
+
+    @app.route('/parse_gbk', methods=['POST'])
+    def parse_gbk():
+        """Parse a GenBank (.gbk/.gb/.gbff) file and return protein FASTA sequences."""
+        file = request.files.get('gbk_file')
+        if file is None or file.filename == '':
+            return jsonify({'error': 'No GenBank file uploaded'}), 400
+
+        filename_lower = file.filename.lower()
+        if not any(filename_lower.endswith(ext) for ext in ('.gbk', '.gb', '.gbff', '.genbank')):
+            return jsonify({'error': 'File must be a GenBank file (.gbk, .gb, .gbff, or .genbank)'}), 400
+
+        try:
+            content = file.read().decode('utf-8', errors='replace')
+            records = list(SeqIO.parse(StringIO(content), 'genbank'))
+            if not records:
+                return jsonify({'error': 'No valid GenBank records found in the file'}), 400
+
+            fasta_lines = []
+            protein_count = 0
+            for record in records:
+                for feature in record.features:
+                    if feature.type == 'CDS':
+                        translation = feature.qualifiers.get('translation', [None])[0]
+                        if translation is None:
+                            continue
+                        # Use locus_tag as primary ID, fall back to protein_id, then gene
+                        locus_tag = feature.qualifiers.get('locus_tag', [None])[0]
+                        protein_id = feature.qualifiers.get('protein_id', [None])[0]
+                        gene_name = feature.qualifiers.get('gene', [None])[0]
+                        product = feature.qualifiers.get('product', ['unknown product'])[0]
+
+                        seq_id = locus_tag or protein_id or gene_name or f'CDS_{protein_count + 1}'
+                        header = f'>{seq_id} {product}'
+                        fasta_lines.append(header)
+                        fasta_lines.append(translation)
+                        protein_count += 1
+
+            if protein_count == 0:
+                return jsonify({'error': 'No CDS features with protein translations found in the GenBank file'}), 400
+
+            fasta_text = '\n'.join(fasta_lines)
+            return jsonify({'fasta': fasta_text, 'protein_count': protein_count})
+
+        except Exception as e:
+            app.logger.error(f'Error parsing GenBank file: {e}')
+            return jsonify({'error': f'Failed to parse GenBank file: {str(e)}'}), 400
 
     @app.route('/help')
     def help_page():
@@ -1185,7 +1323,26 @@ def register_routes(app):
             metadata_json = df.to_json(orient='records')
             
             app.logger.info(f"Metadata loaded: {len(df)} rows, {len(df.columns)} columns")
-            
+
+            # --- Build bootstrap mapping (original tree → jplace edges) ---
+            bootstrap_mapping_json = '{}'
+            tree_link = dataset.get('tree_file', '')
+            if tree_link:
+                orig_tree_path = os.path.join(database_dir, tree_link)
+                if os.path.exists(orig_tree_path):
+                    try:
+                        with open(orig_tree_path, 'r') as tf:
+                            orig_tree_nwk = tf.read().strip()
+                        jplace_obj = json.loads(jplace_content)
+                        jplace_tree_str = jplace_obj.get('tree', '')
+                        if orig_tree_nwk and jplace_tree_str:
+                            bs_map = build_bootstrap_mapping(orig_tree_nwk, jplace_tree_str)
+                            if bs_map:
+                                bootstrap_mapping_json = json.dumps(bs_map)
+                                app.logger.info(f"Bootstrap mapping: {len(bs_map)} edges mapped")
+                    except Exception as bse:
+                        app.logger.warning(f"Bootstrap mapping failed: {bse}")
+
             return render_template('jplace_render.html', 
                              nwk_data=jplace_content, 
                              metadata=metadata_json, 
@@ -1198,7 +1355,8 @@ def register_routes(app):
                              cog_category=dataset.get('cog_category', []),
                              dataset_name=dataset['dataset_name'],
                              source=source,
-                             cite=cite)
+                             cite=cite,
+                             bootstrap_mapping=bootstrap_mapping_json)
         
         except Exception as e:
             app.logger.error(f"Error in jplace_render: {e}", exc_info=True)

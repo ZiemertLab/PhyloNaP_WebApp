@@ -67,6 +67,36 @@
         font-size: 1em;
         text-align: center;
     }
+
+    .gbk-section {
+        margin-top: 18px;
+        padding: 14px 18px;
+        background: rgba(123, 27, 56, 0.04);
+        border: 1px dashed #7B1B38;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 100%;
+    }
+
+    .gbk-section label {
+        font-weight: 500;
+        font-size: 0.97em;
+        color: #333;
+    }
+
+    .gbk-status {
+        margin-top: 6px;
+        font-size: 0.93em;
+        color: #555;
+    }
+
+    .gbk-status.error {
+        color: #c0392b;
+    }
+
+    .gbk-status.success {
+        color: #27ae60;
+    }
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='js/overall.css') }}">
 
@@ -105,9 +135,44 @@ PTRASAELAAIRADAERLVSTLPSAYEYLSTIQPAAEG`;"> -->
             <textarea id="example-seq" name="sequence" placeholder="Paste FASTA protein sequence here" rows="4"
                 cols="50"></textarea><br>
             <input type="file" name="file" placeholder="Upload FASTA file" multiple><br>
+            <div class="gbk-section">
+                <label for="gbk-upload">Or upload a GenBank file (.gbk) to extract protein sequences:</label><br>
+                <input type="file" id="gbk-upload" accept=".gbk,.gb,.gbff,.genbank"
+                    style="margin-top:6px; width:100%;">
+                <div id="gbk-status" class="gbk-status"></div>
+            </div>
             <input type="email" name="email" placeholder="Optional: Enter your email"><br>
             <input type="submit" value="Submit" class="active-button">
         </form>
     </div>
 </div>
+<script>
+document.getElementById('gbk-upload').addEventListener('change', async function() {
+    const file = this.files[0];
+    const statusEl = document.getElementById('gbk-status');
+    if (!file) return;
+
+    statusEl.textContent = 'Parsing GenBank file...';
+    statusEl.className = 'gbk-status';
+
+    const formData = new FormData();
+    formData.append('gbk_file', file);
+
+    try {
+        const resp = await fetch('/parse_gbk', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (!resp.ok) {
+            statusEl.textContent = data.error || 'Failed to parse file';
+            statusEl.className = 'gbk-status error';
+            return;
+        }
+        document.getElementById('example-seq').value = data.fasta;
+        statusEl.textContent = `Extracted ${data.protein_count} protein sequence(s) from GenBank file.`;
+        statusEl.className = 'gbk-status success';
+    } catch (err) {
+        statusEl.textContent = 'Error: ' + err.message;
+        statusEl.className = 'gbk-status error';
+    }
+});
+</script>
 {% endblock %}

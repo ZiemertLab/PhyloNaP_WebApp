@@ -291,6 +291,29 @@ async function main() {
         }
     };
 
+    // --- Inject bootstrap values from server-side mapping ---
+    var bsMapAttr = document.getElementById('tree_data')?.getAttribute('data-bootstrap-mapping');
+    if (bsMapAttr) {
+        try {
+            var bsMap = JSON.parse(bsMapAttr);
+            if (Object.keys(bsMap).length > 0) {
+                console.log('Bootstrap mapping loaded, edges:', Object.keys(bsMap).length);
+                // Walk internal nodes and set bootstrap_values from the mapping
+                tree.getInternals().forEach(function (nd) {
+                    var ann = nd.data?.annotation;
+                    if (ann !== undefined && ann !== null) {
+                        var key = String(ann);
+                        if (bsMap[key] !== undefined) {
+                            nd.data.bootstrap_values = bsMap[key];
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Failed to parse bootstrap mapping:', e);
+        }
+    }
+
     // Enable bootstrap display if tree has bootstrap values
     enableBootstrapDisplay(tree);
 
