@@ -441,9 +441,13 @@
     function loadTreeScriptsNow() {
         console.log('Loading tree scripts now...');
 
-        // Load tree_general.js
+        // Load field_descriptions.js first, then tree_general.js
+        const script0 = document.createElement('script');
+        script0.src = 'static/js/field_descriptions.js?v=20260408a';
+        script0.onload = function () {
+            console.log('field_descriptions.js loaded');
         const script1 = document.createElement('script');
-        script1.src = 'static/js/tree_general.js';
+        script1.src = 'static/js/tree_general.js?v=20260408a';
         script1.onload = function () {
             console.log('tree_general.js loaded');
 
@@ -462,6 +466,11 @@
             console.error('Failed to load tree_general.js');
         };
         document.head.appendChild(script1);
+        }; // end script0.onload
+        script0.onerror = function () {
+            console.error('Failed to load field_descriptions.js');
+        };
+        document.head.appendChild(script0);
     }
 </script>
 
@@ -470,7 +479,8 @@
     console.log("view_client_working.html content:");
     console.log(content);
 </script>
-<script src="static/js/tree_general.js"></script>
-<script src="static/js/tree_database.js"></script>
+<script src="static/js/field_descriptions.js?v=20260408a"></script>
+<script src="static/js/tree_general.js?v=20260408a"></script>
+<script src="static/js/tree_database.js?v=20260408a"></script>
 
 {% endblock %}

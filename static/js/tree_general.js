@@ -3313,6 +3313,21 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
               .attr('data-slot', slotIndex);
 
             applyTruncation(textElement, text, 30);
+
+            // Enrich tooltip with field description (e.g. COG_category codes)
+            if (typeof FIELD_DESCRIPTIONS !== 'undefined' && FIELD_DESCRIPTIONS[columnName]) {
+              var descMap = FIELD_DESCRIPTIONS[columnName];
+              var codes = String(text).split(/[;,|]/).map(function (s) { return s.trim(); }).filter(Boolean);
+              var tips = codes.map(function (code) {
+                return descMap[code] ? code + ' \u2014 ' + descMap[code] : null;
+              }).filter(Boolean);
+              if (tips.length > 0) {
+                var descTip = tips.join('\n');
+                // Replace existing <title> with enriched version
+                textElement.select('title').remove();
+                textElement.append('title').text(descTip);
+              }
+            }
           }
         }
       });

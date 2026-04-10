@@ -483,8 +483,11 @@
         {% endif %}
 
         {% if cog_category is defined and cog_category %}
-        <div style="margin-top: 4px; font-size: 13px; color: #555;">
-          <span style="font-weight: 600; color: #7B1B38;">COG:</span> {{ cog_category | join(', ') }}
+        <div id="cog-detail" style="margin-top: 4px; font-size: 13px; color: #555;">
+          <span style="font-weight: 600; color: #7B1B38;">COG:</span>
+          {% for code in cog_category %}
+            <span class="cog-code-badge" title="" style="cursor: help; border-bottom: 1px dotted #999;">{{ code }}</span>{% if not loop.last %},{% endif %}
+          {% endfor %}
         </div>
         {% endif %}
 
@@ -673,7 +676,16 @@
   console.log("phylotree_render.html content:");
   console.log(content);
 </script>
-<script src="static/js/tree_general.js?v=20260407b"></script>
-<script src="static/js/tree_placement.js?v=20260407b"></script>
+<script src="static/js/field_descriptions.js?v=20260408a"></script>
+<script>
+  // Enrich COG badges in the details panel with descriptions from FIELD_DESCRIPTIONS
+  document.querySelectorAll('.cog-code-badge').forEach(function(el) {
+    var code = el.textContent.trim();
+    var desc = (FIELD_DESCRIPTIONS['COG_category'] || {})[code];
+    if (desc) el.title = code + ' \u2014 ' + desc;
+  });
+</script>
+<script src="static/js/tree_general.js?v=20260408a"></script>
+<script src="static/js/tree_placement.js?v=20260408a"></script>
 <!-- <script src="static/js/tree_rendering.js"></script> -->
 {% endblock %}
