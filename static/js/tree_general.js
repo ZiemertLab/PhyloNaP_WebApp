@@ -2037,26 +2037,28 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // For BGC_product, scan the entire dataset until we find a BGC
     if (imageType === 'BGC_product') {
       console.log('Scanning entire dataset for BGC entries...');
-      // Check if mibig column exists
-      if (!metadata[0].hasOwnProperty('mibig')) {
+      // Check if mibig column exists (supports mibig, MIBiG_ID, MIBiG)
+      const mibigCol = ['mibig', 'MIBiG_ID', 'MIBiG'].find(col => metadata[0].hasOwnProperty(col));
+      if (!mibigCol) {
         console.log('No mibig column found in metadata');
         return false;
       }
 
       for (let i = 0; i < metadata.length; i++) {
         const item = metadata[i];
+        const mibigVal = item[mibigCol];
 
         // Only process non-empty mibig values
-        if (item.mibig &&
-          item.mibig !== 'NaN' &&
-          item.mibig !== 'nan' &&
-          item.mibig !== '' &&
-          item.mibig !== null) {
+        if (mibigVal &&
+          mibigVal !== 'NaN' &&
+          mibigVal !== 'nan' &&
+          mibigVal !== '' &&
+          mibigVal !== null) {
 
-          console.log(`Found MIBiG entry at index ${i}: ${item.mibig}`);
+          console.log(`Found MIBiG entry at index ${i}: ${mibigVal}`);
 
           // Test this BGC entry for images
-          let bgc = item.mibig;
+          let bgc = mibigVal;
           if (bgc.includes(';') || bgc.includes(',') || bgc.includes('|')) {
             // If multiple IDs, just use the first one
             bgc = bgc.split(/[;,|]/)[0].trim();
@@ -2519,7 +2521,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     // Add this line:
     createColumnHeader('BGC Products', slotIndex);
 
-    let columnName = 'mibig';
+    let columnName = ['mibig', 'MIBiG_ID', 'MIBiG'].find(col => metadata.length > 0 && metadata[0].hasOwnProperty(col)) || 'mibig';
     if (metadata.length > 0) {
       let columnNames = Object.keys(metadata[0]);
       console.log("Available columns:", columnNames);
@@ -3722,8 +3724,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
   (async function () {
     let hasBGCImages = false;
     if (metadata && metadata.length > 0) {
-      // Change: Check for mibig column instead of Cluster
-      let hasMibigColumn = metadata[0].hasOwnProperty('mibig');
+      // Change: Check for mibig column instead of Cluster (supports mibig, MIBiG_ID, MIBiG)
+      let hasMibigColumn = ['mibig', 'MIBiG_ID', 'MIBiG'].some(col => metadata[0].hasOwnProperty(col));
       console.log('Checking for mibig column:', hasMibigColumn);
 
       if (hasMibigColumn) {

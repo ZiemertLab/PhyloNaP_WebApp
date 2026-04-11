@@ -1856,7 +1856,7 @@ def process_job(job_id, filename, app):
             # '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
-            'sashakorenskaia/phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+            'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
