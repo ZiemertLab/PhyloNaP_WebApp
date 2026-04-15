@@ -373,7 +373,8 @@ def register_routes(app):
 
             if protein_count == 0:
                 return jsonify({'error': 'No CDS features with protein translations found in the GenBank file'}), 400
-
+            if protein_count > 100:
+                return jsonify({'error': f'Too many proteins ({protein_count}) in the GenBank file. Please upload a file with 100 or fewer proteins.'}), 400
             fasta_text = '\n'.join(fasta_lines)
             return jsonify({'fasta': fasta_text, 'protein_count': protein_count})
 
