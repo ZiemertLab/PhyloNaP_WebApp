@@ -585,11 +585,36 @@
                     <p class="small mb-1">
                         The color of each dot reflects the <strong>pendant length</strong> (evolutionary distance
                         between your query and the placement node). A color scale is shown at the top of the tree view:
+                        brighter and more saturated dots indicate shorter evolutionary distance, while pale or faded dots
+                        indicate greater distance. The table below summarises how pendant length values relate to
+                        placement reliability:
                     </p>
-                    <ul class="small mb-2">
-                        <li><span style="color:#7B1B38; font-weight:600;">Bright / saturated</span> &mdash; short evolutionary distance (query is close to the placement node)</li>
-                        <li><span style="color:#bda5ab; font-weight:600;">Pale / faded</span> &mdash; long evolutionary distance (query is far from the placement node; interpret with caution)</li>
-                    </ul>
+                    <table class="table table-sm mb-2" style="font-size: 12px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #dee2e6;">
+                                <th style="width:22%;">Pendant length</th>
+                                <th>Interpretation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>&lt; 0.1</strong></td>
+                                <td>Very short evolutionary distance &mdash; close homolog; functional inference is likely reliable.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>0.1 &ndash; 0.2</strong></td>
+                                <td>Short evolutionary distance &mdash; likely related, but minor functional differences are possible.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>0.2 &ndash; 0.5</strong></td>
+                                <td>Substantial evolutionary distance &mdash; use caution when assigning specific function; broad functional class may still be informative.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>0.5 &ndash; 1.0</strong></td>
+                                <td>Very large evolutionary distance &mdash; avoid direct functional extrapolation; use only for broad phylogenetic context or exploratory interpretation.</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
                     <h6 class="mt-3" style="font-size: 13px;"><i class="fa fa-circle" style="font-size:10px;"></i><i class="fa fa-circle" style="font-size:6px; margin-left:2px;"></i> Dot Size &mdash; Likelihood Weight Ratio (LWR)</h6>
                     <p class="small mb-1">

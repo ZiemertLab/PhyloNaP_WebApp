@@ -661,21 +661,26 @@ function updatePlacementContainer(placementsToShow, showAll) {
         if (pendantVal < 0.1) {
             qualityNote = `<div style="font-size: 11px; color: #1a7d37; margin-top: 6px; padding: 5px 10px; background: #f0faf3; border: 1px solid #c3e6cb; border-radius: 4px;">
                 <i class="fa fa-check-circle" style="margin-right: 4px;"></i>
-                The evolutionary distance is very short — this placement is reliable.
+                Very short evolutionary distance — close homolog; functional inference is likely reliable.
+            </div>`;
+        } else if (pendantVal < 0.2) {
+            qualityNote = `<div style="font-size: 11px; color: #1a7d37; margin-top: 6px; padding: 5px 10px; background: #f0faf3; border: 1px solid #c3e6cb; border-radius: 4px;">
+                <i class="fa fa-check-circle" style="margin-right: 4px;"></i>
+                Short evolutionary distance — likely related, but minor functional differences are possible.
             </div>`;
         } else if (pendantVal < 0.5) {
             qualityNote = `<div style="font-size: 11px; color: #6c757d; margin-top: 6px;">
-                Moderate evolutionary distance to the placement node.
+                Substantial evolutionary distance — use caution when assigning specific function; broad functional class may still be informative.
             </div>`;
         } else if (pendantVal <= 1.0) {
             qualityNote = `<div style="font-size: 11px; color: #b45309; margin-top: 6px; padding: 5px 10px; background: #fefcf3; border: 1px solid #f0e6c8; border-radius: 4px;">
                 <i class="fa fa-exclamation-circle" style="margin-right: 4px;"></i>
-                The evolutionary distance is considerable — interpret with some caution.
+                Very large evolutionary distance — avoid direct functional extrapolation; use only for broad phylogenetic context or exploratory interpretation.
             </div>`;
         } else {
             qualityNote = `<div style="font-size: 11px; color: #b45309; margin-top: 6px; padding: 5px 10px; background: #fefcf3; border: 1px solid #f0e6c8; border-radius: 4px;">
                 <i class="fa fa-exclamation-triangle" style="margin-right: 4px;"></i>
-                The evolutionary distance is large — the query may be distant from the reference sequences in this clade. Interpret with caution.
+                Extremely distant placement — likely too divergent for meaningful functional inference.
             </div>`;
         }
 
