@@ -1533,7 +1533,35 @@ def register_routes(app):
                 print(f"File exists after save: {os.path.exists(individual_submission_file)}")
                 app.logger.info(f"Individual submission saved: {individual_submission_file}")
                 app.logger.info(f"Dataset submission saved with ID: {dataset_id}")
-                
+
+                # Send admin notification email
+                try:
+                    admin_email = app.config.get('ADMIN_EMAIL', '')
+                    if admin_email:
+                        admin_script = os.path.join(
+                            os.path.dirname(os.path.abspath(__file__)), '..', 'send_admin_notification.sh'
+                        )
+                        if os.path.isfile(admin_script):
+                            submission_time_iso = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                            subprocess.run(
+                                ['/bin/bash', admin_script,
+                                 admin_email,
+                                 dataset_id,
+                                 dataset_entry.get('name', ''),
+                                 form_data.get('authors', ''),
+                                 form_data.get('email', ''),
+                                 superfamily_name,
+                                 submission_time_iso],
+                                check=False
+                            )
+                            app.logger.info(f"Admin notification sent to {admin_email} for submission {dataset_id}")
+                        else:
+                            app.logger.warning(f"Admin notification script not found: {admin_script}")
+                    else:
+                        app.logger.warning("ADMIN_EMAIL not configured; skipping admin notification")
+                except Exception as notify_err:
+                    app.logger.error(f"Failed to send admin notification: {notify_err}")
+
                 # Format submission time for display
                 submission_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
                 
@@ -1856,7 +1884,7 @@ def process_job(job_id, filename, app):
             # '--memory','8g', '--cpus','4', \
             '--name', job_id, '-v', f'{os.path.abspath(database_dir)}:/app/data', 
             '-v', f"{os.path.abspath(os.path.join(tmp_directory, job_id))}:/app/results",
-            'sashakorenskaia/phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
+            'phylonap-backend', 'python', '/app/place_enz.py', job_id, filename],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True
