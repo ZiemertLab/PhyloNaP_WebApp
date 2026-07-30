@@ -4129,7 +4129,7 @@ window.setupSaveImageButton = function () {
     defsEl.appendChild(styleEl);
     styleEl.setAttribute("type", "text/css");
 
-    // Set the CSS content via a CDATA node BEFORE serializing. Previously the
+    // Set the CSS content as a text child BEFORE serializing. Previously the
     // style element was left empty and the CSS was spliced in afterwards via
     // source.replace("</style>", ...). But an empty <style> element has no
     // children, so XMLSerializer emits it as a self-closing tag
@@ -4137,7 +4137,12 @@ window.setupSaveImageButton = function () {
     // making that replace() a silent no-op. That dropped ALL inlined CSS
     // (including .branch stroke/fill rules) from every exported SVG, which is
     // the actual cause of the invisible/black-triangle branches on export.
-    styleEl.appendChild(document.createCDATASection(styles));
+    //
+    // Note: use textContent, NOT document.createCDATASection() — the latter
+    // throws NotSupportedError in an HTML document. Giving the element a text
+    // child is enough to make XMLSerializer emit a proper <style>…</style>
+    // pair (and it escapes any <, >, & in the CSS along the way).
+    styleEl.textContent = styles;
 
     // removing attributes so they aren't doubled up
     svg.removeAttribute("xmlns");
