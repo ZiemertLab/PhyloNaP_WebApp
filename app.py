@@ -29,6 +29,7 @@ cache = {}
 
 from logging.handlers import RotatingFileHandler
 
+MAX_SEQUENCES = 100
 # Setup logging configuration
 def setup_app_logging():
     # Create logs directory if it doesn't exist
@@ -1086,7 +1087,6 @@ def register_routes(app):
     # Add other routes here...
     @app.route('/submit', methods=['POST'])
     def submit():
-        # Check if a file was uploaded
         sequence = request.form['sequence']
         file = request.files.get('file')
         email = request.form.get('email', '').strip()
@@ -1094,71 +1094,101 @@ def register_routes(app):
         if sequence == '' and (file is None or file.filename == ''):
             return 'No fasta sequence was uploaded', 400
 
-        # Validate email format if provided (but don't require it)
         if email and not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return 'Invalid email address format', 400
 
-        # Generate a unique job ID
+        # ── Validate & fix FASTA ─────────────────────────────────────────
+        if file and file.filename != '':
+            filename = secure_filename(file.filename)
+            raw_content = file.read().decode('utf-8', errors='replace')
+        else:
+            filename = 'sequence.fasta'
+            raw_content = sequence
+
+        validation = validate_and_fix_fasta(raw_content)
+
+        if not validation['valid']:
+            error_detail = ' | '.join(validation['errors'])
+            return f'Invalid FASTA input: {error_detail}', 400
+
+        # Use the (possibly corrected) content from here on
+        content = validation['fixed_content']
+        # ─────────────────────────────────────────────────────────────────
+
         job_id = str(uuid.uuid4())
         print('Job ID:', job_id, flush=True)
         tmp_directory = app.config['TMP_DIR']
         os.makedirs(os.path.join(tmp_directory, job_id))
-        
-        # Create status file showing job is queued
+
         status_file = os.path.join(tmp_directory, job_id, 'output_status.txt')
         with open(status_file, 'w') as f:
             f.write('queued')
-        
-        # Process file or sequence
-        if file and file.filename != '':
-            filename = secure_filename(file.filename)
-            file_path = os.path.join(tmp_directory, job_id, filename)
-            file.save(file_path)
-            print('File uploaded:', filename, flush=True)
-            with open(file_path, 'r') as f:
-                content = f.read()
-            if not is_fasta(content):
-                return 'Uploaded file is not a valid FASTA protein file', 400
-        elif sequence != '':
-            filename = 'sequence.fasta'
-            if not is_fasta(sequence):
-                return 'Pasted sequence is not a valid FASTA protein sequence', 400
-            with open(os.path.join(tmp_directory, job_id, filename), 'w') as f:
-                f.write(sequence)
-        
-        # Save metadata including email if provided
+
+        file_path = os.path.join(tmp_directory, job_id, filename)
+        with open(file_path, 'w') as f:
+            f.write(content)
+
+        # Log any auto-fixes so they appear in the job log
+        if validation['warnings']:
+            log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
+            with open(log_file, 'w') as f:
+                for w in validation['warnings']:
+                    f.write(f"[AUTO-FIX] {w}\n")
+
         metadata = {
             'filename': filename,
             'submission_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'email': email if email else None
+            'email': email if email else None,
+            'fasta_warnings': validation['warnings'],
         }
-        
         metadata_file = os.path.join(tmp_directory, job_id, 'metadata.json')
         with open(metadata_file, 'w') as f:
             json.dump(metadata, f)
-        
-        # Add job to queue and track it
+
         with app.queue_lock:
             app.queued_jobs.append((job_id, filename, datetime.now()))
             queue_position = len(app.queued_jobs)
-            
-            # Create log file with queue information
+
             log_file = os.path.join(tmp_directory, job_id, 'output_log.txt')
-            with open(log_file, 'w') as f:
-                f.write(f"Job {job_id} added to queue at position {queue_position} on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            with open(log_file, 'a') as f:
+                f.write(f"Job {job_id} added to queue at position {queue_position} on "
+                        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
                 f.write(f"Current active jobs: {len(app.active_jobs)}/{app.max_concurrent_jobs}\n")
                 f.write(f"Total jobs in queue: {len(app.queued_jobs)}\n")
-                
                 if queue_position > 1:
-                    estimated_wait_minutes = (queue_position - 1) * 15
-                    f.write(f"Estimated wait time: ~{estimated_wait_minutes} minutes\n")
+                    f.write(f"Estimated wait time: ~{(queue_position - 1) * 15} minutes\n")
                 else:
                     f.write("Your job will start as soon as a processing slot is available.\n")
-                
                 if email:
                     f.write(f"Email notification will be sent to {email} when the job is completed.\n")
 
         return redirect(url_for('results', job_id=job_id))
+
+
+    @app.route('/api/validate_fasta', methods=['POST'])
+    def api_validate_fasta():
+        """
+        Client-side pre-validation endpoint.
+        Accepts JSON  { "content": "<fasta string>" }
+        or multipart  file field named 'file'.
+        Returns validation result so the UI can warn the user before submission.
+        """
+        content = None
+        if request.is_json:
+            content = request.get_json().get('content', '')
+        elif 'file' in request.files:
+            content = request.files['file'].read().decode('utf-8', errors='replace')
+        else:
+            content = request.form.get('content', '')
+
+        if not content:
+            return jsonify({'valid': False, 'errors': ['No content provided.'],
+                            'warnings': [], 'record_count': 0, 'fixed': False})
+
+        # No size cap needed — sequence count is limited to MAX_SEQUENCES
+        result = validate_and_fix_fasta(content)
+        result.pop('fixed_content', None)
+        return jsonify(result)
 
     # Add other routes...
     @app.route('/results/<job_id>', methods=['GET'])
@@ -1453,38 +1483,38 @@ def register_routes(app):
                 # Parse metadata columns if provided
                 metadata_columns = []
                 if 'metadata_columns' in form_data and form_data['metadata_columns']:
-                    metadata_columns = [col.strip() for col in form_data['metadata_columns'].split(',') if col.strip()]
+                    metadata_columns = [col.strip() for col in form.data['metadata_columns'].split(',') if col.strip()]
                 
                 # Parse HMM names if provided
                 hmm_names = []
-                if 'hmm_name' in form_data and form_data['hmm_name']:
-                    hmm_names = [hmm.strip() for hmm in form_data['hmm_name'].split(',') if hmm.strip()]
+                if 'hmm_name' in form_data and form.data['hmm_name']:
+                    hmm_names = [hmm.strip() for hmm in form.data['hmm_name'].split(',') if hmm.strip()]
                 
                 # Create structured JSON according to your schema
                 dataset_entry = {
                     "name": form_data.get('dataset_name', ''),
                     "id": dataset_id,
-                    "description": form_data.get('dataset_description', ''),  # Fixed field name
+                    "description": form.data.get('dataset_description', ''),  # Fixed field name
                     "tree": uploaded_files.get('tree', ''),
                     "metadata": uploaded_files.get('metadata', ''),
                     "sequences": uploaded_files.get('sequences', ''),
                     "metadata_columns": metadata_columns,
-                    "N_proteins": int(form_data.get('n_proteins', 0)) if form_data.get('n_proteins', '').isdigit() else 0,
-                    "N_characterized": int(form_data.get('n_characterized', 0)) if form_data.get('n_characterized', '').isdigit() else 0,
-                    "N_np_val": int(form_data.get('n_np_val', 0)) if form_data.get('n_np_val', '').isdigit() else 0,
-                    "N_np_pred": int(form_data.get('n_np_pred', 0)) if form_data.get('n_np_pred', '').isdigit() else 0,
+                    "N_proteins": int(form.data.get('n_proteins', 0)) if form.data.get('n_proteins', '').isdigit() else 0,
+                    "N_characterized": int(form.data.get('n_characterized', 0)) if form.data.get('n_characterized', '').isdigit() else 0,
+                    "N_np_val": int(form.data.get('n_np_val', 0)) if form.data.get('n_np_val', '').isdigit() else 0,
+                    "N_np_pred": int(form.data.get('n_np_pred', 0)) if form.data.get('n_np_pred', '').isdigit() else 0,
                     "alignment": uploaded_files.get('alignment', ''),
                     "evolutionary_model": evolutionary_model,  # New field
-                    "source": form_data.get('source', 'user_submitted'),
+                    "source": form.data.get('source', 'user_submitted'),
                     "cite": {
-                        "name": form_data.get('authors', ''),  # Fixed field name
-                        "doi": form_data.get('paper_link', '')  # Fixed field name
+                        "name": form.data.get('authors', ''),  # Fixed field name
+                        "doi": form.data.get('paper_link', '')  # Fixed field name
                     },
-                    "data_type": form_data.get('data_type', 'protein'),
-                    "reviewed": form_data.get('reviewed', 'no')
+                    "data_type": form.data.get('data_type', 'protein'),
+                    "reviewed": form.data.get('reviewed', 'no')
                 }
                 
-                superfamily_name = form_data.get('superfamily', 'other')
+                superfamily_name = form.data.get('superfamily', 'other')
                 
                 # Create the full structure
                 submission_data = {
@@ -1497,8 +1527,8 @@ def register_routes(app):
                     ],
                     "submission_metadata": {
                         "submission_time": datetime.now().isoformat(),
-                        "submitter_email": form_data.get('email', ''),  # Fixed field name
-                        "submitter_name": form_data.get('authors', ''),  # Fixed field name
+                        "submitter_email": form.data.get('email', ''),  # Fixed field name
+                        "submitter_name": form.data.get('authors', ''),  # Fixed field name
                         "upload_folder": upload_folder
                     }
                 }
@@ -1516,9 +1546,9 @@ def register_routes(app):
                         "dataset": dataset_entry
                     },
                     "submitter": {
-                        "email": form_data.get('email', ''),
-                        "name": form_data.get('authors', ''),
-                        "paper_link": form_data.get('paper_link', '')
+                        "email": form.data.get('email', ''),
+                        "name": form.data.get('authors', ''),
+                        "paper_link": form.data.get('paper_link', '')
                     },
                     "files": {
                         "upload_folder": upload_folder,
@@ -1546,7 +1576,7 @@ def register_routes(app):
                 return render_template('dataset_uploaded.html', 
                                      dataset_id=dataset_id,
                                      dataset_name=dataset_entry['name'],
-                                     email=form_data.get('email', ''),
+                                     email=form.data.get('email', ''),
                                      evolutionary_model=evolutionary_model,
                                      uploaded_files=file_list,
                                      submission_time=submission_time)
@@ -1801,6 +1831,135 @@ def is_fasta(content):
         return len(records) > 0
     except Exception:
         return False
+
+
+def validate_and_fix_fasta(content):
+    """
+    Validate FASTA content, fix common formatting issues, and return
+    detailed diagnostics.
+
+    Returns a dict:
+    {
+        'valid': bool,
+        'fixed_content': str,
+        'warnings': [str],
+        'errors': [str],
+        'record_count': int,
+        'fixed': bool
+    }
+    """
+    warnings = []
+    errors = []
+    fixed = False
+
+    if not content or not content.strip():
+        return {
+            'valid': False,
+            'fixed_content': content,
+            'warnings': [],
+            'errors': ['Input is empty.'],
+            'record_count': 0,
+            'fixed': False,
+        }
+
+    # ── Fix 1: space between '>' and sequence ID ─────────────────────────
+    fixed_lines = []
+    for line in content.splitlines():
+        if line.startswith('> '):
+            fixed_lines.append('>' + line[2:].lstrip())
+            fixed = True
+        else:
+            fixed_lines.append(line)
+
+    if fixed:
+        warnings.append(
+            'Space detected between ">" and sequence ID in one or more headers '
+            '(e.g. "> seq1"). This has been corrected automatically.'
+        )
+
+    fixed_content = '\n'.join(fixed_lines)
+
+    # ── Fix 2: Windows line endings ──────────────────────────────────────
+    if '\r\n' in fixed_content or '\r' in fixed_content:
+        fixed_content = fixed_content.replace('\r\n', '\n').replace('\r', '\n')
+        warnings.append('Windows-style line endings (CRLF) were detected and converted to Unix (LF).')
+        fixed = True
+
+    # ── Parse with Biopython ─────────────────────────────────────────────
+    try:
+        records = list(SeqIO.parse(StringIO(fixed_content), "fasta"))
+    except Exception as e:
+        errors.append(f'Could not parse FASTA content: {str(e)}')
+        return {
+            'valid': False,
+            'fixed_content': fixed_content,
+            'warnings': warnings,
+            'errors': errors,
+            'record_count': 0,
+            'fixed': fixed,
+        }
+
+    if not records:
+        errors.append(
+            'No valid FASTA records found. '
+            'Make sure each sequence starts with a header line beginning with ">".'
+        )
+        return {
+            'valid': False,
+            'fixed_content': fixed_content,
+            'warnings': warnings,
+            'errors': errors,
+            'record_count': 0,
+            'fixed': fixed,
+        }
+
+    # ── Per-record checks ────────────────────────────────────────────────
+    seen_ids = {}
+    for i, record in enumerate(records, start=1):
+        if record.id in ('', '<unknown id>'):
+            errors.append(
+                f'Record #{i} has an unparseable or empty sequence ID. '
+                f'Check the header line for unusual characters.'
+            )
+
+        if record.id in seen_ids:
+            warnings.append(
+                f'Duplicate sequence ID "{record.id}" found '
+                f'(records #{seen_ids[record.id]} and #{i}). '
+                f'This may cause unexpected results.'
+            )
+        else:
+            seen_ids[record.id] = i
+
+        seq_str = str(record.seq).upper()
+        non_aa = set(seq_str) - set('ACDEFGHIKLMNPQRSTVWYBXZJUO*-')
+        if non_aa:
+            errors.append(
+                f'Record "{record.id}" contains unexpected characters: '
+                f'{", ".join(sorted(non_aa))}. '
+                f'Only protein (amino acid) sequences are accepted.'
+            )
+
+        if len(record.seq) == 0:
+            errors.append(f'Record "{record.id}" has an empty sequence.')
+
+    # ── Sequence count limit ─────────────────────────────────────────────
+    if len(records) > MAX_SEQUENCES:
+        errors.append(
+            f'Too many sequences ({len(records)}). '
+            f'Please submit {MAX_SEQUENCES} or fewer sequences at a time.'
+        )
+
+    valid = len(errors) == 0
+    return {
+        'valid': valid,
+        'fixed_content': fixed_content,
+        'warnings': warnings,
+        'errors': errors,
+        'record_count': len(records),
+        'fixed': fixed,
+    }
+
 
 def job_processor(app):
     """Process jobs from the queue when slots are available."""

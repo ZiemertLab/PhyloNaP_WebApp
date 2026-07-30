@@ -4110,10 +4110,20 @@ window.setupSaveImageButton = function () {
 
     svg.setAttribute("version", "1.1");
 
-    var defsEl = document.createElement("defs");
+    // Fix: explicitly set fill="none" on branch paths to prevent black-triangle
+    // rendering when CSS styles are not carried over into the saved file.
+    svg.querySelectorAll('path').forEach(function (path) {
+      if (!path.hasAttribute('fill')) {
+        path.setAttribute('fill', 'none');
+      }
+    });
+
+    // Use the SVG namespace so <defs> and <style> serialise correctly.
+    var svgNS = prefix.svg;
+    var defsEl = document.createElementNS(svgNS, "defs");
     svg.insertBefore(defsEl, svg.firstChild);
 
-    var styleEl = document.createElement("style");
+    var styleEl = document.createElementNS(svgNS, "style");
     defsEl.appendChild(styleEl);
     styleEl.setAttribute("type", "text/css");
 
@@ -4137,7 +4147,7 @@ window.setupSaveImageButton = function () {
       '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
     var to_download = [doctype + source];
     var image_string =
-      "data:image/svg+xml;base66," + encodeURIComponent(to_download);
+      "data:image/svg+xml;charset=utf-8," + encodeURIComponent(to_download);
 
     if (navigator.msSaveBlob) {
       // IE10
