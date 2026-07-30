@@ -4099,26 +4099,28 @@ window.setupSaveImageButton = function () {
     // if (!svg) {
     //   svg = $(container)[0];
     // }
-    var svg = document.querySelector('svg');
-    if (svg) {
-      svg.setAttribute("version", "1.1");
-    } else {
+    var liveSvg = document.querySelector('svg');
+    if (!liveSvg) {
       console.log('SVG element not found');
+      return;
     }
 
     var styles = get_styles(window.document);
 
+    // ── Work on a CLONE so the live tree is never mutated ──────────────────
+    var svg = liveSvg.cloneNode(true);
+
     svg.setAttribute("version", "1.1");
 
-    // Fix: explicitly set fill="none" on branch paths to prevent black-triangle
-    // rendering when CSS styles are not carried over into the saved file.
+    // Fix: explicitly set fill="none" on branch paths to prevent the
+    // black-triangle artefact that occurs when CSS is absent in the saved file.
     svg.querySelectorAll('path').forEach(function (path) {
       if (!path.hasAttribute('fill')) {
         path.setAttribute('fill', 'none');
       }
     });
 
-    // Use the SVG namespace so <defs> and <style> serialise correctly.
+    // Use the SVG namespace so <defs>/<style> serialise correctly.
     var svgNS = prefix.svg;
     var defsEl = document.createElementNS(svgNS, "defs");
     svg.insertBefore(defsEl, svg.firstChild);
@@ -4126,6 +4128,16 @@ window.setupSaveImageButton = function () {
     var styleEl = document.createElementNS(svgNS, "style");
     defsEl.appendChild(styleEl);
     styleEl.setAttribute("type", "text/css");
+
+    // Set the CSS content via a CDATA node BEFORE serializing. Previously the
+    // style element was left empty and the CSS was spliced in afterwards via
+    // source.replace("</style>", ...). But an empty <style> element has no
+    // children, so XMLSerializer emits it as a self-closing tag
+    // (<style type="text/css"/>) which contains no "</style>" substring —
+    // making that replace() a silent no-op. That dropped ALL inlined CSS
+    // (including .branch stroke/fill rules) from every exported SVG, which is
+    // the actual cause of the invisible/black-triangle branches on export.
+    styleEl.appendChild(document.createCDATASection(styles));
 
     // removing attributes so they aren't doubled up
     svg.removeAttribute("xmlns");
@@ -4140,9 +4152,7 @@ window.setupSaveImageButton = function () {
       svg.setAttributeNS(prefix.xmlns, "xmlns:xlink", prefix.xlink);
     }
 
-    var source = new XMLSerializer()
-      .serializeToString(svg)
-      .replace("</style>", "<![CDATA[" + styles + "]]></style>");
+    var source = new XMLSerializer().serializeToString(svg);
     var doctype =
       '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
     var to_download = [doctype + source];
