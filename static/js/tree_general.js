@@ -2268,7 +2268,7 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
             .attr('y', bbox.y - 2) // Adjust as needed
             .attr('width', bbox.width + 4) // Adjust as needed
             .attr('height', bbox.height + 4) // Adjust as needed
-            .style('fill', clusters_colors[index]); // Use different color from clusters_colors
+            .style('fill', '#' +clusters_colors[index]); // Use different color from clusters_colors
         }
       });
     });
