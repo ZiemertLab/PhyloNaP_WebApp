@@ -4112,37 +4112,50 @@ window.setupSaveImageButton = function () {
 
     svg.setAttribute("version", "1.1");
 
-    // Fix: explicitly set fill="none" on branch paths to prevent the
-    // black-triangle artefact that occurs when CSS is absent in the saved file.
-    svg.querySelectorAll('path').forEach(function (path) {
-      if (!path.hasAttribute('fill')) {
-        path.setAttribute('fill', 'none');
-      }
-    });
-
-    // Use the SVG namespace so <defs>/<style> serialise correctly.
-    var svgNS = prefix.svg;
-    var defsEl = document.createElementNS(svgNS, "defs");
-    svg.insertBefore(defsEl, svg.firstChild);
-
-    var styleEl = document.createElementNS(svgNS, "style");
-    defsEl.appendChild(styleEl);
-    styleEl.setAttribute("type", "text/css");
-
-    // Set the CSS content as a text child BEFORE serializing. Previously the
-    // style element was left empty and the CSS was spliced in afterwards via
-    // source.replace("</style>", ...). But an empty <style> element has no
-    // children, so XMLSerializer emits it as a self-closing tag
-    // (<style type="text/css"/>) which contains no "</style>" substring —
-    // making that replace() a silent no-op. That dropped ALL inlined CSS
-    // (including .branch stroke/fill rules) from every exported SVG, which is
-    // the actual cause of the invisible/black-triangle branches on export.
+    // Bake every element's COMPUTED style into an inline style attribute with
+    // concrete values, instead of shipping a <style> block that references CSS.
     //
-    // Note: use textContent, NOT document.createCDATASection() — the latter
-    // throws NotSupportedError in an HTML document. Giving the element a text
-    // child is enough to make XMLSerializer emit a proper <style>…</style>
-    // pair (and it escapes any <, >, & in the CSS along the way).
-    styleEl.textContent = styles;
+    // Why: branches are <path class="branch"> whose colour comes from
+    // `stroke: var(--color-branch)` (defined on :root in phylotree.css). A
+    // stand-alone SVG that carries that rule only renders correctly in a viewer
+    // that supports CSS custom properties. Preview.app, Illustrator, Inkscape,
+    // Office and any <img>-embedded SVG do NOT resolve var(), so `.branch` gets
+    // no stroke and the whole dendrogram disappears (previously it also filled
+    // black as triangles). Inlining getComputedStyle() resolves var() and the
+    // cascade up-front, producing a portable file that looks identical in every
+    // viewer and needs no <style> block at all.
+    //
+    // `styles` (collected above) is intentionally left unused now — kept so the
+    // get_styles() helper and its call site remain a drop-in if ever needed.
+    void styles;
+    var STYLE_PROPS = [
+      "fill", "fill-opacity", "fill-rule",
+      "stroke", "stroke-width", "stroke-opacity",
+      "stroke-linecap", "stroke-linejoin", "stroke-dasharray", "stroke-dashoffset",
+      "opacity", "color",
+      "font-family", "font-size", "font-weight", "font-style",
+      "text-anchor", "dominant-baseline",
+      "visibility", "display", "shape-rendering"
+    ];
+    // liveSvg and its clone have identical structure, so a flat querySelectorAll
+    // on each yields the same elements in the same order — zip them by index.
+    // getComputedStyle only works on elements in the live document, so read from
+    // liveEls and write onto cloneEls.
+    var liveEls = liveSvg.querySelectorAll("*");
+    var cloneEls = svg.querySelectorAll("*");
+    for (var ei = 0; ei < liveEls.length; ei++) {
+      var cs = window.getComputedStyle(liveEls[ei]);
+      var decl = "";
+      for (var pi = 0; pi < STYLE_PROPS.length; pi++) {
+        var val = cs.getPropertyValue(STYLE_PROPS[pi]);
+        if (val && val !== "auto" && val !== "normal") {
+          decl += STYLE_PROPS[pi] + ":" + val + ";";
+        }
+      }
+      if (decl) {
+        cloneEls[ei].setAttribute("style", decl);
+      }
+    }
 
     // removing attributes so they aren't doubled up
     svg.removeAttribute("xmlns");
