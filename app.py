@@ -1109,7 +1109,8 @@ def register_routes(app):
 
         if not validation['valid']:
             error_detail = ' | '.join(validation['errors'])
-            return f'Invalid FASTA input: {error_detail}', 400
+            app.logger.warning(f"FASTA validation failed: {error_detail}")
+            return render_template('error.html', error_message=f"Invalid FASTA input: {error_detail}"), 400
 
         # Use the (possibly corrected) content from here on
         content = validation['fixed_content']
