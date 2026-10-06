@@ -1913,33 +1913,112 @@ def validate_and_fix_fasta(content):
         warnings.append('Windows-style line endings (CRLF) were detected and converted to Unix (LF).')
         fixed = True
 
+    # ── Check: header-like line without leading '>' ──────────────────────
+    # If user pasted a sequence with a header line but forgot to prepend '>',
+    # detect it and inform them to add '>' (except when it's a single raw sequence).
+    lines = fixed_content.splitlines()
+    has_header_line = any(l.strip().startswith('>') for l in lines)
+    if not has_header_line and len(lines) > 1:
+        for i in range(len(lines) - 1):
+            line = lines[i].strip()
+            next_line = lines[i + 1].strip() if i + 1 < len(lines) else ''
+            if not line or not next_line:
+                continue
+            # next_line looks like a sequence (letters, * or -)
+            next_seq = re.sub(r"\s+", "", next_line).upper()
+            if re.match(r'^[A-Z\*\-]+$', next_seq):
+                # line looks non-sequence (contains spaces or punctuation) and may be a header
+                line_no_spaces = re.sub(r"\s+", "", line)
+                if not re.match(r'^[A-Z\*\-]+$', line_no_spaces):
+                    errors.append(
+                        "It looks like you pasted a sequence with a header line, but header lines must start with '>' at the beginning of the line. "
+                        "If you're submitting a single protein sequence without a header, paste only the sequence. "
+                        "To include a header, prepend '>' to the header line."
+                    )
+                    return {
+                        'valid': False,
+                        'fixed_content': fixed_content,
+                        'warnings': warnings,
+                        'errors': errors,
+                        'record_count': 0,
+                        'fixed': fixed,
+                    }
+
     # ── Parse with Biopython ─────────────────────────────────────────────
+    # Helper to detect a raw protein sequence (no FASTA header)
+    def _is_raw_protein_sequence(txt, max_len=2000):
+        seq = re.sub(r"\s+", "", txt).upper()
+        if not seq:
+            return False, seq
+        if len(seq) > max_len:
+            return False, seq
+        allowed = set('ACDEFGHIKLMNPQRSTVWYBXZJUO*-')
+        non_aa = set(seq) - allowed
+        return (len(non_aa) == 0), seq
+
     try:
         records = list(SeqIO.parse(StringIO(fixed_content), "fasta"))
     except Exception as e:
-        errors.append(f'Could not parse FASTA content: {str(e)}')
-        return {
-            'valid': False,
-            'fixed_content': fixed_content,
-            'warnings': warnings,
-            'errors': errors,
-            'record_count': 0,
-            'fixed': fixed,
-        }
+        # If parsing fails, check whether the input is a single raw protein
+        is_raw, seq = _is_raw_protein_sequence(fixed_content)
+        if is_raw:
+            # Add artificial header and re-parse
+            warnings.append(
+                'Input appears to be a single raw protein sequence without a FASTA header. '
+                'An artificial header ">seq1" was added automatically.'
+            )
+            # Wrap sequence at 60 chars per FASTA convention
+            wrapped = '\n'.join([seq[i:i+60] for i in range(0, len(seq), 60)])
+            fixed_content = f">seq1\n{wrapped}\n"
+            fixed = True
+            try:
+                records = list(SeqIO.parse(StringIO(fixed_content), "fasta"))
+            except Exception as e2:
+                errors.append(f'Could not parse FASTA content after adding artificial header: {str(e2)}')
+                return {
+                    'valid': False,
+                    'fixed_content': fixed_content,
+                    'warnings': warnings,
+                    'errors': errors,
+                    'record_count': 0,
+                    'fixed': fixed,
+                }
+        else:
+            errors.append(f'Could not parse FASTA content: {str(e)}')
+            return {
+                'valid': False,
+                'fixed_content': fixed_content,
+                'warnings': warnings,
+                'errors': errors,
+                'record_count': 0,
+                'fixed': fixed,
+            }
 
     if not records:
-        errors.append(
-            'No valid FASTA records found. '
-            'Make sure each sequence starts with a header line beginning with ">".'
-        )
-        return {
-            'valid': False,
-            'fixed_content': fixed_content,
-            'warnings': warnings,
-            'errors': errors,
-            'record_count': 0,
-            'fixed': fixed,
-        }
+        # Maybe the user submitted a single raw sequence without a header
+        is_raw, seq = _is_raw_protein_sequence(fixed_content)
+        if is_raw:
+            warnings.append(
+                'Input appears to be a single raw protein sequence without a FASTA header. '
+                'An artificial header ">seq1" was added automatically.'
+            )
+            wrapped = '\n'.join([seq[i:i+60] for i in range(0, len(seq), 60)])
+            fixed_content = f">seq1\n{wrapped}\n"
+            fixed = True
+            records = list(SeqIO.parse(StringIO(fixed_content), "fasta"))
+        else:
+            errors.append(
+                'No valid FASTA records found. '
+                'Make sure each sequence starts with a header line beginning with ">".'
+            )
+            return {
+                'valid': False,
+                'fixed_content': fixed_content,
+                'warnings': warnings,
+                'errors': errors,
+                'record_count': 0,
+                'fixed': fixed,
+            }
 
     # ── Per-record checks ────────────────────────────────────────────────
     seen_ids = {}
