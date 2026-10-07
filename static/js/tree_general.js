@@ -1060,9 +1060,22 @@ window.createExternalLinksTable = function (metadata) {
 
     const sequenceId = sequenceData.ID || sequenceData.id || `sequence_${index}`;
 
-    // Check each column type for IDs
-    Object.keys(linkTemplates).forEach(columnName => {
-      const columnValue = sequenceData[columnName];
+    // Check each metadata key for a matching link template (case-insensitive).
+    // This is more robust than relying on exact header names.
+    Object.entries(sequenceData).forEach(([metaKey, columnValue]) => {
+      console.debug('createExternalLinksTable: metaKey=', metaKey, 'value=', columnValue);
+      // Find the config key whose name matches the metadata key (robust, normalized)
+      function _normalizeKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+      const configKey = Object.keys(linkTemplates).find(k => {
+        const nK = _normalizeKey(k);
+        const nMeta = _normalizeKey(metaKey);
+        const nName = _normalizeKey(linkTemplates[k] && linkTemplates[k].name);
+        return nK === nMeta || nName === nMeta || nMeta.startsWith(nK) || nK.startsWith(nMeta) || nMeta.startsWith(nName);
+      });
+      if (configKey) console.debug('Matched metaKey', metaKey, 'to template key', configKey, 'template.name=', linkTemplates[configKey].name);
+      if (!configKey) return;
+
+      const template = linkTemplates[configKey];
 
       if (columnValue &&
         columnValue !== '' &&
@@ -1072,17 +1085,27 @@ window.createExternalLinksTable = function (metadata) {
         columnValue !== null &&
         columnValue !== 'undefined') {
 
-        const template = linkTemplates[columnName];
-
         // Convert to string and handle multiple IDs separated by semicolon, comma, or pipe
         const rawIds = String(columnValue);
-        const ids = rawIds.split(/[;,|]/).map(id => id.trim()).filter(id => id && id !== '');
+        const ids = rawIds.split(/[;,|]/).map(id => id.trim()).filter(id => {
+          if (!id) return false;
+          const lid = String(id).toLowerCase();
+          return !['', '.', '-', 'none', 'na', 'n/a'].includes(lid);
+        });
 
         ids.forEach(id => {
+          console.debug('Processing raw id for', configKey, ':', id);
+          // For bioregistry links we want to strip version suffixes (e.g. ".3")
+          let idToClean = id;
+          if (template && template.url && String(template.url).includes('bioregistry.io')) {
+            idToClean = String(idToClean).split('.')[0];
+          }
+
           // Clean the ID (remove any prefixes/suffixes if needed)
-          const cleanId = cleanIdentifier(id, columnName);
+          const cleanId = cleanIdentifier(idToClean, configKey);
 
           if (cleanId) {
+            console.debug('Pushing external link', { cleanId, original: id, source: template.name, url: template.url.replace('{id}', cleanId) });
             externalLinks.push({
               id: cleanId,
               originalId: id,
@@ -1319,14 +1342,26 @@ function cleanIdentifier(id, columnName) {
   // Remove common prefixes and clean up
   let cleanId = id.trim();
 
+  // Normalize column name for fuzzy matching (handles MIBiG_ID, mibig, etc.)
+  const normalizedCol = columnName ? String(columnName).toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+
+  // If this column appears to be a MIBiG-like column, apply MIBiG cleaning
+  if (normalizedCol.includes('mibig')) {
+    cleanId = cleanId.replace(/^(MIBiG:|BGC-)/i, '');
+    cleanId = cleanId.split('.')[0];
+    if (!cleanId.startsWith('BGC') && /^\d{7}$/.test(cleanId)) {
+      cleanId = 'BGC' + cleanId;
+    }
+    return cleanId;
+  }
+
   switch (columnName) {
     case 'Uniprot_ID':
       // UniProt IDs are typically 6-10 characters, alphanumeric
       cleanId = cleanId.replace(/^(UniProt:|UP:)/i, '');
       break;
     case 'mibig':
-      // MIBiG IDs are typically BGC followed by 7 digits
-
+      // retained for explicit 'mibig' column name
       cleanId = cleanId.replace(/^(MIBiG:|BGC-)/i, '');
       cleanId = cleanId.split('.')[0];
       if (!cleanId.startsWith('BGC') && /^\d{7}$/.test(cleanId)) {
@@ -1371,12 +1406,31 @@ function makeLinkedValueElement(columnName, value) {
   var strVal = String(value);
   var fragment = document.createDocumentFragment();
 
-  // Case 1: known ID column with a URL template
-  if (HYPERLINK_CONFIG[columnName]) {
-    var template = HYPERLINK_CONFIG[columnName];
-    var ids = strVal.split(/[;,|]/).map(function (s) { return s.trim(); }).filter(Boolean);
+  // Case 1: known ID column with a URL template (robust matching)
+  function _normalizeKey(s) {
+    return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  var templateKey = Object.keys(HYPERLINK_CONFIG).find(k => {
+    const nK = _normalizeKey(k);
+    const nCol = _normalizeKey(columnName);
+    const nName = _normalizeKey(HYPERLINK_CONFIG[k] && HYPERLINK_CONFIG[k].name);
+    return nK === nCol || nName === nCol || nCol.startsWith(nK) || nK.startsWith(nCol) || nCol.startsWith(nName);
+  });
+  if (templateKey) {
+    var template = HYPERLINK_CONFIG[templateKey];
+    var ids = strVal.split(/[;,|]/).map(function (s) { return s.trim(); }).filter(function (id) {
+      if (!id) return false;
+      const lid = String(id).toLowerCase();
+      return !['', '.', '-', 'none', 'na', 'n/a'].includes(lid);
+    });
+    // Determine whether to strip version suffix for bioregistry links
+    var shouldStripVersion = template && template.url && String(template.url).includes('bioregistry.io');
+    console.debug('makeLinkedValueElement: columnName=', columnName, 'templateKey=', templateKey, 'shouldStripVersion=', shouldStripVersion, 'ids=', ids);
     ids.forEach(function (rawId, i) {
-      var cleanId = cleanIdentifier(rawId, columnName);
+      var idToClean = shouldStripVersion ? String(rawId).split('.')[0] : rawId;
+      console.debug('makeLinkedValueElement: rawId=', rawId, 'idToClean=', idToClean);
+      var cleanId = cleanIdentifier(idToClean, templateKey || columnName);
       if (cleanId) {
         var a = document.createElement('a');
         a.href = template.url.replace('{id}', cleanId);
@@ -3211,7 +3265,28 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
     createColumnHeader(displayName, slotIndex);
 
 
-    const isHyperlinkColumn = HYPERLINK_CONFIG.hasOwnProperty(columnName);
+    // Robustly resolve a hyperlink template for this metadata column name.
+    function getHyperlinkTemplateForColumn(col) {
+      try {
+        if (!HYPERLINK_CONFIG || typeof HYPERLINK_CONFIG !== 'object') return null;
+        // direct match
+        if (HYPERLINK_CONFIG[col]) return HYPERLINK_CONFIG[col];
+        const normalized = String(col).toLowerCase().replace(/[^a-z0-9]/g, '');
+        for (const key in HYPERLINK_CONFIG) {
+          const keyNorm = String(key).toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (keyNorm === normalized) return HYPERLINK_CONFIG[key];
+          // allow "mibig" <-> "MIBiG_ID" style matches
+          if (normalized.includes(keyNorm) || keyNorm.includes(normalized)) return HYPERLINK_CONFIG[key];
+        }
+      } catch (e) {
+        console.debug('getHyperlinkTemplateForColumn error', e);
+      }
+      return null;
+    }
+
+    const hyperlinkTemplate = getHyperlinkTemplateForColumn(columnName);
+    const isHyperlinkColumn = !!hyperlinkTemplate;
+    console.debug('renderMetadata: columnName=', columnName, 'hyperlinkTemplate=', hyperlinkTemplate);
 
     let annot = metadata.reduce((obj, item) => {
       obj[item["ID"]] = item[columnName];
@@ -3239,7 +3314,8 @@ window.addImagesAndMetadata = function (tree, metadata, metadataListArray) {
           let translateValues = parseFloat(match[1]);
           // **NEW**: Handle hyperlink columns differently
           if (isHyperlinkColumn) {
-            const template = HYPERLINK_CONFIG[columnName]; // **UPDATED**: Now uses global config
+            // Use the resolved template (handles normalized names like MIBiG_ID -> mibig)
+            const template = hyperlinkTemplate || getHyperlinkTemplateForColumn(columnName);
 
 
             // Handle multiple IDs separated by semicolon, comma, or pipe
