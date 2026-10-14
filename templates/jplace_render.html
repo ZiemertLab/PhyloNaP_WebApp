@@ -452,6 +452,7 @@
     <div class="tree" id="tree">
       <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}"
         datasetDescr="{{ datasetDescr }}" source="{{ source }}" cite="{{ cite }}"
+        tree_rooting_method="{{ rooting_method | default('') }}"
         data-bootstrap-mapping='{{ bootstrap_mapping | default("{}") }}'></div>
     </div>
   </div>
@@ -522,7 +523,6 @@
           {% endif %}
         </div>
         {% endif %}
-        {% if rooting_method is defined and rooting_method %}
       </div>
 
       <!-- ===== Leaf Annotation (inline, shown after description) ===== -->
@@ -554,6 +554,24 @@
             var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
             metadataList = metadataList.replace(/'/g, '"');
             var metadataListArray = JSON.parse(metadataList);
+
+            // Show rooting method if provided by server
+            (function() {
+              var treeDataEl = document.getElementById('tree_data');
+              if (!treeDataEl) return;
+              var rooting = treeDataEl.getAttribute('rooting_method') || treeDataEl.getAttribute('tree_rooting_method');
+              if (rooting && rooting !== 'None') {
+                var rootDiv = document.createElement('div');
+                rootDiv.style.marginTop = '8px';
+                rootDiv.style.fontSize = '13px';
+                rootDiv.style.color = '#555';
+                rootDiv.innerHTML = '<span style="font-weight: 600; color: #7B1B38;">Rooting method:</span> ' + rooting;
+                var desc = document.getElementById('description');
+                if (desc && desc.parentNode) {
+                  desc.parentNode.insertBefore(rootDiv, desc.nextSibling);
+                }
+              }
+            })();
 
             var buttonContainer = document.getElementById('button-container');
 
