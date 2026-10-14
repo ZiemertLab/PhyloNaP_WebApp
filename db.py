@@ -1676,6 +1676,8 @@ def get_dataset_by_id(dataset_id):
             'cog_category': cog_category,
             'tree': dataset['tree'] or '',
             'tree_file': dataset['tree'] or '',  # Alias for compatibility
+            'tree_rooting_method': dataset.get('tree_rooting_method') or dataset.get('rooting_method') or '',
+            'rooting_method': dataset.get('tree_rooting_method') or dataset.get('rooting_method') or '',
             'tree_model': dataset['tree_model'] or '',
             'metadata': dataset['metadata'] or '',
             'metadata_file': dataset['metadata'] or '',  # Alias for compatibility

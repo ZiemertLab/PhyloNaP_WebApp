@@ -383,10 +383,10 @@
     <div id="tree-container" nwk_data="{{ nwk_data }}"></div>
     <div id="metadata-container" metadata="{{ metadata }}"></div> -->
     <!-- <div id="tree_data" style="margin-top: 20%;" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}" datasetDescr="{{ datasetDescr }}"></div> -->
-    <div class="tree" id="tree">
+      <div class="tree" id="tree">
       <div id="tree_data" nwk_data="{{ nwk_data }}" metadata="{{ metadata }}" metadata_list="{{ metadata_list }}"
         datasetDescr="{{ datasetDescr }}" superfamily_name="{{ superfamily_name }}" dataset_name="{{ dataset_name }}"
-        source="{{ source }}" cite="{{ cite }}">
+        source="{{ source }}" cite="{{ cite }}" tree_rooting_method="{{ rooting_method | default('') }}">
       </div>
     </div>
   </div>
@@ -484,22 +484,51 @@
             const color_nonactive_button = "#B69E6C";
           </script>
           <script>
-            var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
+            // Simple: read attributes from the existing #tree_data element (same pattern as datasetDescr)
+            var treeData = document.getElementById('tree_data');
+            var datasetDescr = treeData.getAttribute('datasetDescr');
             document.getElementById('description').textContent = datasetDescr;
 
-            var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
-            metadataList = metadataList.replace(/'/g, '"');
-            var metadataListArray = JSON.parse(metadataList);
+            var metadataList = treeData.getAttribute('metadata_list');
+            try {
+              metadataList = metadataList.replace(/'/g, '"');
+              var metadataListArray = JSON.parse(metadataList);
+              var buttonContainer = document.getElementById('button-container');
+              metadataListArray.forEach(function (item) {
+                var button = document.createElement('button');
+                button.id = item;
+                button.className = 'btn m-1 non-active-button';
+                button.textContent = item.replace('_', ' ');
+                buttonContainer.appendChild(button);
+              });
+            } catch (e) {
+              console.warn('Could not parse metadata_list for buttons', e);
+            }
 
-            var buttonContainer = document.getElementById('button-container');
-
-            metadataListArray.forEach(function (item) {
-              var button = document.createElement('button');
-              button.id = item;
-              button.className = 'btn m-1 non-active-button';
-              button.textContent = item.replace('_', ' ');
-              buttonContainer.appendChild(button);
-            });
+            // Read rooting method passed from server (same as datasetDescr). Try both common attribute names.
+            (function insertRootingMethod() {
+              try {
+                var rooting = treeData.getAttribute('rooting_method') || treeData.getAttribute('tree_rooting_method');
+                if (!rooting) return;
+                var descEl = document.getElementById('description');
+                var rootDiv = document.createElement('div');
+                rootDiv.style.marginTop = '8px';
+                rootDiv.style.fontSize = '13px';
+                rootDiv.style.color = '#555';
+                var label = document.createElement('span');
+                label.style.fontWeight = '600';
+                label.style.color = '#7B1B38';
+                label.textContent = 'Rooting method:';
+                rootDiv.appendChild(label);
+                rootDiv.appendChild(document.createTextNode(' ' + rooting));
+                if (descEl && descEl.parentNode) {
+                  if (descEl.nextSibling) descEl.parentNode.insertBefore(rootDiv, descEl.nextSibling);
+                  else descEl.parentNode.appendChild(rootDiv);
+                }
+              } catch (e) {
+                console.warn('Failed to insert rooting method', e);
+              }
+            })();
           </script>
         </div>
       </div>

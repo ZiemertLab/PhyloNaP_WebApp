@@ -783,6 +783,7 @@ def register_routes(app):
             metadata_link = dataset['metadata_file']
             metadata_columns = dataset['metadata_columns']
             datasetDescr = dataset['description']
+            rooting_method = dataset.get('tree_rooting_method', None)
             source = dataset['source']
             cite = dataset.get('cite', None)
             
@@ -834,6 +835,7 @@ def register_routes(app):
                              metadata=metadata_json, 
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
+                             rooting_method=rooting_method,
                              superfamily_name=dataset['superfamily_name'],
                              superfamily_hmm_names=dataset.get('superfamily_hmm_names', []),
                              ec_numbers=dataset.get('ec_numbers', []),
@@ -1338,6 +1340,7 @@ def register_routes(app):
             datasetDescr = dataset['description']
             source = dataset['source']
             cite = dataset.get('cite', None)
+            rooting_method = dataset.get('tree_rooting_method', None)
             
             if not metadata_link:
                 app.logger.error("No metadata file path found in dataset")
@@ -1380,6 +1383,7 @@ def register_routes(app):
                              metadata=metadata_json, 
                              metadata_list=metadata_columns, 
                              datasetDescr=datasetDescr,
+                             rooting_method=rooting_method,
                              superfamily_name=dataset['superfamily_name'],
                              superfamily_hmm_names=dataset.get('superfamily_hmm_names', []),
                              ec_numbers=dataset.get('ec_numbers', []),

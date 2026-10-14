@@ -79,6 +79,7 @@ window.getTreeData = function () {
   var metadataList = document.getElementById('tree_data').getAttribute('metadata_list');
   var datasetDescr = document.getElementById('tree_data').getAttribute('datasetDescr');
 
+
   // var metadataList = JSON.parse(localStorage.getItem('metadataList'));
   console.log("metadataList = " + metadataList);
   console.log(typeof metadataList);
