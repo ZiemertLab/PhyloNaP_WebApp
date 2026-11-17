@@ -139,6 +139,72 @@ def _parse_newick_internal_nodes(nwk_str):
     return results
 
 
+_STRUCTURE_IMAGE_INDEX = None
+
+
+def _structure_image_index():
+    """List the structure images shipped in static/ once, grouped by ID.
+
+    Returns {'bgc': {'BGC0000001': ['BGC0000001_1.png', ...]},
+             'reaction': {'MITE0000001': ['MITE0000001_reaction_1.png', ...]}}
+    The folders are read on first use; restart the app after adding images.
+    """
+    global _STRUCTURE_IMAGE_INDEX
+    if _STRUCTURE_IMAGE_INDEX is not None:
+        return _STRUCTURE_IMAGE_INDEX
+    static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+    index = {'bgc': {}, 'reaction': {}}
+    patterns = {
+        'bgc': ('images', re.compile(r'^(BGC\d+(?:\.\d+)?)_(\d+)\.png$')),
+        'reaction': ('images_reactions', re.compile(r'^(.+)_reaction_(\d+)(?:_(\d+))?\.png$')),
+    }
+    for kind, (folder, pattern) in patterns.items():
+        try:
+            names = os.listdir(os.path.join(static_dir, folder))
+        except OSError:
+            names = []
+        found = {}
+        for name in names:
+            m = pattern.match(name)
+            if m:
+                order = tuple(int(g) if g else 0 for g in m.groups()[1:])
+                found.setdefault(m.group(1), []).append((order, name))
+        index[kind] = {key: [name for _, name in sorted(files)] for key, files in found.items()}
+    _STRUCTURE_IMAGE_INDEX = index
+    return index
+
+
+def find_structure_images(df):
+    """Structure images available for the IDs in a dataset's annotation table.
+
+    Lets the tree page know up front which tips have a BGC product or reaction
+    image, instead of asking the server for every possible file name.
+    """
+    index = _structure_image_index()
+    result = {'bgc': {}, 'reaction': {}}
+    columns = {
+        'bgc': [c for c in df.columns if re.sub(r'[^a-z0-9]', '', str(c).lower()) in ('mibig', 'mibigid')],
+        'reaction': [c for c in df.columns if re.sub(r'[^a-z0-9]', '', str(c).lower()) in ('mite', 'miteid')],
+    }
+    for kind, cols in columns.items():
+        for col in cols:
+            for value in df[col].dropna().astype(str).unique():
+                for raw in re.split(r'[;,|]', value):
+                    raw = raw.strip()
+                    if not raw or raw.lower() == 'nan':
+                        continue
+                    candidates = [raw]
+                    if kind == 'bgc':
+                        if raw.isdigit():
+                            candidates = ['BGC' + raw]
+                        candidates.append(candidates[0].split('.')[0])
+                    for cand in candidates:
+                        if cand in index[kind]:
+                            result[kind][raw] = index[kind][cand]
+                            break
+    return result
+
+
 def build_bootstrap_mapping(original_nwk, jplace_nwk):
     """Map jplace edge-annotations → bootstrap values by leaf-set matching.
 
@@ -497,8 +563,11 @@ def register_routes(app):
                 app.logger.error(f"Error in view upload: {e}", exc_info=True)
                 return render_template('view.html', error=f"Error processing files: {str(e)}")
 
+    # The new tree viewer (templates/tree_v2.html) is the default; the previous page stays under /view_render_legacy
+    @app.route('/view_render_legacy/<session_id>', endpoint='view_render_legacy')
     @app.route('/view_render/<session_id>')
     def view_render(session_id):
+        legacy = request.path.startswith('/view_render_legacy')
         try:
             # Get data from session
             view_data = session.get('view_data')
@@ -506,8 +575,8 @@ def register_routes(app):
             if not view_data or view_data.get('session_id') != session_id:
                 return render_template('error.html', error_message="Session expired or invalid. Please upload your files again."), 404
             
-            # Render using phylotree_render template with session data
-            return render_template('phylotree_render.html',
+            return render_template('phylotree_render.html' if legacy else 'tree_v2.html',
+                             legacy_url=url_for('view_render_legacy', session_id=session_id),
                              nwk_data=view_data['tree_content'],
                              metadata=view_data['metadata_json'],
                              metadata_list=view_data['metadata_columns'],
@@ -546,11 +615,20 @@ def register_routes(app):
         session_id = request.args.get('session', 'unknown')
         return render_template('view_client_debug.html', session_id=session_id)
     
+    # Uploaded trees stay in the browser (sessionStorage); the page reads them there.
+    # The new tree viewer is the default, the previous page stays under /view_client_legacy.
+    @app.route('/view_client_legacy', endpoint='view_client_legacy')
     @app.route('/view_client_working')
     def view_client_working():
-        """Working version of client viewer"""
         session_id = request.args.get('session', 'unknown')
-        return render_template('view_client_working.html', session_id=session_id)
+        if request.path.startswith('/view_client_legacy'):
+            return render_template('view_client_working.html', session_id=session_id)
+        return render_template('tree_v2.html',
+                               client_data=True,
+                               legacy_url=url_for('view_client_legacy', session=session_id),
+                               nwk_data='', metadata='[]', metadata_list=[],
+                               datasetDescr='', superfamily_name='', dataset_name='',
+                               source='user', cite=None)
 
     @app.route('/api/datasets')
     def api_datasets():
@@ -733,8 +811,13 @@ def register_routes(app):
                              datasets=[], 
                              pagination=None)
 
+    # The new tree viewer (templates/tree_v2.html) is the default. The previous page stays under
+    # /phylotree_render_legacy for one release; /phylotree_v2 is the old preview address, kept for links.
+    @app.route('/phylotree_render_legacy', methods=['POST','GET'], endpoint='tree_renderer_legacy')
+    @app.route('/phylotree_v2', methods=['GET'], endpoint='tree_renderer_v2')
     @app.route('/phylotree_render', methods=['POST','GET'])
     def tree_renderer():
+        template_name = 'phylotree_render.html' if request.path.startswith('/phylotree_render_legacy') else 'tree_v2.html'
         dataset_id = request.args.get('dataset_id')
         superfamilyName = request.args.get('superfamily')
         datasetName = request.args.get('dataset')
@@ -830,10 +913,27 @@ def register_routes(app):
             app.logger.info(f"Metadata loaded: {len(df)} rows, {len(df.columns)} columns")
             app.logger.debug(f"Metadata columns: {metadata_columns}")
 
-            return render_template('phylotree_render.html', 
-                             nwk_data=tree_content, 
-                             metadata=metadata_json, 
-                             metadata_list=metadata_columns, 
+            structure_images = find_structure_images(df) if template_name == 'tree_v2.html' else None
+
+            # catalytic sites from M-CSA, placed on the alignment by scripts/build_catalytic_sites.py
+            catalytic_sites = None
+            catalytic_path = os.path.join(os.path.dirname(metadata_path), f"{dataset['id']}_catalytic.json")
+            if template_name == 'tree_v2.html' and os.path.exists(catalytic_path):
+                try:
+                    with open(catalytic_path) as f:
+                        catalytic_sites = json.load(f)
+                except Exception as ce:
+                    app.logger.warning(f"Catalytic site file could not be read: {ce}")
+
+            return render_template(template_name,
+                             dataset_id=dataset['id'],
+                             structure_images=structure_images,
+                             catalytic_sites=catalytic_sites,
+                             tree_model=dataset.get('tree_model'),
+                             default_tip_label=dataset.get('default_tip_label'),
+                             nwk_data=tree_content,
+                             metadata=metadata_json,
+                             metadata_list=metadata_columns,
                              datasetDescr=datasetDescr,
                              rooting_method=rooting_method,
                              superfamily_name=dataset['superfamily_name'],
@@ -1298,8 +1398,40 @@ def register_routes(app):
                 response['summary'] = None
         
         return jsonify(response)
+    def _placement_file(job_id, query, tree_id, filename):
+        """Path of a file in a placement result folder, or None if it is missing or the request is malformed."""
+        parts = [job_id, query, tree_id]
+        if any((not part) or '/' in part or '\\' in part or part in ('.', '..') for part in parts):
+            return None
+        base = os.path.realpath(app.config['TMP_DIR'])
+        folder = os.path.realpath(os.path.join(base, *parts))
+        if not folder.startswith(base + os.sep) or not os.path.isfile(os.path.join(folder, filename)):
+            return None
+        return folder, filename
+
+    @app.route('/download/aligned_query/<job_id>/<query>/<tree_id>')
+    def download_aligned_query(job_id, query, tree_id):
+        """The query sequence aligned to the reference alignment of a tree."""
+        found = _placement_file(job_id, query, tree_id, f'{query}_al.fa')
+        if not found:
+            return "Aligned query not found", 404
+        return send_from_directory(found[0], found[1], as_attachment=True)
+
+    @app.route('/download/placement/<job_id>/<query>/<tree_id>')
+    def download_placement(job_id, query, tree_id):
+        """The placement result (.jplace) of a query on a tree."""
+        found = _placement_file(job_id, query, tree_id, 'epa_result.jplace')
+        if not found:
+            return "Placement file not found", 404
+        return send_from_directory(found[0], found[1], as_attachment=True)
+
+    # The new tree viewer (templates/tree_v2.html) is the default. The previous page stays under
+    # /jplace_render_legacy for one release; /jplace_v2 is the old preview address, kept for links.
+    @app.route('/jplace_render_legacy', endpoint='jplace_render_legacy')
+    @app.route('/jplace_v2', endpoint='jplace_render_v2')
     @app.route('/jplace_render.html')
     def jplace_render():
+        use_v2 = not request.path.startswith('/jplace_render_legacy')
         jobId = request.args.get('jobId')
         query = request.args.get('query')
         treeId = request.args.get('treeId')
@@ -1378,7 +1510,12 @@ def register_routes(app):
                     except Exception as bse:
                         app.logger.warning(f"Bootstrap mapping failed: {bse}")
 
-            return render_template('jplace_render.html', 
+            return render_template('tree_v2.html' if use_v2 else 'jplace_render.html',
+                             dataset_id=treeId,
+                             default_tip_label=dataset.get('default_tip_label'),
+                             structure_images=find_structure_images(df) if use_v2 else None,
+                             tree_model=dataset.get('tree_model'),
+                             placement={'jobId': jobId, 'query': query, 'treeId': treeId},
                              nwk_data=jplace_content, 
                              metadata=metadata_json, 
                              metadata_list=metadata_columns, 

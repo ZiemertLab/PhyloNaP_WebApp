@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block css %}
+<link href="{{ url_for('static', filename='css/tree2.css') }}?v=32" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<div class="tv-layout" id="tv-layout">
+
+  <div class="tv-main">
+    <div class="tv-toolbar" role="toolbar" aria-label="Tree view controls">
+      <div class="tv-group tv-segmented" role="group" aria-label="Layout">
+        <button type="button" class="tv-btn" data-tv-layout="rect" aria-pressed="true">Rectangular</button>
+        <button type="button" class="tv-btn" data-tv-layout="radial" aria-pressed="false">Circular</button>
+      </div>
+
+      <div class="tv-group">
+        <span class="tv-group-label">Zoom</span>
+        <button type="button" class="tv-btn" data-tv-action="zoom-out" title="Zoom out" aria-label="Zoom out">&minus;</button>
+        <button type="button" class="tv-btn" data-tv-action="zoom-in" title="Zoom in" aria-label="Zoom in">+</button>
+        <button type="button" class="tv-btn" data-tv-action="fit" title="Show the whole tree">Fit tree</button>
+        <button type="button" class="tv-btn" data-tv-action="readable" data-tv-rect-only
+          title="Make tip labels readable; a large tree scrolls">Readable labels</button>
+      </div>
+
+      <div class="tv-group" data-tv-rect-only>
+        <span class="tv-group-label">Height</span>
+        <button type="button" class="tv-btn" data-tv-action="shorter" title="Less space between tips" aria-label="Decrease height">&minus;</button>
+        <button type="button" class="tv-btn" data-tv-action="taller" title="More space between tips" aria-label="Increase height">+</button>
+      </div>
+
+      <div class="tv-group" data-tv-rect-only>
+        <span class="tv-group-label">Width</span>
+        <button type="button" class="tv-btn" data-tv-action="narrower" title="Shorter branches" aria-label="Decrease width">&minus;</button>
+        <button type="button" class="tv-btn" data-tv-action="wider" title="Longer branches" aria-label="Increase width">+</button>
+      </div>
+
+      <div class="tv-group" id="tv-values-group">
+        <span class="tv-group-label">On branches</span>
+        <button type="button" class="tv-btn" id="tv-support" aria-pressed="false"
+          title="Show the support value (e.g. bootstrap) at each node">Support</button>
+        <button type="button" class="tv-btn" id="tv-lengths" aria-pressed="false"
+          title="Show the length of each branch">Lengths</button>
+      </div>
+
+      <button type="button" class="tv-btn" id="tv-export-open" title="Make a publication-ready figure of the tree as shown">Export figure</button>
+      <span class="tv-structure" id="tv-structure"></span>
+      <span class="tv-count" id="tv-count"></span>
+    </div>
+
+    <div id="tv-tree"></div>
+  </div>
+
+  <div class="tv-divider" id="tv-divider" role="separator" aria-orientation="vertical" title="Drag to resize"></div>
+
+  <aside class="tv-panel" id="tv-panel">
+
+    <section class="tv-card">
+      <h1 class="tv-dataset-name" id="tv-dataset-name">
+        {% if superfamily_name is defined and superfamily_name is matches('^Superfamily_\\d+$') and superfamily_hmm_names is defined and superfamily_hmm_names %}
+          {{ superfamily_hmm_names | join(', ') }}
+        {% else %}
+          {{ superfamily_name }}
+        {% endif %}
+        {% if source == 'curated' %} &ndash; {{ dataset_name }}{% endif %}
+      </h1>
+      <p class="tv-dataset-desc" id="tv-dataset-desc">{{ datasetDescr }}</p>
+
+      <dl class="tv-facts">
+        {% if rooting_method %}<dt>Rooting</dt><dd>{{ rooting_method }}</dd>{% endif %}
+        {% if ec_numbers is defined and ec_numbers %}<dt>EC</dt><dd>{{ ec_numbers | join(', ') }}</dd>{% endif %}
+        {% if pfams is defined and pfams %}<dt>Pfam</dt><dd>{{ pfams | join(', ') }}</dd>{% endif %}
+        {% if cog_category is defined and cog_category %}<dt>COG</dt><dd>{% for code in cog_category %}<span class="tv-code" data-tv-code="COG_category">{{ code }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</dd>{% endif %}
+      </dl>
+
+      {% if source == 'curated' and cite %}
+      <div class="tv-cite">
+        {% if cite.name %}<div>{{ cite.name }}</div>{% endif %}
+        {% if cite.doi %}
+          {% if cite.doi.startswith('DOI: ') %}
+            <a href="https://doi.org/{{ cite.doi[5:] }}" target="_blank" rel="noopener">{{ cite.doi }}</a>
+          {% else %}
+            <a href="{{ cite.doi }}" target="_blank" rel="noopener">{{ cite.doi }}</a>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% endif %}
+    </section>
+
+    {% if placement %}
+    <section class="tv-card" id="tv-placement-card">
+      <h2 class="tv-card-title">Placement of {{ placement.query }}</h2>
+      <div id="tv-placement"></div>
+    </section>
+    {% endif %}
+
+    <section class="tv-card tv-selection-card" id="tv-selection-card" hidden>
+      <div class="tv-selection-head">
+        <div>
+          <h2 class="tv-selection-title" id="tv-selection-title"></h2>
+          <div class="tv-note" id="tv-selection-subtitle"></div>
+        </div>
+        <button type="button" class="tv-popover-close" id="tv-selection-close" aria-label="Close" title="Close">&times;</button>
+      </div>
+      <div id="tv-selection-body"></div>
+    </section>
+
+    <section class="tv-card">
+      <h2 class="tv-card-title">Display</h2>
+      <div class="tv-field">
+        <label for="tv-label-by">Label tips by</label>
+        <select id="tv-label-by" class="tv-select"></select>
+      </div>
+      <div class="tv-field">
+        <label for="tv-align">Align labels</label>
+        <input type="checkbox" id="tv-align">
+      </div>
+      <div class="tv-field" id="tv-hide-ids-row" hidden>
+        <label for="tv-hide-ids" title="Tips without a value in the chosen field get no label instead of their sequence ID">Hide IDs where the field is empty</label>
+        <input type="checkbox" id="tv-hide-ids">
+      </div>
+    </section>
+
+    <section class="tv-card">
+      <h2 class="tv-card-title">Annotations</h2>
+      <div id="tv-annotations"></div>
+      <p class="tv-note tv-card-foot">Click a branch or a tip in the tree for more: colour or collapse a clade, see a summary, download, reroot.</p>
+    </section>
+
+    <section class="tv-card" id="tv-legend-card" hidden>
+      <h2 class="tv-card-title">Colours</h2>
+      <div id="tv-legend"></div>
+    </section>
+
+    <section class="tv-card" id="tv-structures-card" hidden>
+      <h2 class="tv-card-title">Structures</h2>
+      <div class="tv-button-row" id="tv-structure-toggles"></div>
+      <div id="tv-structure-view" hidden>
+        <button type="button" class="tv-structure-image" id="tv-structure-enlarge" title="Click to enlarge">
+          <img id="tv-structure-img" alt="">
+        </button>
+        <div class="tv-structure-nav">
+          <button type="button" class="tv-btn" id="tv-structure-prev" aria-label="Previous image">&lsaquo;</button>
+          <span id="tv-structure-caption"></span>
+          <button type="button" class="tv-btn" id="tv-structure-next" aria-label="Next image">&rsaquo;</button>
+        </div>
+      </div>
+      <p class="tv-note" id="tv-structure-hint">Show the structures next to the tree, then click one to enlarge it here.</p>
+    </section>
+
+    <section class="tv-card" id="tv-links-card" hidden>
+      <details id="tv-links-fold">
+        <summary class="tv-card-title tv-card-title-fold">Cross-links</summary>
+        <div class="tv-button-row">
+          <button type="button" class="tv-btn" id="tv-links-on-tree" aria-pressed="false">Show on tree</button>
+        </div>
+        <div id="tv-links"></div>
+      </details>
+    </section>
+
+    <section class="tv-card">
+      <h2 class="tv-card-title">Download dataset</h2>
+      <div class="tv-button-row">
+        <button type="button" class="tv-btn" id="tv-dl-tree">Tree (.nwk)</button>
+        <button type="button" class="tv-btn" id="tv-dl-metadata">Annotations (.tsv)</button>
+        {% if source != 'user' %}
+        <a class="tv-btn tv-btn-link" href="/download/alignment/{{ dataset_id }}" download>Alignment (.faa)</a>
+        <a class="tv-btn tv-btn-link" href="/download/sequences/{{ dataset_id }}" download="{{ dataset_id }}.fasta">Sequences (.fasta)</a>
+        {% endif %}
+        {% if placement %}
+        <a class="tv-btn tv-btn-link" href="/download/aligned_query/{{ placement.jobId }}/{{ placement.query }}/{{ placement.treeId }}" download="{{ placement.query }}_{{ placement.treeId }}.fa">Aligned query (.fa)</a>
+        <button type="button" class="tv-btn" id="tv-dl-jplace">Placement (.jplace)</button>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="tv-card">
+      <h2 class="tv-card-title">This view</h2>
+      <div class="tv-button-row">
+        <button type="button" class="tv-btn" id="tv-copy-link" title="Copy a link that opens the tree with these display settings">Copy link</button>
+        <button type="button" class="tv-btn" id="tv-save-file" title="Save the display settings as a file">Save settings file</button>
+        <label class="tv-btn tv-file-btn" title="Load display settings from a file">
+          Load settings file
+          <input type="file" id="tv-load-file" accept="application/json,.json" hidden>
+        </label>
+        <button type="button" class="tv-btn" id="tv-reset" title="Back to the default view">Reset</button>
+      </div>
+      <p class="tv-note" id="tv-view-status" role="status"></p>
+    </section>
+
+    <section class="tv-card">
+      <p class="tv-note">
+        This is the new tree viewer. The previous one stays available for a while:
+        {% if legacy_url is defined and legacy_url %}
+        <a class="tv-link" href="{{ legacy_url }}">previous viewer</a>.
+        {% elif placement %}
+        <a class="tv-link" href="{{ url_for('jplace_render_legacy') }}?jobId={{ placement.jobId }}&amp;query={{ placement.query | urlencode }}&amp;treeId={{ placement.treeId }}">previous viewer</a>.
+        {% else %}
+        <a class="tv-link" href="{{ url_for('tree_renderer_legacy') }}?dataset_id={{ dataset_id }}">previous viewer</a>.
+        {% endif %}
+      </p>
+    </section>
+
+  </aside>
+</div>
+
+<dialog class="tv-dialog" id="tv-download">
+  <div class="tv-dialog-head">
+    <h2 id="tv-download-title"></h2>
+    <button type="button" class="tv-popover-close" id="tv-download-close" aria-label="Close">&times;</button>
+  </div>
+  <pre id="tv-download-content"></pre>
+  <div class="tv-dialog-foot">
+    <button type="button" class="tv-btn" id="tv-download-copy">Copy to clipboard</button>
+    <button type="button" class="tv-btn tv-btn-primary" id="tv-download-save">Download</button>
+  </div>
+</dialog>
+
+<dialog class="tv-dialog tv-export-dialog" id="tv-export">
+  <div class="tv-dialog-head">
+    <h2>Export figure</h2>
+    <button type="button" class="tv-popover-close" id="tv-export-close" aria-label="Close">&times;</button>
+  </div>
+  <div class="tv-export-body">
+    <div class="tv-export-options">
+      <p class="tv-note" id="tv-ex-layout"></p>
+      <label class="tv-ex-field">Title <input type="text" id="tv-ex-title" class="tv-input" placeholder="Optional"></label>
+      <label class="tv-ex-field">Tip labels <select id="tv-ex-labels" class="tv-select"></select></label>
+      <label class="tv-ex-field">Label size (pt) <input type="number" id="tv-ex-font" class="tv-input tv-input-num" value="7" min="3" max="24" step="0.5"></label>
+      <label class="tv-ex-field">Width (mm) <input type="number" id="tv-ex-width" class="tv-input tv-input-num" value="180" min="40" max="2000" step="5"></label>
+      <label class="tv-ex-field">Height
+        <span class="tv-ex-pair">
+          <select id="tv-ex-height-mode" class="tv-select">
+            <option value="auto">As tall as needed</option>
+            <option value="custom">Set (mm)</option>
+          </select>
+          <input type="number" id="tv-ex-height" class="tv-input tv-input-num" value="200" min="30" max="5000" step="5" hidden>
+        </span>
+      </label>
+      <div class="tv-ex-checks">
+        <label><input type="checkbox" id="tv-ex-strips"> Colour strips</label>
+        <label><input type="checkbox" id="tv-ex-legend"> Legend</label>
+        <label><input type="checkbox" id="tv-ex-columns"> Text columns</label>
+        <label><input type="checkbox" id="tv-ex-structures"> Structures</label>
+        <label><input type="checkbox" id="tv-ex-scale"> Scale bar</label>
+        <label><input type="checkbox" id="tv-ex-support"> Support values</label>
+        <label><input type="checkbox" id="tv-ex-lengths"> Branch lengths</label>
+        <label title="Tips without a value in the chosen field get no label instead of their sequence ID"><input type="checkbox" id="tv-ex-hide-ids"> No ID where the label is empty</label>
+      </div>
+      <p class="tv-note">The figure shows the tree as it is now: colours, collapsed and hidden clades, and rooting.</p>
+    </div>
+    <div class="tv-export-preview-wrap">
+      <div class="tv-export-preview" id="tv-ex-preview"></div>
+      <div class="tv-export-meta"><span id="tv-ex-size"></span> <span class="tv-ex-notes" id="tv-ex-notes" role="status"></span></div>
+    </div>
+  </div>
+  <div class="tv-export-info">
+    <div class="tv-export-info-head">
+      <span>Tree details</span>
+      <button type="button" class="tv-linkbtn" id="tv-ex-info-copy">Copy</button>
+    </div>
+    <div id="tv-ex-info-text"></div>
+  </div>
+  <div class="tv-dialog-foot">
+    <button type="button" class="tv-btn tv-btn-primary" id="tv-ex-svg" title="Vector file for Illustrator, Inkscape or a journal">Download SVG</button>
+    <span class="tv-ex-pair">
+      <button type="button" class="tv-btn" id="tv-ex-png">Download PNG</button>
+      <select id="tv-ex-dpi" class="tv-select" aria-label="PNG resolution">
+        <option value="300">300 dpi</option>
+        <option value="600">600 dpi</option>
+        <option value="150">150 dpi</option>
+      </select>
+    </span>
+    <button type="button" class="tv-btn" id="tv-ex-pdf" title="Opens the print dialog with the page set to the figure's size; choose Save as PDF">PDF (via print)</button>
+  </div>
+</dialog>
+
+<dialog class="tv-dialog tv-image-dialog" id="tv-image-dialog">
+  <div class="tv-dialog-head">
+    <h2 id="tv-image-dialog-title"></h2>
+    <button type="button" class="tv-popover-close" id="tv-image-dialog-close" aria-label="Close">&times;</button>
+  </div>
+  <img id="tv-image-dialog-img" alt="">
+</dialog>
+
+<script id="tv-payload" type="application/json">{{ {
+  'nwk': nwk_data,
+  'metadata': metadata,
+  'columns': metadata_list,
+  'defaultTipLabel': default_tip_label | default(none),
+  'datasetId': dataset_id | default(none),
+  'sections': annotation_sections | default(none),
+  'structureImages': structure_images | default(none),
+  'catalytic': catalytic_sites | default(none),
+  'source': source,
+  'clientData': client_data | default(false),
+  'info': {'name': dataset_name | default(none), 'model': tree_model | default(none), 'rooting': rooting_method | default(none)},
+  'placement': placement | default(none),
+  'bootstrapMapping': bootstrap_mapping | default(none)
+} | tojson }}</script>
+<script src="{{ url_for('static', filename='js/field_descriptions.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script type="module" src="{{ url_for('static', filename='js/tree2/main.js') }}?v=32"></script>
+{% endblock %}
